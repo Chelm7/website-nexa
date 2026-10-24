@@ -1,111 +1,104 @@
-<meta name='viewport' content='width=device-width, initial-scale=1'/><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NexaTech - Solusi Digital Terdepan</title>
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- FontAwesome -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            primary: { 50: '#f0f9ff', 100: '#e0f2fe', 500: '#0ea5e9', 600: '#0284c7', 700: '#0369a1' }
-          }
-        }
-      }
-    }
-  </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mie Bangka Autentik - Lezat & Nikmat</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body class="bg-slate-50 text-slate-800 flex flex-col min-h-screen">
+<body class="bg-amber-50/30 text-gray-800 font-sans antialiased">
 
-  <!-- Navigation Bar -->
-  <nav class="bg-white border-b border-slate-200 sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex justify-between h-16 items-center">
-        <!-- Logo -->
-        <div class="flex items-center space-x-3">
-          <div class="w-10 h-10 bg-primary-600 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-md">N</div>
-          <span class="text-xl font-bold bg-gradient-to-r from-primary-600 to-indigo-600 bg-clip-text text-transparent">NexaTech</span>
+    <!-- Header / Navbar -->
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex justify-center items-center">
+            <div class="flex items-center space-x-2">
+                <span class="bg-amber-600 text-white p-2 rounded-lg font-bold text-lg"><i class="fa-solid fa-bowl-food"></i></span>
+                <span class="text-xl font-extrabold tracking-tight text-amber-900">Mie Bangka Asli</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="py-12 px-4 max-w-6xl mx-auto text-center">
+        <div class="bg-gradient-to-r from-amber-600 to-orange-600 rounded-2xl p-8 md:p-12 text-white shadow-lg">
+            <span class="bg-white/20 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider">100% Halal & Autentik</span>
+            <h1 class="text-3xl md:text-5xl font-extrabold mt-4 mb-4">Nikmatnya Kelezatan Mie Bangka Legendaris</h1>
+            <p class="text-amber-100 text-sm md:text-base max-w-2xl mx-auto mb-6">
+                Disajikan dengan mie kenyal homemade, topping ayam gurih, kuah kaldu kaya rempah, dan sambal khas yang bikin ketagihan!
+            </p>
+            <a href="#menu" class="bg-white text-amber-700 hover:bg-amber-50 font-bold px-6 py-3 rounded-xl shadow transition inline-block">
+                Lihat Menu & Harga
+            </a>
+        </div>
+    </section>
+
+    <!-- Menu Section -->
+    <section id="menu" class="py-10 px-4 max-w-6xl mx-auto">
+        <div class="text-center mb-10">
+            <h2 class="text-2xl md:text-3xl font-bold text-gray-900">Menu Andalan Kami</h2>
+            <p class="text-gray-600 text-sm mt-1">Pilih menu favoritmu dan nikmati kelezatannya hari ini.</p>
         </div>
 
-        <!-- Desktop Menu -->
-        <div class="hidden md:flex space-x-8 text-sm font-medium text-slate-600">
-          <a href="#beranda" class="hover:text-primary-600 transition">Beranda</a>
-          <a href="#fitur" class="hover:text-primary-600 transition">Fitur</a>
-          <a href="#layanan" class="hover:text-primary-600 transition">Layanan</a>
-          <a href="#kontak" class="hover:text-primary-600 transition">Kontak</a>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Menu 1 -->
+            <div class="bg-white rounded-2xl shadow-sm border border-amber-100 overflow-hidden hover:shadow-md transition">
+                <div class="bg-amber-100 h-48 flex items-center justify-center text-amber-600 text-4xl">
+                    <i class="fa-solid fa-bowl-food"></i>
+                </div>
+                <div class="p-5">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="font-bold text-lg text-gray-900">Mie Bangka Spesial</h3>
+                        <span class="text-amber-600 font-extrabold">Rp 25.000</span>
+                    </div>
+                    <p class="text-gray-600 text-xs mb-4">Mie kenyal dengan topping ayam cincang, bakso ikan, pangsit rebus, dan sayuran segar.</p>
+                    <a href="https://wa.me/6281234567890?text=Halo,%20saya%20mau%20pesan%20Mie%20Bangka%20Spesial" target="_blank" class="block text-center bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2 rounded-xl text-sm transition">
+                        Pesan via WhatsApp
+                    </a>
+                </div>
+            </div>
+
+            <!-- Menu 2 -->
+            <div class="bg-white rounded-2xl shadow-sm border border-amber-100 overflow-hidden hover:shadow-md transition">
+                <div class="bg-amber-100 h-48 flex items-center justify-center text-amber-600 text-4xl">
+                    <i class="fa-solid fa-utensils"></i>
+                </div>
+                <div class="p-5">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="font-bold text-lg text-gray-900">Mie Bangka Jumbo</h3>
+                        <span class="text-amber-600 font-extrabold">Rp 32.000</span>
+                    </div>
+                    <p class="text-gray-600 text-xs mb-4">Porsi lebih puas dengan ekstra mie, double topping ayam, dan tambahan telur omega.</p>
+                    <a href="https://wa.me/6281234567890?text=Halo,%20saya%20mau%20pesan%20Mie%20Bangka%20Jumbo" target="_blank" class="block text-center bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2 rounded-xl text-sm transition">
+                        Pesan via WhatsApp
+                    </a>
+                </div>
+            </div>
+
+            <!-- Menu 3 -->
+            <div class="bg-white rounded-2xl shadow-sm border border-amber-100 overflow-hidden hover:shadow-md transition">
+                <div class="bg-amber-100 h-48 flex items-center justify-center text-amber-600 text-4xl">
+                    <i class="fa-solid fa-glass-water"></i>
+                </div>
+                <div class="p-5">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="font-bold text-lg text-gray-900">Es Timun Suri / Jeruk</h3>
+                        <span class="text-amber-600 font-extrabold">Rp 8.000</span>
+                    </div>
+                    <p class="text-gray-600 text-xs mb-4">Minuman segar pilihan untuk menetralisir rasa gurih setelah menikmati mie.</p>
+                    <a href="https://wa.me/6281234567890?text=Halo,%20saya%20mau%20pesan%20Es%20Jeruk" target="_blank" class="block text-center bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2 rounded-xl text-sm transition">
+                        Pesan via WhatsApp
+                    </a>
+                </div>
+            </div>
         </div>
+    </section>
 
-        <!-- Admin Portal Button -->
-        <div class="flex items-center space-x-4">
-          <a href="admin.html" class="inline-flex items-center gap-2 bg-slate-900 text-white text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-slate-800 transition shadow-sm">
-            <i class="fa-solid fa-lock text-xs">="text-primary-400"></i> Portal Admin
-          </a>
-        </div>
-      </div>
-    </div>
-  </nav>
-
-  <!-- Hero Section -->
-  <section id="beranda" class="py-20 lg:py-28 bg-gradient-to-b from-white via-primary-50/30 to-slate-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-      <span class="inline-block py-1 px-3 rounded-full bg-primary-100 text-primary-700 text-xs font-semibold uppercase tracking-wider mb-4">Solusi Masa Depan</span>
-      <h1 class="text-4xl sm:text-6xl font-extrabold text-slate-900 tracking-tight leading-tight mb-6">
-        Kelola Bisnis Digital Anda <br><span class="bg-gradient-to-r from-primary-600 to-indigo-600 bg-clip-text text-transparent">Lebih Cepat & Efisien</span>
-      </h1>
-      <p class="text-lg text-slate-600 max-w-2xl mx-auto mb-10">
-        Platform terpadu untuk analisis data, manajemen pengguna, serta pengawasan aktivitas bisnis secara real-time.
-      </p>
-      <div class="flex justify-center gap-4">
-        <a href="#fitur" class="bg-primary-600 text-white font-semibold px-6 py-3 rounded-xl hover:bg-primary-700 transition shadow-lg shadow-primary-500/25">Jelajahi Fitur</a>
-        <a href="admin.html" class="bg-white border border-slate-300 text-slate-700 font-semibold px-6 py-3 rounded-xl hover:bg-slate-50 transition">Demo Dashboard</a>
-      </div>
-    </div>
-  </section>
-
-  <!-- Feature Grid -->
-  <section id="fitur" class="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="text-center mb-12">
-      <h2 class="text-3xl font-bold text-slate-900">Mengapa Memilih NexaTech?</h2>
-      <p class="text-slate-600 mt-2">Segala kemudahan dalam satu ekosistem yang terintegrasi</p>
-    </div>
-    <div class="grid md:grid-cols-3 gap-8">
-      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition">
-        <div class="w-12 h-12 bg-primary-100 text-primary-600 rounded-xl flex items-center justify-center text-xl font-bold mb-4">
-          <i class="fa-solid fa-chart-line"></i>
-        </div>
-        <h3 class="text-xl font-semibold mb-2 text-slate-800">Analitik Real-Time</h3>
-        <p class="text-slate-600 text-sm">Pantau statistik pengunjung, penjualan, dan tren bisnis secara langsung tanpa tunda.</p>
-      </div>
-
-      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition">
-        <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center text-xl font-bold mb-4">
-          <i class="fa-solid fa-users-gear"></i>
-        </div>
-        <h3 class="text-xl font-semibold mb-2 text-slate-800">Manajemen Pengguna</h3>
-        <p class="text-slate-600 text-sm">Kelola data pelanggan, hak akses, dan status akun dengan antarmuka yang intuitif.</p>
-      </div>
-
-      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition">
-        <div class="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center text-xl font-bold mb-4">
-          <i class="fa-solid fa-shield-halved"></i>
-        </div>
-        <h3 class="text-xl font-semibold mb-2 text-slate-800">Keamanan Tingkat Tinggi</h3>
-        <p class="text-slate-600 text-sm">Proteksi enkripsi mutakhir untuk menjamin keamanan data bisnis dan privasi pengguna.</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- Footer -->
-  <footer class="mt-auto bg-slate-900 text-slate-400 py-8 border-t border-slate-800">
-    <div class="max-w-7xl mx-auto px-4 text-center">
-      <p class="text-sm">&copy; 2026 NexaTech. All rights reserved.</p>
-    </div>
-  </footer>
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-100 mt-12 py-8 text-center text-xs text-gray-500">
+        <p>&copy; 2026 Mie Bangka Asli. All rights reserved.</p>
+    </footer>
 
 </body>
 </html>
