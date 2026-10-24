@@ -8,48 +8,37 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script>
-        // Sistem Proteksi Login Admin Real-Time dengan Nama, Sandi & Verifikasi Kode dari Nomor HP 081267166886
-        let generatedOtp = "";
-
         function checkAdminAuth() {
             if (sessionStorage.getItem('mb_admin_logged') !== 'true') {
                 document.getElementById('login-modal').classList.remove('hidden');
+                document.getElementById('display-phone-label').innerText = localStorage.getItem('mb_admin_phone') || "081267166886";
             } else {
                 document.getElementById('login-modal').classList.add('hidden');
                 initAdminPanel();
             }
         }
 
-        function requestOtpCode() {
-            let phone = localStorage.getItem('mb_admin_phone') || "081267166886";
-            // Generate real-time random 4-digit code
-            generatedOtp = Math.floor(1000 + Math.random() * 9000).toString();
-            document.getElementById('otp-display-box').classList.remove('hidden');
-            document.getElementById('otp-code-sent-target').innerText = phone;
-            document.getElementById('otp-simulation-code').innerText = generatedOtp;
-            alert(`[SIMULASI REAL-TIME SMS] Kode verifikasi terkirim ke nomor ${phone}: ${generatedOtp}`);
-        }
-
         function verifyAdminLogin() {
             let usernameInput = document.getElementById('admin-username').value.trim();
             let passwordInput = document.getElementById('admin-password').value.trim();
-            let otpInput = document.getElementById('admin-otp').value.trim();
+            let pinInput = document.getElementById('admin-pin').value.trim();
 
             let correctUsername = localStorage.getItem('mb_admin_user') || "miebangka";
             let correctPassword = localStorage.getItem('mb_admin_pass') || "admin123";
+            let correctPin = localStorage.getItem('mb_admin_pin') || "886886";
 
             if (usernameInput !== correctUsername || passwordInput !== correctPassword) {
                 alert('Nama Admin atau Sandi salah!');
                 return;
             }
 
-            if (!generatedOtp || otpInput !== generatedOtp) {
-                alert('Kode verifikasi OTP dari nomor HP salah atau belum diminta!');
+            if (pinInput !== correctPin) {
+                alert('PIN Rahasia Admin salah!');
                 return;
             }
 
             sessionStorage.setItem('mb_admin_logged', 'true');
-            alert('Login Admin Berhasil dengan Verifikasi Real-Time!');
+            alert('Login Admin Berhasil!');
             document.getElementById('login-modal').classList.add('hidden');
             initAdminPanel();
         }
@@ -57,14 +46,14 @@
 </head>
 <body class="bg-gray-100 text-gray-800 font-sans" onload="checkAdminAuth()">
 
-    <!-- Modal Login Admin dengan Nama, Sandi, & Verifikasi OTP HP -->
+    <!-- Modal Login Admin dengan PIN Rahasia Kustom -->
     <div id="login-modal" class="fixed inset-0 bg-sky-900 bg-opacity-95 hidden z-50 flex justify-center items-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 text-center">
             <div class="w-14 h-14 bg-sky-600 text-white rounded-full flex items-center justify-center text-2xl mx-auto mb-3 shadow">
                 <i class="fa-solid fa-shield-halved"></i>
             </div>
             <h3 class="text-2xl font-bold text-sky-900 mb-1">Login Admin Resto</h3>
-            <p class="text-xs text-gray-500 mb-4">Masukkan Nama, Sandi, & Verifikasi Kode dari Nomor HP.</p>
+            <p class="text-xs text-gray-500 mb-4">Pemilik Terdaftar HP: <b id="display-phone-label">081267166886</b></p>
             
             <div class="space-y-3 text-left">
                 <div>
@@ -76,14 +65,8 @@
                     <input type="password" id="admin-password" placeholder="••••••••" class="w-full px-3 py-2 border rounded-xl mt-1 text-sm outline-none focus:ring-2 focus:ring-sky-500">
                 </div>
                 <div>
-                    <button type="button" onclick="requestOtpCode()" class="w-full bg-sky-100 text-sky-800 hover:bg-sky-200 font-bold py-2 rounded-xl text-xs transition mb-2">
-                        <i class="fa-solid fa-mobile-screen mr-1"></i> Kirim Kode Verifikasi ke <span id="display-phone-label">081267166886</span>
-                    </button>
-                    <div id="otp-display-box" class="hidden bg-yellow-50 border border-yellow-200 p-2 rounded-xl text-center text-xs text-yellow-800 mb-2">
-                        Kode OTP dikirim ke <b id="otp-code-sent-target"></b>: <span id="otp-simulation-code" class="font-bold text-red-600 tracking-widest text-sm"></span>
-                    </div>
-                    <label class="block text-xs font-bold text-gray-700">Masukkan Kode Verifikasi Real-Time</label>
-                    <input type="text" id="admin-otp" placeholder="4-digit kode" class="w-full px-3 py-2 border rounded-xl mt-1 text-sm tracking-widest text-center font-bold outline-none focus:ring-2 focus:ring-sky-500">
+                    <label class="block text-xs font-bold text-gray-700">PIN Rahasia (6 Digit)</label>
+                    <input type="password" id="admin-pin" placeholder="886886" maxlength="6" class="w-full px-3 py-2 border rounded-xl mt-1 text-sm tracking-widest text-center font-bold outline-none focus:ring-2 focus:ring-sky-500">
                 </div>
             </div>
 
@@ -93,7 +76,6 @@
 
     <!-- Wrapper Admin -->
     <div class="min-h-screen flex flex-col">
-        <!-- Header -->
         <header class="bg-sky-900 text-white shadow-md">
             <div class="container mx-auto px-4 py-4 flex justify-between items-center">
                 <h1 class="text-lg font-bold"><i class="fa-solid fa-gauge-high mr-2"></i> Admin Panel - Mie Bangka Teladan</h1>
@@ -104,7 +86,6 @@
             </div>
         </header>
 
-        <!-- Navbar Tab Admin -->
         <nav class="bg-sky-800 text-white text-sm shadow">
             <div class="container mx-auto px-4 flex space-x-6 overflow-x-auto py-3">
                 <button onclick="switchTab('orders')" id="tab-btn-orders" class="font-bold border-b-2 border-white pb-1 whitespace-nowrap">Kelola Pesanan</button>
@@ -115,7 +96,6 @@
             </div>
         </nav>
 
-        <!-- Main Content -->
         <main class="container mx-auto px-4 py-8 flex-grow">
             
             <!-- TAB 1: KELOLA PESANAN -->
@@ -252,7 +232,11 @@
                         <input type="password" id="setting-admin-pass" class="w-full px-3 py-2 border rounded-xl mt-1">
                     </div>
                     <div>
-                        <label class="block font-medium text-gray-700">Ganti Nomor HP Verifikasi Kode OTP</label>
+                        <label class="block font-medium text-gray-700">Ganti PIN Rahasia (6 Digit)</label>
+                        <input type="password" id="setting-admin-pin" maxlength="6" class="w-full px-3 py-2 border rounded-xl mt-1">
+                    </div>
+                    <div>
+                        <label class="block font-medium text-gray-700">Ganti Nomor HP Pemilik</label>
                         <input type="text" id="setting-admin-phone" class="w-full px-3 py-2 border rounded-xl mt-1">
                     </div>
                     <button onclick="saveAdminCredentials()" class="bg-white text-sky-600 border border-sky-600 hover:bg-sky-50 font-bold px-4 py-2 rounded-xl shadow">Simpan Perubahan Akun</button>
@@ -279,8 +263,8 @@
 
             document.getElementById('setting-admin-user').value = localStorage.getItem('mb_admin_user') || "miebangka";
             document.getElementById('setting-admin-pass').value = localStorage.getItem('mb_admin_pass') || "admin123";
+            document.getElementById('setting-admin-pin').value = localStorage.getItem('mb_admin_pin') || "886886";
             document.getElementById('setting-admin-phone').value = localStorage.getItem('mb_admin_phone') || "081267166886";
-            document.getElementById('display-phone-label').innerText = localStorage.getItem('mb_admin_phone') || "081267166886";
 
             setInterval(checkNewOrdersAlert, 4000);
         }
@@ -299,7 +283,6 @@
             document.getElementById(`tab-btn-${tab}`).className = "font-bold border-b-2 border-white pb-1 whitespace-nowrap";
         }
 
-        // --- MANAJEMEN PESANAN ---
         let lastOrderCount = 0;
         function loadAdminOrders() {
             const orders = JSON.parse(localStorage.getItem('mb_orders')) || [];
@@ -371,7 +354,6 @@
             }
         }
 
-        // --- CETAK STRUK BLUETOOTH / THERMAL DENGAN WAKTU DIGITAL ---
         function printReceipt(index) {
             const orders = JSON.parse(localStorage.getItem('mb_orders')) || [];
             const o = orders[index];
@@ -421,7 +403,6 @@
             printWindow.document.close();
         }
 
-        // --- MANAJEMEN MENU ---
         function loadAdminMenus() {
             const menu = JSON.parse(localStorage.getItem('mb_menu')) || [];
             const tbody = document.getElementById('admin-menu-list');
@@ -455,4 +436,132 @@
                 let idx = menu.findIndex(m => m.id == id);
                 if (idx !== -1) menu[idx] = { id: Number(id), name, category, price, image, desc };
             } else {
-                const newId = menu.length > 0 ? Math.max(...menu.map(m => m.id))
+                const newId = menu.length > 0 ? Math.max(...menu.map(m => m.id)) + 1 : 1;
+                menu.push({ id: newId, name, category, price, image, desc });
+            }
+            localStorage.setItem('mb_menu', JSON.stringify(menu));
+            resetMenuForm();
+            loadAdminMenus();
+            alert('Menu berhasil disimpan!');
+        }
+
+        function editMenu(id) {
+            let menu = JSON.parse(localStorage.getItem('mb_menu')) || [];
+            let item = menu.find(m => m.id === id);
+            if (!item) return;
+            document.getElementById('menu-id').value = item.id;
+            document.getElementById('menu-name').value = item.name;
+            document.getElementById('menu-category').value = item.category;
+            document.getElementById('menu-price').value = item.price;
+            document.getElementById('menu-image').value = item.image;
+            document.getElementById('menu-desc').value = item.desc;
+            document.getElementById('menu-form-title').innerText = "Edit Menu";
+        }
+
+        function deleteMenu(id) {
+            if (confirm('Hapus menu ini?')) {
+                let menu = JSON.parse(localStorage.getItem('mb_menu')) || [];
+                menu = menu.filter(m => m.id !== id);
+                localStorage.setItem('mb_menu', JSON.stringify(menu));
+                loadAdminMenus();
+            }
+        }
+
+        function resetMenuForm() {
+            document.getElementById('menu-form').reset();
+            document.getElementById('menu-id').value = '';
+            document.getElementById('menu-form-title').innerText = "Tambah Menu Baru";
+        }
+
+        function loadAdminBanners() {
+            const banners = JSON.parse(localStorage.getItem('mb_banners')) || [];
+            const container = document.getElementById('banner-list-admin');
+            container.innerHTML = '';
+            banners.forEach((b, idx) => {
+                container.innerHTML += `
+                    <div class="relative rounded-xl overflow-hidden border shadow-sm">
+                        <img src="${b}" class="w-full h-32 object-cover">
+                        <button onclick="deleteBanner(${idx})" class="absolute top-2 right-2 bg-red-600 text-white w-7 h-7 rounded-full flex items-center justify-center text-xs"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                `;
+            });
+        }
+
+        function uploadBannerFile() {
+            const fileInput = document.getElementById('banner-file-input');
+            if (fileInput.files && fileInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    let banners = JSON.parse(localStorage.getItem('mb_banners')) || [];
+                    banners.push(e.target.result);
+                    localStorage.setItem('mb_banners', JSON.stringify(banners));
+                    fileInput.value = '';
+                    loadAdminBanners();
+                    alert('Banner berhasil diunggah!');
+                }
+                reader.readAsDataURL(fileInput.files[0]);
+            } else {
+                alert('Pilih file gambar terlebih dahulu.');
+            }
+        }
+
+        function deleteBanner(idx) {
+            let banners = JSON.parse(localStorage.getItem('mb_banners')) || [];
+            banners.splice(idx, 1);
+            localStorage.setItem('mb_banners', JSON.stringify(banners));
+            loadAdminBanners();
+        }
+
+        function loadAdminBanks() {
+            const banks = JSON.parse(localStorage.getItem('mb_banks')) || [];
+            const tbody = document.getElementById('admin-bank-list');
+            tbody.innerHTML = '';
+            banks.forEach((b, idx) => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="p-4 font-bold">${b.name}</td>
+                        <td class="p-4">${b.account}</td>
+                        <td class="p-4">${b.holder}</td>
+                        <td class="p-4 text-center"><button onclick="deleteBank(${idx})" class="text-red-500"><i class="fa-solid fa-trash"></i></button></td>
+                    </tr>
+                `;
+            });
+        }
+
+        function saveBank(e) {
+            e.preventDefault();
+            const name = document.getElementById('bank-name').value;
+            const account = document.getElementById('bank-acc').value;
+            const holder = document.getElementById('bank-holder').value;
+
+            let banks = JSON.parse(localStorage.getItem('mb_banks')) || [];
+            banks.push({ name, account, holder });
+            localStorage.setItem('mb_banks', JSON.stringify(banks));
+            e.target.reset();
+            loadAdminBanks();
+            alert('Akun bank berhasil ditambahkan!');
+        }
+
+        function deleteBank(idx) {
+            let banks = JSON.parse(localStorage.getItem('mb_banks')) || [];
+            banks.splice(idx, 1);
+            localStorage.setItem('mb_banks', JSON.stringify(banks));
+            loadAdminBanks();
+        }
+
+        function saveAdminCredentials() {
+            let newUser = document.getElementById('setting-admin-user').value.trim();
+            let newPass = document.getElementById('setting-admin-pass').value.trim();
+            let newPin = document.getElementById('setting-admin-pin').value.trim();
+            let newPhone = document.getElementById('setting-admin-phone').value.trim();
+
+            if (newUser) localStorage.setItem('mb_admin_user', newUser);
+            if (newPass) localStorage.setItem('mb_admin_pass', newPass);
+            if (newPin) localStorage.setItem('mb_admin_pin', newPin);
+            if (newPhone) localStorage.setItem('mb_admin_phone', newPhone);
+
+            alert('Pengaturan akun & PIN admin berhasil disimpan!');
+        }
+    </script>
+</body>
+</html>
