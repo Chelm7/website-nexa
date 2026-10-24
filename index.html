@@ -43,19 +43,26 @@
         </div>
     </header>
 
-    <!-- Banner Slider Dinamis (Diperbaiki Ukuran & Ketajaman) -->
-    <section class="relative bg-sky-900 text-white py-8 px-4 text-center overflow-hidden">
-        <div id="banner-container" class="container mx-auto max-w-4xl relative h-64 md:h-80 flex items-center justify-center rounded-2xl overflow-hidden shadow-lg bg-sky-800">
-            <!-- Banner dimuat otomatis -->
-        </div>
-        <div class="flex justify-center space-x-4 mt-4">
-            <button onclick="changeBannerSlide(-1)" class="bg-sky-700 hover:bg-sky-600 text-white px-4 py-1.5 rounded-xl text-sm font-bold shadow transition"><i class="fa-solid fa-chevron-left mr-1"></i> Prev</button>
-            <button onclick="changeBannerSlide(1)" class="bg-sky-700 hover:bg-sky-600 text-white px-4 py-1.5 rounded-xl text-sm font-bold shadow transition">Next <i class="fa-solid fa-chevron-right ml-1"></i></button>
+    <!-- Banner Bersih & Teks di Tempat Kosong (Tidak Menghalangi Banner) -->
+    <section class="container mx-auto px-4 py-6">
+        <div class="bg-white rounded-3xl shadow-lg overflow-hidden border border-sky-100 p-4 md:p-6 text-center">
+            <div id="banner-container" class="relative h-56 md:h-72 rounded-2xl overflow-hidden shadow-md bg-sky-800 mb-4">
+                <!-- Banner Slider Gambar Murni -->
+            </div>
+            <div class="flex justify-center space-x-3 mb-3">
+                <button onclick="changeBannerSlide(-1)" class="bg-sky-100 hover:bg-sky-200 text-sky-800 px-4 py-1 rounded-xl text-xs font-bold transition shadow-sm"><i class="fa-solid fa-chevron-left mr-1"></i> Sebelumnya</button>
+                <button onclick="changeBannerSlide(1)" class="bg-sky-100 hover:bg-sky-200 text-sky-800 px-4 py-1 rounded-xl text-xs font-bold transition shadow-sm">Selanjutnya <i class="fa-solid fa-chevron-right ml-1"></i></button>
+            </div>
+            <!-- Teks di tempat kosong di bawah banner -->
+            <div>
+                <h2 class="text-2xl md:text-3xl font-extrabold text-sky-900 mb-1">Mie Bangka Teladan</h2>
+                <p class="text-gray-600 text-sm md:text-base">Selamat datang! Nikmati cita rasa legendaris autentik di Kota Tanjungpinang dengan senang hati.</p>
+            </div>
         </div>
     </section>
 
     <!-- Kategori Menu (Makanan & Minuman) -->
-    <main class="container mx-auto px-4 py-8">
+    <main class="container mx-auto px-4 py-4">
         <div class="flex justify-center space-x-4 mb-8">
             <button onclick="filterMenu('all')" id="btn-all" class="px-6 py-2 rounded-xl font-bold bg-sky-600 text-white shadow transition">Semua Menu</button>
             <button onclick="filterMenu('Makanan')" id="btn-makanan" class="px-6 py-2 rounded-xl font-bold bg-white text-sky-600 border border-sky-300 shadow transition">Makanan</button>
@@ -66,7 +73,7 @@
             <!-- Menu dinamis -->
         </div>
 
-        <!-- Status Pesanan (Auto Tampil dengan Tombol Reload) -->
+        <!-- Status Pesanan Pelanggan (Auto Tampil dengan Tombol Reload) -->
         <div class="mt-16 bg-white p-6 rounded-2xl shadow-md border border-sky-100 max-w-2xl mx-auto">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-xl font-bold text-sky-900"><i class="fa-solid fa-list-check mr-2"></i> Status Pesanan Pelanggan</h3>
@@ -96,7 +103,7 @@
                 
                 <div class="space-y-3">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">Nama Pemesan</label>
+                        <label class="block text-sm font-medium text-gray-700">Nama Pelanggan</label>
                         <input type="text" id="buyer-name" class="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-sky-500 outline-none" placeholder="Nama lengkap">
                     </div>
                     <div>
@@ -126,9 +133,25 @@
         </div>
     </div>
 
+    <!-- Custom Modal Sukses Berkelimpahan Keramahan (Tanpa Popup Domain Browser) -->
+    <div id="success-modal" class="fixed inset-0 bg-black bg-opacity-60 hidden z-50 flex justify-center items-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 text-center">
+            <div class="w-16 h-16 bg-sky-100 text-sky-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">
+                <i class="fa-solid fa-face-smile-beam"></i>
+            </div>
+            <h3 class="text-2xl font-extrabold text-sky-900 mb-2">Terima Kasih Banyak!</h3>
+            <p id="success-message" class="text-gray-600 text-sm mb-6 leading-relaxed">
+                Pesanan Anda telah kami terima dengan senang hati.
+            </p>
+            <button onclick="closeSuccessModal()" class="w-full bg-sky-600 hover:bg-sky-700 text-white font-bold py-3 rounded-xl transition shadow">
+                Baik, Terima Kasih
+            </button>
+        </div>
+    </div>
+
     <!-- Footer -->
     <footer class="bg-sky-900 text-sky-100 py-6 text-center mt-12 text-sm">
-        <p>&copy; 2026 Mie Bangka Teladan - Kota Tanjungpinang (<span id="domain-label">masak-masak.my.id</span>). All rights reserved.</p>
+        <p>&copy; 2026 Mie Bangka Teladan - Kota Tanjungpinang. All rights reserved.</p>
     </footer>
 
     <!-- Audio Sukses -->
@@ -179,10 +202,6 @@
                 container.innerHTML += `
                     <div class="banner-slide ${idx === 0 ? 'active' : ''} absolute inset-0 w-full h-full">
                         <img src="${b}" class="w-full h-full object-cover">
-                        <div class="absolute inset-0 bg-black bg-opacity-40 flex flex-col items-center justify-center p-4">
-                            <h2 class="text-2xl md:text-3xl font-extrabold text-white mb-1">Mie Bangka Teladan</h2>
-                            <p class="text-sky-200 text-xs md:text-sm">Cita rasa legendaris autentik di Kota Tanjungpinang.</p>
-                        </div>
                     </div>
                 `;
             });
@@ -246,7 +265,8 @@
             const existing = cart.find(i => i.id === id);
             if (existing) { existing.qty += 1; } else { cart.push({ ...product, qty: 1 }); }
             updateCartUI();
-            alert(`${product.name} ditambahkan ke keranjang.`);
+            
+            // Subtle notification or simple notice if needed, keeping it polite
         }
 
         function updateCartUI() {
@@ -301,10 +321,10 @@
             const payment = document.getElementById('payment-method').value;
             const confirmed = document.getElementById('payment-confirmed').checked;
 
-            if (!name || !address) { alert('Nama dan Nomor Meja / Alamat wajib diisi!'); return; }
-            if (!payment) { alert('Silakan pilih metode pembayaran terlebih dahulu!'); return; }
-            if (!confirmed) { alert('Wajib mencentang kotak konfirmasi pembayaran!'); return; }
-            if (cart.length === 0) { alert('Keranjang kosong!'); return; }
+            if (!name || !address) { alert('Mohon maaf, Nama dan Nomor Meja / Alamat wajib diisi dengan lengkap ya.'); return; }
+            if (!payment) { alert('Mohon pilih metode pembayaran terlebih dahulu.'); return; }
+            if (!confirmed) { alert('Mohon centang kotak konfirmasi pembayaran terlebih dahulu.'); return; }
+            if (cart.length === 0) { alert('Keranjang belanja Anda masih kosong.'); return; }
 
             const total = cart.reduce((sum, i) => sum + (i.price * i.qty), 0);
             const newOrder = {
@@ -313,7 +333,7 @@
                 name, address, payment,
                 items: [...cart],
                 total,
-                status: 'Pending'
+                status: 'Menunggu Verifikasi Resto'
             };
 
             let orders = JSON.parse(localStorage.getItem('mb_orders')) || [];
@@ -322,7 +342,9 @@
 
             document.getElementById('success-sound').play().catch(e => console.log(e));
 
-            alert(`Terima kasih ${name}! Pesanan berhasil dibuat dengan ID: ${newOrder.id}. Status: Pending.`);
+            // Tampilkan modal kustom yang sopan dan ramah (tanpa popup domain browser)
+            document.getElementById('success-message').innerHTML = `Terima kasih banyak <b>${name}</b>!<br>Pesanan Anda berhasil dibuat dengan ID: <b>${newOrder.id}</b>.<br><span class="text-sky-700 font-medium">Status: Menunggu Verifikasi Resto.</span> Silakan menunggu sebentar ya.`;
+            document.getElementById('success-modal').classList.remove('hidden');
             
             cart = [];
             updateCartUI();
@@ -331,6 +353,10 @@
             document.getElementById('buyer-address').value = '';
             document.getElementById('payment-confirmed').checked = false;
             loadCustomerOrders();
+        }
+
+        function closeSuccessModal() {
+            document.getElementById('success-modal').classList.add('hidden');
         }
 
         function loadCustomerOrders() {
@@ -345,13 +371,13 @@
             let html = '';
             orders.slice(0, 10).forEach(o => {
                 let badgeColor = o.status === 'Diproses' ? 'bg-blue-100 text-blue-800' : (o.status === 'Selesai' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800');
-                let noteMsg = o.status === 'Selesai' ? 'Pesanan Anda telah selesai. Terima kasih!' : (o.status === 'Diproses' ? 'Pesanan sedang diproses di dapur.' : 'Pesanan menunggu verifikasi admin (Pending).');
+                let noteMsg = o.status === 'Selesai' ? 'Pesanan Anda telah selesai. Terima kasih banyak atas kunjungannya!' : (o.status === 'Diproses' ? 'Pesanan sedang disiapkan dengan higienis di dapur.' : 'Pesanan sedang diproses dalam tahap antrean dan menunggu verifikasi resto.');
                 
                 html += `
                     <div class="p-3 bg-sky-50 rounded-xl border border-sky-200">
-                        <div class="flex justify-between font-bold"><span>ID: ${o.id} (${o.name})</span> <span class="px-2 py-0.5 rounded-full ${badgeColor}">Status: ${o.status}</span></div>
+                        <div class="flex justify-between font-bold"><span>ID: ${o.id} (${o.name})</span> <span class="px-2 py-0.5 rounded-full ${badgeColor}">${o.status}</span></div>
                         <div class="text-xs text-gray-600 mt-1">Meja/Alamat: ${o.address} | Total: Rp ${o.total.toLocaleString('id-ID')}</div>
-                        <div class="text-xs font-bold text-sky-800 mt-1">${noteMsg}</div>
+                        <div class="text-xs font-medium text-sky-800 mt-1">${noteMsg}</div>
                     </div>
                 `;
             });
