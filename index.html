@@ -57,10 +57,6 @@
             <button onclick="changeBannerSlide(-1)" class="bg-sky-100 hover:bg-sky-200 text-sky-800 px-4 py-1.5 rounded-xl text-xs font-bold transition shadow-sm"><i class="fa-solid fa-chevron-left mr-1"></i> Sebelumnya</button>
             <button onclick="changeBannerSlide(1)" class="bg-sky-100 hover:bg-sky-200 text-sky-800 px-4 py-1.5 rounded-xl text-xs font-bold transition shadow-sm">Selanjutnya <i class="fa-solid fa-chevron-right ml-1"></i></button>
         </div>
-        <div class="container mx-auto px-4 pb-4 text-center">
-            <h2 class="text-2xl md:text-3xl font-extrabold text-sky-900 mb-1">Mie Bangka Teladan</h2>
-            <p class="text-gray-600 text-sm md:text-base">Selamat datang! Nikmati cita rasa legendaris autentik di Kota Tanjungpinang dengan senang hati.</p>
-        </div>
     </section>
 
     <!-- Kategori Menu (Makanan & Minuman) -->
@@ -162,7 +158,7 @@
                 </div>
             </div>
 
-            <p class="text-[11px] text-gray-500">Menunggu verifikasi dan konfirmasi diproses oleh admin resto...</p>
+            <p class="text-[11px] text-gray-500">Menunggu verifikasi dan konfirmasi diproses oleh pihak resto...</p>
         </div>
     </div>
 
@@ -397,7 +393,6 @@
             document.getElementById('pay-total-items').innerText = `${totalItemsCount} item`;
             document.getElementById('pay-total').innerText = `Rp ${total.toLocaleString('id-ID')}`;
             
-            // Render metode pembayaran sesuai pilihan (Kasir vs Bank)
             const payMethodContainer = document.getElementById('pay-method-container');
             if (payment === 'Kasir') {
                 payMethodContainer.innerHTML = `<span class="font-medium text-gray-800 bg-white p-2 block rounded-xl border">Bayar di Kasir (Tunai) - Silakan langsung memberitahukan ke kasir.</span>`;
@@ -417,7 +412,6 @@
             document.getElementById('buyer-address').value = '';
             document.getElementById('payment-confirmed').checked = false;
 
-            // Tampilkan modal timer pembayaran 3 menit
             document.getElementById('payment-timer-modal').classList.remove('hidden');
             startCountdown(3 * 60);
         }
@@ -443,7 +437,6 @@
                 }
             }, 1000);
 
-            // Cek otomatis apakah admin sudah mengubah status ke 'Diproses'
             orderStatusCheckInterval = setInterval(function() {
                 if (!activeOrderId) return;
                 let orders = JSON.parse(localStorage.getItem('mb_orders')) || [];
