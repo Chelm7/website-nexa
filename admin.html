@@ -4,22 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - Mie Bangka Teladan</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="bg-gray-100 text-gray-800 font-sans">
 
-    <!-- Wrapper -->
     <div class="min-h-screen flex flex-col">
         
         <!-- Header Admin -->
         <header class="bg-gray-900 text-white shadow-md">
             <div class="container mx-auto px-4 py-4 flex justify-between items-center">
                 <h1 class="text-xl font-bold"><i class="fa-solid fa-gauge-high mr-2"></i> Admin Panel - Mie Bangka</h1>
-                <a href="index.html" target="_blank" class="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg text-sm transition">
-                    <i class="fa-solid fa-globe mr-1"></i> Kunjungi Web
-                </a>
+                <div class="flex items-center space-x-3">
+                    <span id="audio-status" class="text-xs bg-green-600 text-white px-2 py-1 rounded">Audio Notif Aktif</span>
+                    <a href="index.html" target="_blank" class="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg text-sm transition">
+                        <i class="fa-solid fa-globe mr-1"></i> Kunjungi Web
+                    </a>
+                </div>
             </div>
         </header>
 
@@ -69,16 +70,15 @@
                             <thead>
                                 <tr class="bg-gray-50 border-b text-gray-600 text-sm">
                                     <th class="p-4">ID / Waktu</th>
-                                    <th class="p-4">Pemesan & Alamat</th>
+                                    <th class="p-4">Pemesan & Lokasi</th>
+                                    <th class="p-4">Pembayaran</th>
                                     <th class="p-4">Detail Pesanan</th>
                                     <th class="p-4">Total</th>
                                     <th class="p-4">Status</th>
                                     <th class="p-4 text-center">Aksi</th>
                                 </tr>
                             </thead>
-                            <tbody id="orders-table-body" class="divide-y divide-gray-200 text-sm">
-                                <!-- Data Pesanan -->
-                            </tbody>
+                            <tbody id="orders-table-body" class="divide-y divide-gray-200 text-sm"></tbody>
                         </table>
                     </div>
                 </div>
@@ -113,7 +113,6 @@
                     </form>
                 </div>
 
-                <!-- Daftar Menu Tabel -->
                 <div class="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-200">
                     <div class="p-4 border-b font-bold text-gray-800">Daftar Menu Saat Ini di Web</div>
                     <div class="overflow-x-auto">
@@ -126,9 +125,7 @@
                                     <th class="p-4 text-center">Aksi</th>
                                 </tr>
                             </thead>
-                            <tbody id="admin-menu-list" class="divide-y divide-gray-200 text-sm">
-                                <!-- List Menu -->
-                            </tbody>
+                            <tbody id="admin-menu-list" class="divide-y divide-gray-200 text-sm"></tbody>
                         </table>
                     </div>
                 </div>
@@ -137,8 +134,43 @@
         </main>
     </div>
 
-    <!-- Script Admin Dashboard -->
+    <!-- Script Admin Dashboard & Notifikasi Suara -->
     <script>
+        let lastOrderCount = 0;
+
+        // Fungsi Notifikasi Suara Berdering (Web Audio API)
+        function playRingSound() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                
+                // Bunyi dering berulang (3 beep)
+                for (let i = 0; i < 3; i++) {
+                    setTimeout(() => {
+                        if (audioCtx.state === 'suspended') {
+                            audioCtx.resume();
+                        }
+                        const osc = audioCtx.createOscillator();
+                        const gain = audioCtx.createGain();
+                        
+                        osc.type = 'triangle';
+                        osc.frequency.setValueAtTime(880, audioCtx.currentTime); // Nada tinggi
+                        osc.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 0.3);
+                        
+                        gain.gain.setValueAtTime(0.7, audioCtx.currentTime);
+                        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                        
+                        osc.connect(gain);
+                        gain.connect(audioCtx.destination);
+                        
+                        osc.start();
+                        osc.stop(audioCtx.currentTime + 0.3);
+                    }, i * 400);
+                }
+            } catch(e) {
+                console.log("Audio alert error: ", e);
+            }
+        }
+
         function switchTab(tab) {
             const ordersTab = document.getElementById('tab-orders');
             const menusTab = document.getElementById('tab-menus');
@@ -160,11 +192,16 @@
             }
         }
 
-        // --- MANAJEMEN PESANAN ---
-        function loadOrders() {
+        function loadOrders(isPolling = false) {
             const orders = JSON.parse(localStorage.getItem('warung_orders')) || [];
             const tbody = document.getElementById('orders-table-body');
             document.getElementById('stat-orders').innerText = orders.length;
+
+            // Cek jika ada pesanan baru masuk
+            if (isPolling && orders.length > lastOrderCount && lastOrderCount !== 0) {
+                playRingSound();
+            }
+            lastOrderCount = orders.length;
 
             let revenue = 0;
             orders.forEach(o => {
@@ -174,7 +211,7 @@
 
             tbody.innerHTML = '';
             if (orders.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-gray-500">Belum ada pesanan masuk.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-gray-500">Belum ada pesanan masuk.</td></tr>`;
                 return;
             }
 
@@ -186,6 +223,7 @@
                     <tr class="hover:bg-gray-50">
                         <td class="p-4 font-medium">${ord.id}<br><small class="text-gray-400">${ord.date}</small></td>
                         <td class="p-4 font-semibold text-gray-800">${ord.name}<br><small class="text-gray-500 font-normal"><i class="fa-solid fa-location-dot mr-1"></i>${ord.address}</small></td>
+                        <td class="p-4"><span class="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs font-bold">${ord.payment || 'QRIS'}</span></td>
                         <td class="p-4 text-gray-600">${itemsStr}</td>
                         <td class="p-4 font-bold text-amber-700">Rp ${ord.total.toLocaleString('id-ID')}</td>
                         <td class="p-4"><span class="px-3 py-1 rounded-full text-xs font-bold ${statusColor}">${ord.status}</span></td>
@@ -225,14 +263,13 @@
             }
         }
 
-        // --- MANAJEMEN MENU ---
         function loadAdminMenus() {
             const menuList = JSON.parse(localStorage.getItem('warung_menu')) || [];
             const tbody = document.getElementById('admin-menu-list');
             document.getElementById('stat-menus').innerText = menuList.length;
 
             tbody.innerHTML = '';
-            menuList.forEach((item, index) => {
+            menuList.forEach((item) => {
                 tbody.innerHTML += `
                     <tr class="hover:bg-gray-50">
                         <td class="p-4"><img src="${item.image}" class="w-16 h-16 object-cover rounded-lg"></td>
@@ -258,13 +295,11 @@
             let menuList = JSON.parse(localStorage.getItem('warung_menu')) || [];
 
             if (id) {
-                // Edit
                 let index = menuList.findIndex(m => m.id == id);
                 if (index !== -1) {
                     menuList[index] = { id: Number(id), name, price, image, desc };
                 }
             } else {
-                // Tambah baru
                 const newId = menuList.length > 0 ? Math.max(...menuList.map(m => m.id)) + 1 : 1;
                 menuList.push({ id: newId, name, price, image, desc });
             }
@@ -307,7 +342,13 @@
             document.getElementById('cancel-edit').classList.add('hidden');
         }
 
-        window.onload = loadOrders;
+        window.onload = function() {
+            loadOrders();
+            // Polling setiap 3 detik untuk mengecek pesanan baru secara real-time & membunyikan alarm
+            setInterval(() => {
+                loadOrders(true);
+            }, 3000);
+        };
     </script>
 </body>
 </html>
