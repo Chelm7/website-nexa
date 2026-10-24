@@ -9,7 +9,38 @@
 </head>
 <body class="bg-gray-100 text-gray-800 font-sans">
 
-    <div class="min-h-screen flex flex-col">
+    <!-- Modal Login Admin (Wajib Nama, Sandi, & No HP Verifikasi) -->
+    <div id="login-modal" class="fixed inset-0 bg-black bg-opacity-70 z-50 flex justify-center items-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 relative">
+            <div class="text-center mb-6">
+                <h3 class="text-2xl font-bold text-gray-900"><i class="fa-solid fa-lock text-sky-600 mr-2"></i> Login Admin Resto</h3>
+                <p class="text-sm text-gray-500 mt-1">Masukkan nama, sandi, dan nomor HP terdaftar untuk keamanan.</p>
+            </div>
+            <form onsubmit="handleAdminLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nama (Username)</label>
+                    <input type="text" id="login-user" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-sky-500 outline-none" placeholder="admin">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Sandi (Password)</label>
+                    <input type="password" id="login-pass" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-sky-500 outline-none" placeholder="••••••••">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nomor HP Verifikasi Keamanan</label>
+                    <input type="text" id="login-phone" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-sky-500 outline-none" placeholder="081234567890">
+                </div>
+                <button type="submit" class="w-full bg-sky-600 hover:bg-sky-700 text-white font-bold py-3 rounded-xl transition shadow mt-2">
+                    Masuk Dashboard
+                </button>
+            </form>
+            <div class="mt-4 text-center text-xs text-gray-400">
+                Default awal: admin / admin123 / 081234567890 (Dapat diubah di menu pengaturan admin).
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Wrapper -->
+    <div id="admin-dashboard-wrapper" class="min-h-screen flex flex-col hidden">
         
         <!-- Header Admin -->
         <header class="bg-gray-900 text-white shadow-md">
@@ -19,6 +50,9 @@
                     <a href="index.html" target="_blank" class="bg-sky-600 hover:bg-sky-700 text-white px-4 py-2 rounded-lg text-sm transition">
                         <i class="fa-solid fa-globe mr-1"></i> Kunjungi Web Resto
                     </a>
+                    <button onclick="adminLogout()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg text-sm transition">
+                        <i class="fa-solid fa-right-from-bracket"></i> Keluar
+                    </button>
                 </div>
             </div>
         </header>
@@ -55,7 +89,7 @@
             <div class="flex space-x-4 mb-6 border-b border-gray-300 pb-3 overflow-x-auto">
                 <button onclick="switchTab('orders')" id="btn-tab-orders" class="font-bold text-sky-700 border-b-2 border-sky-700 pb-2 px-2 transition whitespace-nowrap">Kelola Pesanan Masuk</button>
                 <button onclick="switchTab('menus')" id="btn-tab-menus" class="font-bold text-gray-500 pb-2 px-2 transition whitespace-nowrap">Kelola Daftar Menu</button>
-                <button onclick="switchTab('payments')" id="btn-tab-payments" class="font-bold text-gray-500 pb-2 px-2 transition whitespace-nowrap">Pengaturan Rekening & Suara</button>
+                <button onclick="switchTab('settings')" id="btn-tab-settings" class="font-bold text-gray-500 pb-2 px-2 transition whitespace-nowrap">Pengaturan Resto & Keamanan</button>
             </div>
 
             <!-- TAB 1: KELOLA PESANAN & CETAK STRUK -->
@@ -84,7 +118,7 @@
                 </div>
             </div>
 
-            <!-- TAB 2: KELOLA MENU -->
+            <!-- TAB 2: KELOLA MENU (Dengan Kategori Makanan/Minuman) -->
             <div id="tab-menus" class="hidden space-y-6">
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
                     <h3 id="form-title" class="text-xl font-bold mb-4 text-gray-800">Tambah Menu Baru</h3>
@@ -95,10 +129,17 @@
                             <input type="text" id="menu-name" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-sky-500 outline-none">
                         </div>
                         <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Kategori Menu</label>
+                            <select id="menu-category" class="w-full px-3 py-2 border rounded-lg bg-white focus:ring-2 focus:ring-sky-500 outline-none">
+                                <option value="Makanan">Makanan</option>
+                                <option value="Minuman">Minuman</option>
+                            </select>
+                        </div>
+                        <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Harga (Rp)</label>
                             <input type="number" id="menu-price" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-sky-500 outline-none">
                         </div>
-                        <div class="md:col-span-2">
+                        <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">URL Gambar / Foto</label>
                             <input type="url" id="menu-image" placeholder="https://images.unsplash.com/..." required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-sky-500 outline-none">
                         </div>
@@ -120,7 +161,7 @@
                             <thead>
                                 <tr class="bg-gray-50 border-b text-gray-600 text-sm">
                                     <th class="p-4">Gambar</th>
-                                    <th class="p-4">Nama & Deskripsi</th>
+                                    <th class="p-4">Nama, Kategori & Deskripsi</th>
                                     <th class="p-4">Harga</th>
                                     <th class="p-4 text-center">Aksi</th>
                                 </tr>
@@ -131,40 +172,85 @@
                 </div>
             </div>
 
-            <!-- TAB 3: PENGATURAN REKENING & SUARA NOTIFIKASI -->
-            <div id="tab-payments" class="hidden space-y-6">
-                <!-- Pengaturan Suara -->
+            <!-- TAB 3: PENGATURAN RESTO, BANNER, LOGIN, & SUARA -->
+            <div id="tab-settings" class="hidden space-y-6">
+                <!-- Pengaturan Banner View -->
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-                    <h3 class="text-xl font-bold mb-2 text-gray-800"><i class="fa-solid fa-volume-high mr-2"></i> Pengaturan Bunyi Dering Notifikasi</h3>
-                    <p class="text-sm text-gray-500 mb-4">Pilih jenis suara dering ketika pesanan baru masuk ke sistem.</p>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+                    <h3 class="text-xl font-bold mb-2 text-gray-800"><i class="fa-solid fa-image mr-2"></i> Pengaturan Banner Tampilan Web</h3>
+                    <p class="text-sm text-gray-500 mb-4">Masukkan URL gambar banner yang ingin ditampilkan di bagian atas halaman web depan.</p>
+                    <div class="space-y-3">
                         <div>
-                            <label class="block text-xs font-bold text-gray-600 mb-1">Pilih Jenis Suara Dering</label>
-                            <select id="sound-type-select" class="w-full px-3 py-2 border rounded-lg bg-white focus:ring-2 focus:ring-sky-500 outline-none">
-                                <option value="classic">Beep Klasik (Standar)</option>
-                                <option value="chime">Chime Modern (Harmoni Lembut)</option>
-                                <option value="siren">Alarm Sirene (Peringatan Tegas)</option>
-                                <option value="bell">Bel Digital (Loneng Toko)</option>
+                            <label class="block text-xs font-bold text-gray-600 mb-1">URL Gambar Banner</label>
+                            <input type="url" id="admin-banner-url" placeholder="https://images.unsplash.com/..." class="w-full px-3 py-2 border rounded-lg bg-white focus:ring-2 focus:ring-sky-500 outline-none">
+                        </div>
+                        <button onclick="saveBannerSettings()" class="bg-sky-600 hover:bg-sky-700 text-white font-bold px-6 py-2.5 rounded-lg transition shadow">
+                            Simpan Banner
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Pengaturan Keamanan Admin (Nama, Sandi, & No HP) -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                    <h3 class="text-xl font-bold mb-2 text-gray-800"><i class="fa-solid fa-shield-halved mr-2"></i> Pengaturan Akun & Keamanan Login Admin</h3>
+                    <p class="text-sm text-gray-500 mb-4">Ubah nama pengguna (username), kata sandi, dan nomor HP verifikasi admin.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-1">Nama Admin (Username)</label>
+                            <input type="text" id="set-admin-user" class="w-full px-3 py-2 border rounded-lg bg-white focus:ring-2 focus:ring-sky-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-1">Kata Sandi Baru</label>
+                            <input type="text" id="set-admin-pass" class="w-full px-3 py-2 border rounded-lg bg-white focus:ring-2 focus:ring-sky-500 outline-none" placeholder="Kosongkan jika tetap">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-1">Nomor HP Keamanan</label>
+                            <input type="text" id="set-admin-phone" class="w-full px-3 py-2 border rounded-lg bg-white focus:ring-2 focus:ring-sky-500 outline-none">
+                        </div>
+                    </div>
+                    <button onclick="saveAdminSecurity()" class="mt-4 bg-sky-600 hover:bg-sky-700 text-white font-bold px-6 py-2.5 rounded-lg transition shadow">
+                        Simpan Kredensial Login
+                    </button>
+                </div>
+
+                <!-- Pengaturan Suara (Suara Tinggi / Silent) -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                    <h3 class="text-xl font-bold mb-2 text-gray-800"><i class="fa-solid fa-volume-high mr-2"></i> Pengaturan Bunyi Dering Orderan Masuk</h3>
+                    <p class="text-sm text-gray-500 mb-4">Atur nada dering tinggi atau aktifkan mode silent (senyap).</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-1">Mode Suara Notifikasi</label>
+                            <select id="sound-mode-select" class="w-full px-3 py-2 border rounded-lg bg-white focus:ring-2 focus:ring-sky-500 outline-none">
+                                <option value="normal">Aktif (Suara Tinggi)</option>
+                                <option value="silent">Silent / Senyap (Mati)</option>
                             </select>
                         </div>
-                        <div class="flex items-end space-x-2 pt-2 md:pt-0">
-                            <button onclick="saveSoundSettings()" class="bg-sky-600 hover:bg-sky-700 text-white font-bold px-5 py-2.5 rounded-lg transition shadow">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-1">Pilih Nada Suara</label>
+                            <select id="sound-type-select" class="w-full px-3 py-2 border rounded-lg bg-white focus:ring-2 focus:ring-sky-500 outline-none">
+                                <option value="classic">Beep Klasik Tinggi</option>
+                                <option value="chime">Chime Modern</option>
+                                <option value="siren">Alarm Sirene Peringatan</option>
+                                <option value="bell">Bel Digital Toko</option>
+                            </select>
+                        </div>
+                        <div class="flex items-end space-x-2 pt-5">
+                            <button onclick="saveSoundSettings()" class="bg-sky-600 hover:bg-sky-700 text-white font-bold px-4 py-2.5 rounded-lg transition shadow w-full">
                                 Simpan Suara
                             </button>
-                            <button onclick="testSelectedSound()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-4 py-2.5 rounded-lg transition">
-                                <i class="fa-solid fa-play mr-1"></i> Tes Suara
+                            <button onclick="testSelectedSound()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-3 py-2.5 rounded-lg transition">
+                                <i class="fa-solid fa-play"></i> Tes
                             </button>
                         </div>
                     </div>
                 </div>
 
-                <!-- Pengaturan Rekening (Dapat Diubah Namanya) -->
+                <!-- Pengaturan Rekening -->
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
                     <div class="flex justify-between items-center mb-4">
                         <div>
                             <h3 class="text-xl font-bold text-gray-800">Pengaturan Metode Pembayaran & E-Wallet</h3>
-                            <p class="text-sm text-gray-500">Nama Bank/E-Wallet, Nomor Rekening, dan Pemilik dapat diubah atau ditambah sesuai kebutuhan.</p>
+                            <p class="text-sm text-gray-500">Nama Bank/E-Wallet, Nomor Rekening, dan Pemilik dapat diubah atau ditambah.</p>
                         </div>
                         <button onclick="addNewPaymentMethod()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-bold transition shadow">
                             <i class="fa-solid fa-plus mr-1"></i> Tambah Metode
@@ -187,7 +273,93 @@
     <script>
         let lastOrderCount = 0;
 
+        // --- SISTEM LOGIN & KEAMANAN ADMIN ---
+        function checkAdminAuth() {
+            const isLogged = sessionStorage.getItem('is_admin_logged');
+            if (isLogged === 'true') {
+                document.getElementById('login-modal').classList.add('hidden');
+                document.getElementById('admin-dashboard-wrapper').classList.remove('hidden');
+                initAdminData();
+            } else {
+                document.getElementById('login-modal').classList.remove('hidden');
+                document.getElementById('admin-dashboard-wrapper').classList.add('hidden');
+            }
+        }
+
+        function handleAdminLogin(e) {
+            e.preventDefault();
+            const user = document.getElementById('login-user').value.trim();
+            const pass = document.getElementById('login-pass').value.trim();
+            const phone = document.getElementById('login-phone').value.trim();
+
+            const savedCreds = JSON.parse(localStorage.getItem('admin_credentials')) || { user: 'admin', pass: 'admin123', phone: '081234567890' };
+
+            if (user === savedCreds.user && pass === savedCreds.pass && phone === savedCreds.phone) {
+                sessionStorage.setItem('is_admin_logged', 'true');
+                alert('Login Berhasil!');
+                checkAdminAuth();
+            } else {
+                alert('Nama, Sandi, atau Nomor HP verifikasi salah!');
+            }
+        }
+
+        function adminLogout() {
+            sessionStorage.removeItem('is_admin_logged');
+            alert('Anda telah keluar dari dashboard admin.');
+            checkAdminAuth();
+        }
+
+        function loadAdminSecurityForm() {
+            const savedCreds = JSON.parse(localStorage.getItem('admin_credentials')) || { user: 'admin', pass: 'admin123', phone: '081234567890' };
+            document.getElementById('set-admin-user').value = savedCreds.user;
+            document.getElementById('set-admin-pass').value = '';
+            document.getElementById('set-admin-phone').value = savedCreds.phone;
+        }
+
+        function saveAdminSecurity() {
+            const newUser = document.getElementById('set-admin-user').value.trim();
+            const newPass = document.getElementById('set-admin-pass').value.trim();
+            const newPhone = document.getElementById('set-admin-phone').value.trim();
+
+            let savedCreds = JSON.parse(localStorage.getItem('admin_credentials')) || { user: 'admin', pass: 'admin123', phone: '081234567890' };
+            
+            if (!newUser || !newPhone) {
+                alert('Nama dan Nomor HP tidak boleh kosong!');
+                return;
+            }
+
+            savedCreds.user = newUser;
+            if (newPass) {
+                savedCreds.pass = newPass;
+            }
+            savedCreds.phone = newPhone;
+
+            localStorage.setItem('admin_credentials', JSON.stringify(savedCreds));
+            alert('Pengaturan akun & keamanan berhasil disimpan!');
+            loadAdminSecurityForm();
+        }
+
+        // --- PENGATURAN BANNER ---
+        function loadBannerSettings() {
+            const bannerUrl = localStorage.getItem('resto_banner') || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80';
+            document.getElementById('admin-banner-url').value = bannerUrl;
+        }
+
+        function saveBannerSettings() {
+            const url = document.getElementById('admin-banner-url').value.trim();
+            if (!url) {
+                alert('URL banner tidak boleh kosong!');
+                return;
+            }
+            localStorage.setItem('resto_banner', url);
+            alert('Banner resto berhasil diperbarui!');
+        }
+
+        // --- AUDIO NOTIFIKASI TINGGI & SILENT ---
         function playSelectedSound() {
+            const soundMode = localStorage.getItem('warung_sound_mode') || 'normal';
+            if (soundMode === 'silent') return; // Jika mode silent, tidak berbunyi
+
             const soundType = localStorage.getItem('warung_sound_type') || 'classic';
             try {
                 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -201,22 +373,22 @@
                             const osc = audioCtx.createOscillator();
                             const gain = audioCtx.createGain();
                             osc.type = 'triangle';
-                            osc.frequency.setValueAtTime(880, audioCtx.currentTime);
-                            osc.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 0.3);
-                            gain.gain.setValueAtTime(0.7, audioCtx.currentTime);
+                            osc.frequency.setValueAtTime(1174.66, audioCtx.currentTime); // Nada tinggi D6
+                            osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.3);
+                            gain.gain.setValueAtTime(0.9, audioCtx.currentTime); // Volume tinggi
                             gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
                             osc.connect(gain); gain.connect(audioCtx.destination);
                             osc.start(); osc.stop(audioCtx.currentTime + 0.3);
                         }, i * 400);
                     }
                 } else if (soundType === 'chime') {
-                    [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
+                    [880, 1046.50, 1318.51, 1567.98].forEach((freq, i) => {
                         setTimeout(() => {
                             const osc = audioCtx.createOscillator();
                             const gain = audioCtx.createGain();
                             osc.type = 'sine';
                             osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-                            gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+                            gain.gain.setValueAtTime(0.8, audioCtx.currentTime);
                             gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
                             osc.connect(gain); gain.connect(audioCtx.destination);
                             osc.start(); osc.stop(audioCtx.currentTime + 0.5);
@@ -228,8 +400,8 @@
                             const osc = audioCtx.createOscillator();
                             const gain = audioCtx.createGain();
                             osc.type = 'square';
-                            osc.frequency.setValueAtTime(i % 2 === 0 ? 600 : 900, audioCtx.currentTime);
-                            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                            osc.frequency.setValueAtTime(i % 2 === 0 ? 800 : 1200, audioCtx.currentTime);
+                            gain.gain.setValueAtTime(0.6, audioCtx.currentTime);
                             gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
                             osc.connect(gain); gain.connect(audioCtx.destination);
                             osc.start(); osc.stop(audioCtx.currentTime + 0.25);
@@ -239,9 +411,9 @@
                     const osc = audioCtx.createOscillator();
                     const gain = audioCtx.createGain();
                     osc.type = 'sine';
-                    osc.frequency.setValueAtTime(1200, audioCtx.currentTime);
-                    osc.frequency.exponentialRampToValueAtTime(300, audioCtx.currentTime + 0.8);
-                    gain.gain.setValueAtTime(0.8, audioCtx.currentTime);
+                    osc.frequency.setValueAtTime(1760, audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 0.8);
+                    gain.gain.setValueAtTime(0.9, audioCtx.currentTime);
                     gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.8);
                     osc.connect(gain); gain.connect(audioCtx.destination);
                     osc.start(); osc.stop(audioCtx.currentTime + 0.8);
@@ -252,39 +424,48 @@
         }
 
         function testSelectedSound() {
-            const selectEl = document.getElementById('sound-type-select');
-            localStorage.setItem('warung_sound_type', selectEl.value);
+            const mode = document.getElementById('sound-mode-select').value;
+            if (mode === 'silent') {
+                alert('Mode saat ini diatur ke Silent. Ubah ke Aktif untuk mendengarkan tes suara.');
+                return;
+            }
+            const type = document.getElementById('sound-type-select').value;
+            localStorage.setItem('warung_sound_mode', mode);
+            localStorage.setItem('warung_sound_type', type);
             playSelectedSound();
         }
 
         function saveSoundSettings() {
-            const selectEl = document.getElementById('sound-type-select');
-            localStorage.setItem('warung_sound_type', selectEl.value);
+            const mode = document.getElementById('sound-mode-select').value;
+            const type = document.getElementById('sound-type-select').value;
+            localStorage.setItem('warung_sound_mode', mode);
+            localStorage.setItem('warung_sound_type', type);
             alert('Pengaturan suara notifikasi berhasil disimpan!');
         }
 
         function loadSoundSettings() {
-            const savedSound = localStorage.getItem('warung_sound_type') || 'classic';
-            const selectEl = document.getElementById('sound-type-select');
-            if (selectEl) selectEl.value = savedSound;
+            const savedMode = localStorage.getItem('warung_sound_mode') || 'normal';
+            const savedType = localStorage.getItem('warung_sound_type') || 'classic';
+            document.getElementById('sound-mode-select').value = savedMode;
+            document.getElementById('sound-type-select').value = savedType;
         }
 
         function switchTab(tab) {
             const ordersTab = document.getElementById('tab-orders');
             const menusTab = document.getElementById('tab-menus');
-            const paymentsTab = document.getElementById('tab-payments');
+            const settingsTab = document.getElementById('tab-settings');
             
             const btnOrders = document.getElementById('btn-tab-orders');
             const btnMenus = document.getElementById('btn-tab-menus');
-            const btnPayments = document.getElementById('btn-tab-payments');
+            const btnSettings = document.getElementById('btn-tab-settings');
 
             ordersTab.classList.add('hidden');
             menusTab.classList.add('hidden');
-            paymentsTab.classList.add('hidden');
+            settingsTab.classList.add('hidden');
             
             btnOrders.className = "font-bold text-gray-500 pb-2 px-2 transition whitespace-nowrap";
             btnMenus.className = "font-bold text-gray-500 pb-2 px-2 transition whitespace-nowrap";
-            btnPayments.className = "font-bold text-gray-500 pb-2 px-2 transition whitespace-nowrap";
+            btnSettings.className = "font-bold text-gray-500 pb-2 px-2 transition whitespace-nowrap";
 
             if (tab === 'orders') {
                 ordersTab.classList.remove('hidden');
@@ -294,11 +475,13 @@
                 menusTab.classList.remove('hidden');
                 btnMenus.className = "font-bold text-sky-700 border-b-2 border-sky-700 pb-2 px-2 transition whitespace-nowrap";
                 loadAdminMenus();
-            } else if (tab === 'payments') {
-                paymentsTab.classList.remove('hidden');
-                btnPayments.className = "font-bold text-sky-700 border-b-2 border-sky-700 pb-2 px-2 transition whitespace-nowrap";
+            } else if (tab === 'settings') {
+                settingsTab.classList.remove('hidden');
+                btnSettings.className = "font-bold text-sky-700 border-b-2 border-sky-700 pb-2 px-2 transition whitespace-nowrap";
                 loadAdminPayments();
                 loadSoundSettings();
+                loadBannerSettings();
+                loadAdminSecurityForm();
             }
         }
 
@@ -352,7 +535,6 @@
             });
         }
 
-        // Fungsi Cetak Struk (Kompatibel dengan semua printer Bluetooth Thermal via Print Dialog Sistem)
         function printOrderReceipt(orderId) {
             const orders = JSON.parse(localStorage.getItem('warung_orders')) || [];
             const ord = orders.find(o => o.id === orderId);
@@ -440,7 +622,11 @@
                 tbody.innerHTML += `
                     <tr class="hover:bg-gray-50">
                         <td class="p-4"><img src="${item.image}" class="w-16 h-16 object-cover rounded-lg"></td>
-                        <td class="p-4"><h5 class="font-bold text-gray-800">${item.name}</h5><p class="text-gray-500 text-xs">${item.desc}</p></td>
+                        <td class="p-4">
+                            <span class="text-xs font-bold text-sky-600 bg-sky-50 px-2 py-0.5 rounded uppercase">${item.category || 'Makanan'}</span>
+                            <h5 class="font-bold text-gray-800 mt-1">${item.name}</h5>
+                            <p class="text-gray-500 text-xs">${item.desc}</p>
+                        </td>
                         <td class="p-4 font-bold text-sky-700">Rp ${item.price.toLocaleString('id-ID')}</td>
                         <td class="p-4 text-center space-x-2">
                             <button onclick="editMenu(${item.id})" class="text-blue-600 hover:text-blue-800"><i class="fa-solid fa-pen-to-square"></i></button>
@@ -455,6 +641,7 @@
             e.preventDefault();
             const id = document.getElementById('menu-id').value;
             const name = document.getElementById('menu-name').value;
+            const category = document.getElementById('menu-category').value;
             const price = Number(document.getElementById('menu-price').value);
             const image = document.getElementById('menu-image').value;
             const desc = document.getElementById('menu-desc').value;
@@ -464,11 +651,11 @@
             if (id) {
                 let index = menuList.findIndex(m => m.id == id);
                 if (index !== -1) {
-                    menuList[index] = { id: Number(id), name, price, image, desc };
+                    menuList[index] = { id: Number(id), name, category, price, image, desc };
                 }
             } else {
                 const newId = menuList.length > 0 ? Math.max(...menuList.map(m => m.id)) + 1 : 1;
-                menuList.push({ id: newId, name, price, image, desc });
+                menuList.push({ id: newId, name, category, price, image, desc });
             }
 
             localStorage.setItem('warung_menu', JSON.stringify(menuList));
@@ -484,6 +671,7 @@
 
             document.getElementById('menu-id').value = item.id;
             document.getElementById('menu-name').value = item.name;
+            document.getElementById('menu-category').value = item.category || 'Makanan';
             document.getElementById('menu-price').value = item.price;
             document.getElementById('menu-image').value = item.image;
             document.getElementById('menu-desc').value = item.desc;
@@ -509,7 +697,6 @@
             document.getElementById('cancel-edit').classList.add('hidden');
         }
 
-        // --- KELOLA PEMBAYARAN / REKENING DANA & E-WALLET (BISA DIUBAH & TAMBAH) ---
         function loadAdminPayments() {
             const listEl = document.getElementById('payment-admin-list');
             let payments = JSON.parse(localStorage.getItem('warung_payments')) || [];
@@ -571,11 +758,15 @@
             loadAdminPayments();
         }
 
-        window.onload = function() {
+        function initAdminData() {
             loadOrders();
             setInterval(() => {
                 loadOrders(true);
             }, 3000);
+        }
+
+        window.onload = function() {
+            checkAdminAuth();
         };
     </script>
 </body>
