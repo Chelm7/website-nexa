@@ -149,10 +149,10 @@
                                 <tr class="bg-sky-50 border-b text-sky-900">
                                     <th class="p-4">ID & Waktu</th>
                                     <th class="p-4">Pelanggan & Alamat</th>
-                                    <th class="p-4">Detail Item</th>
+                                    <th class="p-4">Keterangan / Detail Item</th>
                                     <th class="p-4">Total & Pembayaran</th>
                                     <th class="p-4">Status & Sisa Waktu</th>
-                                    <th class="p-4 text-center">Aksi / Edit / Hapus</th>
+                                    <th class="p-4 text-center">Konfirmasi Pesanan</th>
                                 </tr>
                             </thead>
                             <tbody id="orders-table-body" class="divide-y divide-gray-200"></tbody>
@@ -462,11 +462,11 @@
             }
 
             filteredOrders.forEach((o) => {
-                // Cari index asli di array allOrders
                 let realIndex = allOrders.findIndex(item => item.id === o.id);
 
-                let itemsStr = o.items.map(i => `${i.name} (${i.qty}x)`).join(', ');
-                let badge = o.status === 'Diproses' ? 'bg-blue-100 text-blue-800' : (o.status === 'Selesai' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800');
+                let itemsStr = o.items.map(i => `<div class="font-medium text-gray-800"><i class="fa-solid fa-circle-dot text-[8px] mr-1 text-sky-600"></i>${i.name} <span class="text-sky-700 font-bold">(${i.qty}x)</span></div>`).join('');
+                let isFinished = o.status === 'Selesai';
+                let badge = o.status === 'Diproses' ? 'bg-blue-100 text-blue-800' : (isFinished ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800');
 
                 let elapsedSec = Math.floor((Date.now() - (o.timestamp || Date.now())) / 1000);
                 let remainingSec = 180 - elapsedSec;
@@ -483,29 +483,50 @@
                     timerText = `<span class="text-green-600 font-bold">Lunas / Diproses</span>`;
                 }
 
+                // Keterangan status orderan masuk & tombol aksi lengkap dengan tulisan (Proses, Selesai, Edit, Cetak, Tolak, Hapus)
+                let actionButtonsHtml = '';
+                let orderNotice = '';
+                if (o.status === 'Menunggu Verifikasi Resto') {
+                    orderNotice = `<span class="text-[11px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 block mb-1"><i class="fa-solid fa-bell mr-1"></i> Orderan Masuk Baru</span>`;
+                    actionButtonsHtml = `
+                        <button onclick="updateOrderStatus(${realIndex}, 'Diproses')" class="bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1 rounded text-xs font-bold shadow">Proses</button>
+                        <button onclick="updateOrderStatus(${realIndex}, 'Selesai')" class="bg-green-600 hover:bg-green-700 text-white px-2.5 py-1 rounded text-xs font-bold shadow">Selesai</button>
+                    `;
+                } else if (o.status === 'Diproses') {
+                    orderNotice = `<span class="text-[11px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200 block mb-1">Sedang Disiapkan</span>`;
+                    actionButtonsHtml = `
+                        <button onclick="updateOrderStatus(${realIndex}, 'Selesai')" class="bg-green-600 hover:bg-green-700 text-white px-2.5 py-1 rounded text-xs font-bold shadow">Selesai</button>
+                    `;
+                } else {
+                    orderNotice = `<span class="text-[11px] font-bold text-green-700 bg-green-50 px-2 py-0.5 rounded border border-green-200 block mb-1">Pesanan Selesai</span>`;
+                    actionButtonsHtml = `
+                        <span class="text-green-700 font-bold text-xs bg-green-50 px-2 py-1 rounded border border-green-200">Selesai</span>
+                    `;
+                }
+
                 tbody.innerHTML += `
                     <tr class="hover:bg-gray-50">
                         <td class="p-4 font-medium">${o.id}<br><small class="text-gray-400">${o.date}</small></td>
                         <td class="p-4 font-semibold">${o.name}<br><small class="text-gray-500 font-normal"><i class="fa-solid fa-location-dot mr-1"></i>${o.address}</small></td>
-                        <td class="p-4 text-gray-600">${itemsStr}</td>
+                        <td class="p-4">
+                            <div class="text-xs font-bold text-gray-700 mb-1">Keterangan Pesanan:</div>
+                            ${itemsStr}
+                        </td>
                         <td class="p-4 font-bold text-sky-700">Rp ${o.total.toLocaleString('id-ID')}<br><small class="text-gray-500 font-normal">Bayar: ${o.payment}</small></td>
                         <td class="p-4">
                             <span class="px-3 py-1 rounded-full text-xs font-bold ${badge}">${o.status}</span>
                             <div class="mt-1 text-xs">${timerText}</div>
                         </td>
                         <td class="p-4 text-center space-y-1">
-                            <div class="flex justify-center space-x-1">
-                                <select onchange="updateOrderStatus(${realIndex}, this.value)" class="border rounded px-2 py-1 text-xs font-medium">
-                                    <option value="Menunggu Verifikasi Resto" ${o.status === 'Menunggu Verifikasi Resto' ? 'selected' : ''}>Menunggu Verifikasi Resto</option>
-                                    <option value="Diproses" ${o.status === 'Diproses' ? 'selected' : ''}>Diproses</option>
-                                    <option value="Selesai" ${o.status === 'Selesai' ? 'selected' : ''}>Selesai</option>
-                                </select>
-                                <button onclick="openEditModal(${realIndex})" class="bg-blue-50 text-blue-600 border border-blue-200 px-2 py-1 rounded text-xs font-bold hover:bg-blue-100" title="Edit Pesanan"><i class="fa-solid fa-pen"></i></button>
+                            ${orderNotice}
+                            <div class="flex justify-center items-center space-x-1 flex-wrap gap-1">
+                                ${actionButtonsHtml}
                             </div>
-                            <div class="flex justify-center space-x-1 mt-1">
-                                <button onclick="printReceipt(${realIndex})" class="bg-white text-sky-600 border border-sky-600 hover:bg-sky-50 px-2 py-1 rounded text-xs font-bold transition shadow" title="Cetak Struk"><i class="fa-solid fa-print"></i></button>
-                                <button onclick="rejectOrder(${realIndex})" class="bg-red-50 text-red-600 border border-red-200 px-2 py-1 rounded text-xs font-bold hover:bg-red-100" title="Tolak / Batalkan Pesanan">Tolak</button>
-                                <button onclick="deleteOrder(${realIndex})" class="text-red-500 hover:text-red-700 p-1" title="Hapus"><i class="fa-solid fa-trash"></i></button>
+                            <div class="flex justify-center items-center space-x-1 flex-wrap gap-1 mt-1">
+                                <button onclick="openEditModal(${realIndex})" class="bg-blue-50 text-blue-600 border border-blue-200 px-2 py-1 rounded text-xs font-bold hover:bg-blue-100"><i class="fa-solid fa-pen mr-1"></i>Edit</button>
+                                <button onclick="printReceipt(${realIndex})" class="bg-white text-sky-600 border border-sky-600 hover:bg-sky-50 px-2 py-1 rounded text-xs font-bold transition shadow"><i class="fa-solid fa-print mr-1"></i>Cetak</button>
+                                <button onclick="rejectOrder(${realIndex})" class="bg-red-50 text-red-600 border border-red-200 px-2 py-1 rounded text-xs font-bold hover:bg-red-100">Tolak</button>
+                                <button onclick="deleteOrder(${realIndex})" class="bg-red-50 text-red-600 border border-red-200 px-2 py-1 rounded text-xs font-bold hover:bg-red-100"><i class="fa-solid fa-trash mr-1"></i>Hapus</button>
                             </div>
                         </td>
                     </tr>
@@ -790,9 +811,9 @@
             const account = document.getElementById('bank-acc').value;
             const holder = document.getElementById('bank-holder').value;
 
-            let banks = JSON.parse(localStorage.getItem('mb_banks')) || [];
-            banks.push({ name, account, holder });
-            localStorage.setItem('mb_banks', JSON.stringify(banks));
+            let banksList = JSON.parse(localStorage.getItem('mb_banks')) || [];
+            banksList.push({ name, account, holder });
+            localStorage.setItem('mb_banks', JSON.stringify(banksList));
             e.target.reset();
             loadAdminBanks();
             alert('Akun bank berhasil ditambahkan.');
