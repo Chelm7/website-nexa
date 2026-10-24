@@ -16,7 +16,6 @@
             <div class="container mx-auto px-4 py-4 flex justify-between items-center">
                 <h1 class="text-xl font-bold"><i class="fa-solid fa-gauge-high mr-2"></i> Admin Panel - Mie Bangka</h1>
                 <div class="flex items-center space-x-3">
-                    <span id="audio-status" class="text-xs bg-green-600 text-white px-2 py-1 rounded">Audio Notif Aktif</span>
                     <a href="index.html" target="_blank" class="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg text-sm transition">
                         <i class="fa-solid fa-globe mr-1"></i> Kunjungi Web
                     </a>
@@ -56,7 +55,7 @@
             <div class="flex space-x-4 mb-6 border-b border-gray-300 pb-3 overflow-x-auto">
                 <button onclick="switchTab('orders')" id="btn-tab-orders" class="font-bold text-amber-700 border-b-2 border-amber-700 pb-2 px-2 transition whitespace-nowrap">Kelola Pesanan Masuk</button>
                 <button onclick="switchTab('menus')" id="btn-tab-menus" class="font-bold text-gray-500 pb-2 px-2 transition whitespace-nowrap">Kelola Daftar Menu</button>
-                <button onclick="switchTab('payments')" id="btn-tab-payments" class="font-bold text-gray-500 pb-2 px-2 transition whitespace-nowrap">Kelola Rekening / Pembayaran</button>
+                <button onclick="switchTab('payments')" id="btn-tab-payments" class="font-bold text-gray-500 pb-2 px-2 transition whitespace-nowrap">Pengaturan Rekening & Suara</button>
             </div>
 
             <!-- TAB 1: KELOLA PESANAN -->
@@ -132,8 +131,35 @@
                 </div>
             </div>
 
-            <!-- TAB 3: KELOLA PEMBAYARAN / REKENING -->
+            <!-- TAB 3: PENGATURAN REKENING & SUARA NOTIFIKASI -->
             <div id="tab-payments" class="hidden space-y-6">
+                <!-- Pengaturan Suara -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                    <h3 class="text-xl font-bold mb-2 text-gray-800"><i class="fa-solid fa-volume-high mr-2"></i> Pengaturan Bunyi Dering Notifikasi</h3>
+                    <p class="text-sm text-gray-500 mb-4">Pilih jenis suara dering ketika pesanan baru masuk ke sistem.</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-1">Pilih Jenis Suara Dering</label>
+                            <select id="sound-type-select" class="w-full px-3 py-2 border rounded-lg bg-white focus:ring-2 focus:ring-amber-500 outline-none">
+                                <option value="classic">Beep Klasik (Standar)</option>
+                                <option value="chime">Chime Modern (Harmoni Lembut)</option>
+                                <option value="siren">Alarm Sirene (Peringatan Tegas)</option>
+                                <option value="bell">Bel Digital (Loneng Toko)</option>
+                            </select>
+                        </div>
+                        <div class="flex items-end space-x-2 pt-2 md:pt-0">
+                            <button onclick="saveSoundSettings()" class="bg-amber-600 hover:bg-amber-700 text-white font-bold px-5 py-2.5 rounded-lg transition shadow">
+                                Simpan Suara
+                            </button>
+                            <button onclick="testSelectedSound()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-4 py-2.5 rounded-lg transition">
+                                <i class="fa-solid fa-play mr-1"></i> Tes Suara
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pengaturan Rekening -->
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
                     <h3 class="text-xl font-bold mb-2 text-gray-800">Pengaturan Nomor Rekening & E-Wallet</h3>
                     <p class="text-sm text-gray-500 mb-4">Isi nomor rekening atau E-Wallet di bawah ini agar tampil otomatis di pilihan pembayaran web pembeli. Kosongkan jika tidak ingin ditampilkan.</p>
@@ -150,39 +176,91 @@
         </main>
     </div>
 
-    <!-- Script Admin Dashboard & Notifikasi Suara -->
+    <!-- Script Admin Dashboard & Pengaturan Suara -->
     <script>
         let lastOrderCount = 0;
 
-        // Suara Notifikasi Berdering Admin
-        function playRingSound() {
+        // Pemutar Suara Notifikasi Berdasarkan Pilihan Admin
+        function playSelectedSound() {
+            const soundType = localStorage.getItem('warung_sound_type') || 'classic';
             try {
                 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                for (let i = 0; i < 3; i++) {
-                    setTimeout(() => {
-                        if (audioCtx.state === 'suspended') {
-                            audioCtx.resume();
-                        }
-                        const osc = audioCtx.createOscillator();
-                        const gain = audioCtx.createGain();
-                        
-                        osc.type = 'triangle';
-                        osc.frequency.setValueAtTime(880, audioCtx.currentTime);
-                        osc.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 0.3);
-                        
-                        gain.gain.setValueAtTime(0.7, audioCtx.currentTime);
-                        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
-                        
-                        osc.connect(gain);
-                        gain.connect(audioCtx.destination);
-                        
-                        osc.start();
-                        osc.stop(audioCtx.currentTime + 0.3);
-                    }, i * 400);
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+
+                if (soundType === 'classic') {
+                    for (let i = 0; i < 3; i++) {
+                        setTimeout(() => {
+                            const osc = audioCtx.createOscillator();
+                            const gain = audioCtx.createGain();
+                            osc.type = 'triangle';
+                            osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+                            osc.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 0.3);
+                            gain.gain.setValueAtTime(0.7, audioCtx.currentTime);
+                            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                            osc.connect(gain); gain.connect(audioCtx.destination);
+                            osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+                        }, i * 400);
+                    }
+                } else if (soundType === 'chime') {
+                    [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
+                        setTimeout(() => {
+                            const osc = audioCtx.createOscillator();
+                            const gain = audioCtx.createGain();
+                            osc.type = 'sine';
+                            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                            gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+                            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+                            osc.connect(gain); gain.connect(audioCtx.destination);
+                            osc.start(); osc.stop(audioCtx.currentTime + 0.5);
+                        }, i * 150);
+                    });
+                } else if (soundType === 'siren') {
+                    for (let i = 0; i < 4; i++) {
+                        setTimeout(() => {
+                            const osc = audioCtx.createOscillator();
+                            const gain = audioCtx.createGain();
+                            osc.type = 'square';
+                            osc.frequency.setValueAtTime(i % 2 === 0 ? 600 : 900, audioCtx.currentTime);
+                            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
+                            osc.connect(gain); gain.connect(audioCtx.destination);
+                            osc.start(); osc.stop(audioCtx.currentTime + 0.25);
+                        }, i * 300);
+                    }
+                } else if (soundType === 'bell') {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(1200, audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(300, audioCtx.currentTime + 0.8);
+                    gain.gain.setValueAtTime(0.8, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.8);
+                    osc.connect(gain); gain.connect(audioCtx.destination);
+                    osc.start(); osc.stop(audioCtx.currentTime + 0.8);
                 }
             } catch(e) {
                 console.log("Audio alert error: ", e);
             }
+        }
+
+        function testSelectedSound() {
+            const selectEl = document.getElementById('sound-type-select');
+            localStorage.setItem('warung_sound_type', selectEl.value);
+            playSelectedSound();
+        }
+
+        function saveSoundSettings() {
+            const selectEl = document.getElementById('sound-type-select');
+            localStorage.setItem('warung_sound_type', selectEl.value);
+            alert('Pengaturan suara notifikasi berhasil disimpan!');
+        }
+
+        function loadSoundSettings() {
+            const savedSound = localStorage.getItem('warung_sound_type') || 'classic';
+            const selectEl = document.getElementById('sound-type-select');
+            if (selectEl) selectEl.value = savedSound;
         }
 
         function switchTab(tab) {
@@ -214,6 +292,7 @@
                 paymentsTab.classList.remove('hidden');
                 btnPayments.className = "font-bold text-amber-700 border-b-2 border-amber-700 pb-2 px-2 transition whitespace-nowrap";
                 loadAdminPayments();
+                loadSoundSettings();
             }
         }
 
@@ -223,7 +302,7 @@
             document.getElementById('stat-orders').innerText = orders.length;
 
             if (isPolling && orders.length > lastOrderCount && lastOrderCount !== 0) {
-                playRingSound();
+                playSelectedSound();
             }
             lastOrderCount = orders.length;
 
@@ -366,7 +445,6 @@
             document.getElementById('cancel-edit').classList.add('hidden');
         }
 
-        // --- KELOLA PEMBAYARAN MANUAL ---
         function loadAdminPayments() {
             const listEl = document.getElementById('payment-admin-list');
             const payments = JSON.parse(localStorage.getItem('warung_payments')) || [];
