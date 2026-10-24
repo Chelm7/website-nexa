@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - Mie Bangka Teladan</title>
+    <title>Panel Resto - Mie Bangka Teladan</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -28,17 +28,17 @@
             let correctPin = localStorage.getItem('mb_admin_pin') || "886886";
 
             if (usernameInput !== correctUsername || passwordInput !== correctPassword) {
-                alert('Nama Admin atau Sandi salah!');
+                alert('Nama Resto atau Sandi salah.');
                 return;
             }
 
             if (pinInput !== correctPin) {
-                alert('PIN Rahasia Admin salah!');
+                alert('PIN Rahasia Resto salah.');
                 return;
             }
 
             sessionStorage.setItem('mb_admin_logged', 'true');
-            alert('Login Admin Berhasil!');
+            alert('Masuk Panel Resto Berhasil.');
             document.getElementById('login-modal').classList.add('hidden');
             initAdminPanel();
         }
@@ -58,22 +58,22 @@
 </head>
 <body class="bg-gray-100 text-gray-800 font-sans" onload="checkAdminAuth()">
 
-    <!-- Modal Login Admin -->
+    <!-- Modal Login Resto -->
     <div id="login-modal" class="fixed inset-0 bg-sky-900 bg-opacity-95 hidden z-50 flex justify-center items-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 text-center">
             <div class="w-14 h-14 bg-sky-600 text-white rounded-full flex items-center justify-center text-2xl mx-auto mb-3 shadow">
                 <i class="fa-solid fa-shield-halved"></i>
             </div>
-            <h3 class="text-2xl font-bold text-sky-900 mb-1">Login Admin Resto</h3>
+            <h3 class="text-2xl font-bold text-sky-900 mb-1">Login Panel Resto</h3>
             <p class="text-xs text-gray-500 mb-4">Pemilik Terdaftar HP: <b id="display-phone-label">081267166886</b></p>
             
             <div class="space-y-3 text-left">
                 <div>
-                    <label class="block text-xs font-bold text-gray-700">Nama Admin</label>
+                    <label class="block text-xs font-bold text-gray-700">Nama Resto</label>
                     <input type="text" id="admin-username" placeholder="miebangka" class="w-full px-3 py-2 border rounded-xl mt-1 text-sm outline-none focus:ring-2 focus:ring-sky-500">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-gray-700">Sandi Admin</label>
+                    <label class="block text-xs font-bold text-gray-700">Sandi Resto</label>
                     <div class="relative mt-1">
                         <input type="password" id="admin-password" placeholder="••••••••" class="w-full px-3 py-2 border rounded-xl text-sm outline-none focus:ring-2 focus:ring-sky-500 pr-10">
                         <button type="button" onclick="toggleVisibility('admin-password', 'eye-pass')" class="absolute right-3 top-2.5 text-sm"><i id="eye-pass" class="fa-solid fa-eye text-gray-500"></i></button>
@@ -88,15 +88,15 @@
                 </div>
             </div>
 
-            <button onclick="verifyAdminLogin()" class="w-full mt-5 bg-sky-600 hover:bg-sky-700 text-white font-bold py-2.5 rounded-xl transition shadow">Masuk ke Panel Admin</button>
+            <button onclick="verifyAdminLogin()" class="w-full mt-5 bg-sky-600 hover:bg-sky-700 text-white font-bold py-2.5 rounded-xl transition shadow">Masuk ke Panel Resto</button>
         </div>
     </div>
 
-    <!-- Wrapper Admin -->
+    <!-- Wrapper Panel Resto -->
     <div class="min-h-screen flex flex-col">
         <header class="bg-sky-900 text-white shadow-md">
             <div class="container mx-auto px-4 py-4 flex justify-between items-center">
-                <h1 class="text-lg font-bold"><i class="fa-solid fa-gauge-high mr-2"></i> Admin Panel - Mie Bangka Teladan</h1>
+                <h1 class="text-lg font-bold"><i class="fa-solid fa-gauge-high mr-2"></i> Panel Resto - Mie Bangka Teladan</h1>
                 <div class="flex items-center space-x-3">
                     <button onclick="logoutAdmin()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition">Keluar</button>
                     <a href="index.html" target="_blank" class="bg-white text-sky-900 hover:bg-sky-50 px-3 py-1.5 rounded-lg text-xs font-bold transition shadow"><i class="fa-solid fa-globe mr-1"></i> Buka Web</a>
@@ -110,7 +110,7 @@
                 <button onclick="switchTab('menus')" id="tab-btn-menus" class="text-sky-200 hover:text-white pb-1 whitespace-nowrap">Kelola Menu</button>
                 <button onclick="switchTab('banners')" id="tab-btn-banners" class="text-sky-200 hover:text-white pb-1 whitespace-nowrap">Pengaturan Banner</button>
                 <button onclick="switchTab('banks')" id="tab-btn-banks" class="text-sky-200 hover:text-white pb-1 whitespace-nowrap">Bank & E-Wallet</button>
-                <button onclick="switchTab('settings')" id="tab-btn-settings" class="text-sky-200 hover:text-white pb-1 whitespace-nowrap">Pengaturan Admin</button>
+                <button onclick="switchTab('settings')" id="tab-btn-settings" class="text-sky-200 hover:text-white pb-1 whitespace-nowrap">Pengaturan Resto</button>
             </div>
         </nav>
 
@@ -119,7 +119,7 @@
             <!-- TAB 1: KELOLA PESANAN -->
             <div id="section-orders" class="space-y-6">
                 <div class="flex justify-between items-center">
-                    <h3 class="text-xl font-bold text-gray-800">Daftar Pesanan Masuk (Pending / Diproses / Selesai)</h3>
+                    <h3 class="text-xl font-bold text-gray-800">Daftar Pesanan Masuk</h3>
                     <button onclick="clearOrders()" class="bg-red-100 text-red-700 hover:bg-red-200 px-3 py-1 rounded-lg text-xs font-bold">Hapus Semua Riwayat</button>
                 </div>
                 <div class="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-200">
@@ -128,7 +128,7 @@
                             <thead>
                                 <tr class="bg-sky-50 border-b text-sky-900">
                                     <th class="p-4">ID & Waktu</th>
-                                    <th class="p-4">Pemesan</th>
+                                    <th class="p-4">Pelanggan</th>
                                     <th class="p-4">Detail Item</th>
                                     <th class="p-4">Total & Pembayaran</th>
                                     <th class="p-4">Status Pesanan</th>
@@ -217,7 +217,10 @@
                         </div>
                         <div>
                             <label class="block font-medium text-gray-700">Nomor Rekening / Akun</label>
-                            <input type="text" id="bank-acc" required placeholder="1234567890" class="w-full px-3 py-2 border rounded-xl">
+                            <div class="relative mt-1">
+                                <input type="text" id="bank-acc" required placeholder="1234567890" class="w-full px-3 py-2 border rounded-xl text-sm outline-none pr-10">
+                                <button type="button" onclick="toggleVisibility('bank-acc', 'eye-bank-acc')" class="absolute right-3 top-2.5 text-sm"><i id="eye-bank-acc" class="fa-solid fa-eye text-gray-500"></i></button>
+                            </div>
                         </div>
                         <div>
                             <label class="block font-medium text-gray-700">Atas Nama Pemilik</label>
@@ -237,16 +240,16 @@
                 </div>
             </div>
 
-            <!-- TAB 5: PENGATURAN ADMIN -->
+            <!-- TAB 5: PENGATURAN RESTO -->
             <div id="section-settings" class="hidden space-y-6 max-w-xl">
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 space-y-4 text-sm">
-                    <h3 class="text-xl font-bold text-sky-900">Pengaturan Akun & Keamanan Admin</h3>
+                    <h3 class="text-xl font-bold text-sky-900">Pengaturan Akun & Keamanan Resto</h3>
                     <div>
-                        <label class="block font-medium text-gray-700">Ganti Nama Admin</label>
+                        <label class="block font-medium text-gray-700">Ganti Nama Resto</label>
                         <input type="text" id="setting-admin-user" class="w-full px-3 py-2 border rounded-xl mt-1">
                     </div>
                     <div>
-                        <label class="block font-medium text-gray-700">Ganti Sandi Admin</label>
+                        <label class="block font-medium text-gray-700">Ganti Sandi Resto</label>
                         <div class="relative mt-1">
                             <input type="password" id="setting-admin-pass" class="w-full px-3 py-2 border rounded-xl text-sm outline-none pr-10">
                             <button type="button" onclick="toggleVisibility('setting-admin-pass', 'eye-set-pass')" class="absolute right-3 top-2.5 text-sm"><i id="eye-set-pass" class="fa-solid fa-eye text-gray-500"></i></button>
@@ -332,7 +335,7 @@
                         <td class="p-4"><span class="px-3 py-1 rounded-full text-xs font-bold ${badge}">${o.status}</span></td>
                         <td class="p-4 text-center space-x-2">
                             <select onchange="updateOrderStatus(${index}, this.value)" class="border rounded px-2 py-1 text-xs font-medium">
-                                <option value="Pending" ${o.status === 'Pending' ? 'selected' : ''}>Pending</option>
+                                <option value="Menunggu Verifikasi Resto" ${o.status === 'Menunggu Verifikasi Resto' ? 'selected' : ''}>Menunggu Verifikasi Resto</option>
                                 <option value="Diproses" ${o.status === 'Diproses' ? 'selected' : ''}>Diproses</option>
                                 <option value="Selesai" ${o.status === 'Selesai' ? 'selected' : ''}>Selesai</option>
                             </select>
@@ -407,7 +410,7 @@
                     <div class="line"></div>
                     <div>ID: ${o.id}</div>
                     <div>Tanggal: ${o.date}</div>
-                    <div>Pemesan: ${o.name} (${o.address})</div>
+                    <div>Pelanggan: ${o.name} (${o.address})</div>
                     <div>Pembayaran: ${o.payment}</div>
                     <div>Status: ${o.status}</div>
                     <div class="line"></div>
@@ -466,7 +469,7 @@
             localStorage.setItem('mb_menu', JSON.stringify(menu));
             resetMenuForm();
             loadAdminMenus();
-            alert('Menu berhasil disimpan!');
+            alert('Menu berhasil disimpan.');
         }
 
         function editMenu(id) {
@@ -521,7 +524,7 @@
                     localStorage.setItem('mb_banners', JSON.stringify(banners));
                     fileInput.value = '';
                     loadAdminBanners();
-                    alert('Banner berhasil diunggah!');
+                    alert('Banner berhasil diunggah.');
                 }
                 reader.readAsDataURL(fileInput.files[0]);
             } else {
@@ -563,7 +566,7 @@
             localStorage.setItem('mb_banks', JSON.stringify(banks));
             e.target.reset();
             loadAdminBanks();
-            alert('Akun bank berhasil ditambahkan!');
+            alert('Akun bank berhasil ditambahkan.');
         }
 
         function deleteBank(idx) {
@@ -584,7 +587,7 @@
             if (newPin) localStorage.setItem('mb_admin_pin', newPin);
             if (newPhone) localStorage.setItem('mb_admin_phone', newPhone);
 
-            alert('Pengaturan akun & PIN admin berhasil disimpan!');
+            alert('Pengaturan akun & PIN resto berhasil disimpan.');
         }
     </script>
 </body>
