@@ -34,7 +34,7 @@
                 </button>
             </form>
             <div class="mt-4 text-center text-xs text-gray-400">
-                Catatan: Saat pertama kali masuk, wajib gunakan nomor HP awal <strong>081267166886</strong>. Setelah login, nomor ini dapat diubah di dalam halaman pengaturan admin.
+                Catatan: Nomor HP verifikasi awal adalah <strong>081267166886</strong>. Dapat diubah di dalam setelah login.
             </div>
         </div>
     </div>
@@ -172,21 +172,26 @@
                 </div>
             </div>
 
-            <!-- TAB 3: PENGATURAN RESTO, BANNER, LOGIN, & SUARA -->
+            <!-- TAB 3: PENGATURAN RESTO, SLIDE BANNER (PNG), LOGIN, & SUARA -->
             <div id="tab-settings" class="hidden space-y-6">
-                <!-- Pengaturan Banner View -->
+                <!-- Pengaturan Slide Banner PNG/Gambar -->
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-                    <h3 class="text-xl font-bold mb-2 text-gray-800"><i class="fa-solid fa-image mr-2"></i> Pengaturan Banner Tampilan Web</h3>
-                    <p class="text-sm text-gray-500 mb-4">Masukkan URL gambar banner yang ingin ditampilkan di bagian atas halaman web depan.</p>
-                    <div class="space-y-3">
+                    <div class="flex justify-between items-center mb-4">
                         <div>
-                            <label class="block text-xs font-bold text-gray-600 mb-1">URL Gambar Banner</label>
-                            <input type="url" id="admin-banner-url" placeholder="https://images.unsplash.com/..." class="w-full px-3 py-2 border rounded-lg bg-white focus:ring-2 focus:ring-sky-500 outline-none">
+                            <h3 class="text-xl font-bold text-gray-800"><i class="fa-solid fa-images mr-2"></i> Pengaturan Slide Banner Web (PNG/Gambar)</h3>
+                            <p class="text-sm text-gray-500">Tambah, ubah, atau hapus link gambar banner untuk slide otomatis di web depan.</p>
                         </div>
-                        <button onclick="saveBannerSettings()" class="bg-sky-600 hover:bg-sky-700 text-white font-bold px-6 py-2.5 rounded-lg transition shadow">
-                            Simpan Banner
+                        <button onclick="addNewBannerInput()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-bold transition shadow">
+                            <i class="fa-solid fa-plus mr-1"></i> Tambah Banner
                         </button>
                     </div>
+                    
+                    <div id="banner-admin-list" class="space-y-3">
+                        <!-- List input banner diisi via JS -->
+                    </div>
+                    <button onclick="saveBannersSettings()" class="mt-6 bg-sky-600 hover:bg-sky-700 text-white font-bold px-6 py-2.5 rounded-lg transition shadow">
+                        Simpan Slide Banner
+                    </button>
                 </div>
 
                 <!-- Pengaturan Keamanan Admin (Nama, Sandi, & Ganti No HP di Dalam) -->
@@ -273,7 +278,7 @@
     <script>
         let lastOrderCount = 0;
 
-        // --- SISTEM LOGIN & KEAMANAN ADMIN (Wajib Nomor HP Awal 081267166886, Bisa Diubah di Dalam) ---
+        // --- SISTEM LOGIN & KEAMANAN ADMIN ---
         function checkAdminAuth() {
             const isLogged = sessionStorage.getItem('is_admin_logged');
             if (isLogged === 'true') {
@@ -294,7 +299,6 @@
 
             let savedCreds = JSON.parse(localStorage.getItem('admin_credentials')) || { user: 'admin', pass: 'admin123', phone: '081267166886' };
 
-            // Cek nomor HP verifikasi (default 081267166886 atau yang sudah diubah di dalam)
             if (phone !== savedCreds.phone) {
                 alert('Nomor HP verifikasi salah!');
                 return;
@@ -345,20 +349,63 @@
             loadAdminSecurityForm();
         }
 
-        // --- PENGATURAN BANNER ---
-        function loadBannerSettings() {
-            const bannerUrl = localStorage.getItem('resto_banner') || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80';
-            document.getElementById('admin-banner-url').value = bannerUrl;
+        // --- PENGATURAN SLIDE BANNER (PNG/GAMBAR) ---
+        function loadBannerAdminList() {
+            const defaultBanners = [
+                "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80",
+                "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=1200&q=80"
+            ];
+            const banners = JSON.parse(localStorage.getItem('resto_banners')) || defaultBanners;
+            const container = document.getElementById('banner-admin-list');
+            
+            container.innerHTML = '';
+            banners.forEach((url, idx) => {
+                container.innerHTML += `
+                    <div class="flex items-center space-x-3 bg-gray-50 p-3 rounded-xl border border-gray-200">
+                        <input type="url" id="banner-url-${idx}" value="${url}" placeholder="https://... (PNG/JPG)" class="w-full px-3 py-2 border rounded-lg bg-white focus:ring-2 focus:ring-sky-500 outline-none text-sm">
+                        <button onclick="removeBannerInput(${idx})" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-2 rounded-lg text-xs font-bold transition">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+            });
         }
 
-        function saveBannerSettings() {
-            const url = document.getElementById('admin-banner-url').value.trim();
-            if (!url) {
-                alert('URL banner tidak boleh kosong!');
+        function addNewBannerInput() {
+            const defaultBanners = [
+                "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80",
+                "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=1200&q=80"
+            ];
+            let banners = JSON.parse(localStorage.getItem('resto_banners')) || defaultBanners;
+            banners.push("");
+            localStorage.setItem('resto_banners', JSON.stringify(banners));
+            loadBannerAdminList();
+        }
+
+        function removeBannerInput(idx) {
+            let banners = JSON.parse(localStorage.getItem('resto_banners')) || [];
+            banners.splice(idx, 1);
+            localStorage.setItem('resto_banners', JSON.stringify(banners));
+            loadBannerAdminList();
+        }
+
+        function saveBannersSettings() {
+            const inputs = document.querySelectorAll('[id^="banner-url-"]');
+            let newBanners = [];
+            inputs.forEach(input => {
+                if (input.value.trim() !== '') {
+                    newBanners.push(input.value.trim());
+                }
+            });
+
+            if (newBanners.length === 0) {
+                alert('Minimal harus ada 1 banner!');
                 return;
             }
-            localStorage.setItem('resto_banner', url);
-            alert('Banner resto berhasil diperbarui!');
+
+            localStorage.setItem('resto_banners', JSON.stringify(newBanners));
+            alert('Slide banner berhasil disimpan dan diperbarui di web!');
+            loadBannerAdminList();
         }
 
         // --- AUDIO NOTIFIKASI TINGGI & SILENT ---
@@ -486,7 +533,7 @@
                 btnSettings.className = "font-bold text-sky-700 border-b-2 border-sky-700 pb-2 px-2 transition whitespace-nowrap";
                 loadAdminPayments();
                 loadSoundSettings();
-                loadBannerSettings();
+                loadBannerAdminList();
                 loadAdminSecurityForm();
             }
         }
