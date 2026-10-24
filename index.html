@@ -15,6 +15,11 @@
 </head>
 <body class="bg-sky-50 text-gray-800 font-sans">
 
+    <!-- Notifikasi Resto Tutup -->
+    <div id="resto-closed-banner" class="bg-red-600 text-white text-center py-2 px-4 text-xs font-bold hidden sticky top-0 z-50">
+        <i class="fa-solid fa-triangle-exclamation mr-1"></i> Mohon Maaf, Restoran saat ini sedang TUTUP / OFFLINE. Pesanan tidak dapat diproses.
+    </div>
+
     <!-- Header / Navbar -->
     <header class="bg-sky-600 text-white shadow-md sticky top-0 z-50">
         <div class="container mx-auto px-4 py-3 flex flex-col md:flex-row justify-between items-center gap-2">
@@ -130,7 +135,7 @@
         </div>
     </div>
 
-    <!-- Modal Layar Pembayaran (Terkunci & Hitung Mundur 5 Menit - Otomatis oleh Admin) -->
+    <!-- Modal Layar Pembayaran (Terkunci & Hitung Mundur 3 Menit) -->
     <div id="payment-timer-modal" class="fixed inset-0 bg-black bg-opacity-80 hidden z-50 flex justify-center items-center p-4">
         <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 text-center">
             <div class="w-14 h-14 bg-sky-100 text-sky-600 rounded-full flex items-center justify-center text-2xl mx-auto mb-3">
@@ -139,9 +144,9 @@
             <h3 class="text-xl font-extrabold text-sky-900 mb-1">Selesaikan Pembayaran</h3>
             <p class="text-xs text-gray-500 mb-3">Mohon lakukan pembayaran dalam batas waktu:</p>
             
-            <!-- Timer 5 Menit -->
+            <!-- Timer 3 Menit -->
             <div id="countdown-timer" class="text-3xl font-black text-red-600 mb-4 tracking-widest bg-red-50 py-2 rounded-xl border border-red-200">
-                05:00
+                03:00
             </div>
 
             <div class="bg-sky-50 p-3 rounded-2xl text-left text-xs space-y-2 mb-4 border border-sky-100">
@@ -151,9 +156,8 @@
                 <div><b>Total Harga:</b> <span id="pay-total" class="text-2xl font-black text-sky-700 block mt-1"></span></div>
                 <div>
                     <b>Metode Pembayaran:</b>
-                    <div class="flex justify-between items-center mt-1 bg-white p-2 rounded-xl border">
-                        <span id="pay-method-detail" class="font-medium text-gray-800"></span>
-                        <button onclick="copyPaymentInfo()" class="bg-sky-600 text-white px-2.5 py-1 rounded-lg text-xs font-bold hover:bg-sky-700"><i class="fa-solid fa-copy mr-1"></i> Salin</button>
+                    <div id="pay-method-container" class="mt-1">
+                        <!-- Dinamis: Kasir vs Bank -->
                     </div>
                 </div>
             </div>
@@ -204,10 +208,25 @@
                     "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=1200&q=80"
                 ]));
             }
+            if (!localStorage.getItem('mb_resto_status')) {
+                localStorage.setItem('mb_resto_status', 'Buka');
+            }
+
+            checkRestoStatus();
             loadBanners();
             renderMenu();
             loadBankOptions();
             loadCustomerOrders();
+        }
+
+        function checkRestoStatus() {
+            const status = localStorage.getItem('mb_resto_status') || 'Buka';
+            const banner = document.getElementById('resto-closed-banner');
+            if (status === 'Tutup') {
+                banner.classList.remove('hidden');
+            } else {
+                banner.classList.add('hidden');
+            }
         }
 
         function loadBanners() {
@@ -274,6 +293,10 @@
         }
 
         function addToCart(id) {
+            if (localStorage.getItem('mb_resto_status') === 'Tutup') {
+                alert('Mohon maaf, restoran sedang tutup. Tidak dapat menambah pesanan.');
+                return;
+            }
             const menuList = JSON.parse(localStorage.getItem('mb_menu')) || [];
             const product = menuList.find(p => p.id === id);
             if (!product) return;
@@ -316,6 +339,10 @@
         }
 
         function toggleCart() {
+            if (localStorage.getItem('mb_resto_status') === 'Tutup') {
+                alert('Mohon maaf, restoran sedang tutup / offline.');
+                return;
+            }
             document.getElementById('cart-modal').classList.toggle('hidden');
         }
 
@@ -330,6 +357,11 @@
         }
 
         function checkout() {
+            if (localStorage.getItem('mb_resto_status') === 'Tutup') {
+                alert('Restoran sedang tutup.');
+                return;
+            }
+
             const name = document.getElementById('buyer-name').value.trim();
             const address = document.getElementById('buyer-address').value.trim();
             const payment = document.getElementById('payment-method').value;
@@ -346,6 +378,7 @@
             const newOrder = {
                 id: 'ORD-' + Date.now().toString().slice(-6),
                 date: new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' }),
+                timestamp: Date.now(),
                 name, address, payment,
                 items: [...cart],
                 total,
@@ -363,7 +396,19 @@
             document.getElementById('pay-buyer-name').innerText = name;
             document.getElementById('pay-total-items').innerText = `${totalItemsCount} item`;
             document.getElementById('pay-total').innerText = `Rp ${total.toLocaleString('id-ID')}`;
-            document.getElementById('pay-method-detail').innerText = payment;
+            
+            // Render metode pembayaran sesuai pilihan (Kasir vs Bank)
+            const payMethodContainer = document.getElementById('pay-method-container');
+            if (payment === 'Kasir') {
+                payMethodContainer.innerHTML = `<span class="font-medium text-gray-800 bg-white p-2 block rounded-xl border">Bayar di Kasir (Tunai) - Silakan langsung memberitahukan ke kasir.</span>`;
+            } else {
+                payMethodContainer.innerHTML = `
+                    <div class="flex justify-between items-center mt-1 bg-white p-2 rounded-xl border">
+                        <span id="pay-method-detail" class="font-medium text-gray-800">${payment}</span>
+                        <button onclick="copyPaymentInfo()" class="bg-sky-600 text-white px-2.5 py-1 rounded-lg text-xs font-bold hover:bg-sky-700"><i class="fa-solid fa-copy mr-1"></i> Salin</button>
+                    </div>
+                `;
+            }
 
             cart = [];
             updateCartUI();
@@ -372,9 +417,9 @@
             document.getElementById('buyer-address').value = '';
             document.getElementById('payment-confirmed').checked = false;
 
-            // Tampilkan modal timer pembayaran 5 menit
+            // Tampilkan modal timer pembayaran 3 menit
             document.getElementById('payment-timer-modal').classList.remove('hidden');
-            startCountdown(5 * 60);
+            startCountdown(3 * 60);
         }
 
         function startCountdown(duration) {
@@ -420,7 +465,6 @@
         function cancelExpiredOrder() {
             if (!activeOrderId) return;
             let orders = JSON.parse(localStorage.getItem('mb_orders')) || [];
-            // Hapus pesanan dari sistem jika waktu habis tanpa diproses admin
             orders = orders.filter(o => o.id !== activeOrderId);
             localStorage.setItem('mb_orders', JSON.stringify(orders));
             
@@ -439,6 +483,7 @@
         }
 
         function loadCustomerOrders() {
+            checkRestoStatus();
             const container = document.getElementById('customer-orders-list');
             const orders = JSON.parse(localStorage.getItem('mb_orders')) || [];
 
