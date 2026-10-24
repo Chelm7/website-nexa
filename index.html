@@ -46,7 +46,7 @@
     <!-- Banner Slider Dinamis -->
     <section class="relative bg-sky-700 text-white py-16 px-4 text-center overflow-hidden">
         <div id="banner-container" class="container mx-auto max-w-3xl relative min-h-[160px] flex items-center justify-center">
-            <!-- Banner dimuat dari Admin LocalStorage -->
+            <!-- Banner dimuat otomatis -->
         </div>
         <button onclick="changeBannerSlide(-1)" class="absolute left-4 top-1/2 -translate-y-1/2 bg-black bg-opacity-30 hover:bg-opacity-50 text-white w-9 h-9 rounded-full flex items-center justify-center transition"><i class="fa-solid fa-chevron-left"></i></button>
         <button onclick="changeBannerSlide(1)" class="absolute right-4 top-1/2 -translate-y-1/2 bg-black bg-opacity-30 hover:bg-opacity-50 text-white w-9 h-9 rounded-full flex items-center justify-center transition"><i class="fa-solid fa-chevron-right"></i></button>
@@ -104,14 +104,13 @@
                         <select id="payment-method" class="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-sky-500 outline-none font-medium">
                             <option value="">-- Pilih Pembayaran --</option>
                             <option value="Kasir">Bayar di Kasir (Tunai/Langsung)</option>
-                            <!-- Pilihan Bank dari Admin muncul di sini tanpa keterangan detail di bawahnya -->
                         </select>
                     </div>
 
                     <div>
                         <label class="flex items-center mt-2">
                             <input type="checkbox" id="payment-confirmed" class="w-4 h-4 text-sky-600 rounded">
-                            <span class="ml-2 text-xs text-gray-700 font-medium">Saya centang sebagai konfirmasi bahwa pembayaran telah dilakukan atau siap dibayar di kasir.</span>
+                            <span class="ml-2 text-xs text-gray-700 font-medium">Saya centang sebagai konfirmasi pembayaran.</span>
                         </label>
                     </div>
                 </div>
@@ -132,7 +131,6 @@
     <audio id="success-sound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
 
     <script>
-        // Jam & Tanggal Realtime Tanjungpinang (WIB)
         function updateLiveClock() {
             const now = new Date();
             const timeString = now.toLocaleTimeString('id-ID', { timeZone: 'Asia/Jakarta' });
@@ -143,7 +141,6 @@
         setInterval(updateLiveClock, 1000);
         updateLiveClock();
 
-        // Data Default Resto
         const defaultMenu = [
             { id: 1, name: "Mie Bangka Spesial", category: "Makanan", price: 25000, desc: "Mie kenyal dengan topping cincang daging gurih dan bakso ikan.", image: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=500&q=80" },
             { id: 2, name: "Mie Bangka Pangsit Kuah", category: "Makanan", price: 22000, desc: "Disajikan hangat dengan kaldu lezat dan pangsit lembut.", image: "https://images.unsplash.com/photo-1612929633738-8fe44f7ec841?auto=format&fit=crop&w=500&q=80" },
@@ -188,6 +185,7 @@
 
         function changeBannerSlide(n) {
             const slides = document.getElementsByClassName('banner-slide');
+            if(slides.length === 0) return;
             slides[currentSlideIndex].classList.remove('active');
             currentSlideIndex = (currentSlideIndex + n + slides.length) % slides.length;
             slides[currentSlideIndex].classList.add('active');
@@ -259,7 +257,7 @@
                     <div class="py-3 flex justify-between items-center text-sm">
                         <div>
                             <div class="font-bold text-gray-800">${item.name}</div>
-                            <div class="text-gray-500">Rp ${item.price.toLocaleString('id-ID')} x${item.qty}</div>
+                            <div class="text-gray-500">Rp ${item.price.toLocaleString('id-ID')} x ${item.qty}</div>
                         </div>
                         <div class="flex items-center space-x-2">
                             <button onclick="changeQty(${idx}, -1)" class="bg-gray-100 px-2 py-1 rounded">-</button>
@@ -288,7 +286,7 @@
             
             select.innerHTML = `<option value="">-- Pilih Pembayaran --</option><option value="Kasir">Bayar di Kasir (Tunai)</option>`;
             banks.forEach(b => {
-                select.innerHTML += `<option value="${b.name} -${b.account} (a.n. ${b.holder})">${b.name} - ${b.account} (a.n.${b.holder})</option>`;
+                select.innerHTML += `<option value="${b.name} - ${b.account} (a.n. ${b.holder})">${b.name} - ${b.account} (a.n. ${b.holder})</option>`;
             });
         }
 
@@ -317,10 +315,9 @@
             orders.unshift(newOrder);
             localStorage.setItem('mb_orders', JSON.stringify(orders));
 
-            // Bunyi suara sukses
             document.getElementById('success-sound').play().catch(e => console.log(e));
 
-            alert(`Terima kasih ${name}! Pesanan berhasil dibuat dengan ID: ${newOrder.id}. Status pembayaran: Pending. Silakan tunggu konfirmasi admin.`);
+            alert(`Terima kasih ${name}! Pesanan berhasil dibuat dengan ID: ${newOrder.id}. Status: Pending.`);
             
             cart = [];
             updateCartUI();
@@ -346,8 +343,21 @@
             let html = `<div class="mt-3 space-y-2 text-xs">`;
             found.forEach(o => {
                 let badgeColor = o.status === 'Diproses' ? 'bg-blue-100 text-blue-800' : (o.status === 'Selesai' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800');
+                let noteMsg = o.status === 'Selesai' ? 'Terima kasih telah memesan di Mie Bangka Teladan! Pesanan Anda telah selesai.' : (o.status === 'Diproses' ? 'Pesanan Anda sedang diproses oleh dapur.' : 'Pesanan menunggu verifikasi admin (Pending).');
                 html += `
                     <div class="p-3 bg-sky-50 rounded-xl border border-sky-200">
                         <div class="flex justify-between font-bold"><span>ID: ${o.id}</span> <span class="px-2 py-0.5 rounded-full ${badgeColor}">Status: ${o.status}</span></div>
                         <div>Pemesan: ${o.name} (${o.address})</div>
-                        <div>Total: Rp ${o.total.toLocaleString('id-ID')} | Pembayaran: ${o.payment}</div>${o.status === 'Selesai' ? '<div class="text-green-600 font-bold mt-1">Terima kasih telah memesan di Mie Bang
+                        <div>Total: Rp ${o.total.toLocaleString('id-ID')} | Pembayaran: ${o.payment}</div>
+                        <div class="font-bold mt-1 text-sky-800">${noteMsg}</div>
+                    </div>
+                `;
+            });
+            html += `</div>`;
+            resultDiv.innerHTML = html;
+        }
+
+        window.onload = initApp;
+    </script>
+</body>
+</html>
