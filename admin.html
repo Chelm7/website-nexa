@@ -53,9 +53,10 @@
             </div>
 
             <!-- Tab Navigasi -->
-            <div class="flex space-x-4 mb-6 border-b border-gray-300 pb-3">
-                <button onclick="switchTab('orders')" id="btn-tab-orders" class="font-bold text-amber-700 border-b-2 border-amber-700 pb-2 px-2 transition">Kelola Pesanan Masuk</button>
-                <button onclick="switchTab('menus')" id="btn-tab-menus" class="font-bold text-gray-500 pb-2 px-2 transition">Kelola Daftar Menu</button>
+            <div class="flex space-x-4 mb-6 border-b border-gray-300 pb-3 overflow-x-auto">
+                <button onclick="switchTab('orders')" id="btn-tab-orders" class="font-bold text-amber-700 border-b-2 border-amber-700 pb-2 px-2 transition whitespace-nowrap">Kelola Pesanan Masuk</button>
+                <button onclick="switchTab('menus')" id="btn-tab-menus" class="font-bold text-gray-500 pb-2 px-2 transition whitespace-nowrap">Kelola Daftar Menu</button>
+                <button onclick="switchTab('payments')" id="btn-tab-payments" class="font-bold text-gray-500 pb-2 px-2 transition whitespace-nowrap">Kelola Rekening / Pembayaran</button>
             </div>
 
             <!-- TAB 1: KELOLA PESANAN -->
@@ -75,7 +76,7 @@
                                     <th class="p-4">Detail Pesanan</th>
                                     <th class="p-4">Total</th>
                                     <th class="p-4">Status</th>
-                                    <th class="p-4 text-center">Aksi</th>
+                                    <th class="p-4 text-center">Aksi (Proses)</th>
                                 </tr>
                             </thead>
                             <tbody id="orders-table-body" class="divide-y divide-gray-200 text-sm"></tbody>
@@ -131,6 +132,21 @@
                 </div>
             </div>
 
+            <!-- TAB 3: KELOLA PEMBAYARAN / REKENING -->
+            <div id="tab-payments" class="hidden space-y-6">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                    <h3 class="text-xl font-bold mb-2 text-gray-800">Pengaturan Nomor Rekening & E-Wallet</h3>
+                    <p class="text-sm text-gray-500 mb-4">Isi nomor rekening atau E-Wallet di bawah ini agar tampil otomatis di pilihan pembayaran web pembeli. Kosongkan jika tidak ingin ditampilkan.</p>
+                    
+                    <div id="payment-admin-list" class="space-y-4">
+                        <!-- List form pembayaran diisi via JS -->
+                    </div>
+                    <button onclick="savePaymentSettings()" class="mt-6 bg-amber-600 hover:bg-amber-700 text-white font-bold px-6 py-2.5 rounded-lg transition shadow">
+                        Simpan Perubahan Rekening
+                    </button>
+                </div>
+            </div>
+
         </main>
     </div>
 
@@ -138,12 +154,10 @@
     <script>
         let lastOrderCount = 0;
 
-        // Fungsi Notifikasi Suara Berdering (Web Audio API)
+        // Suara Notifikasi Berdering Admin
         function playRingSound() {
             try {
                 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                
-                // Bunyi dering berulang (3 beep)
                 for (let i = 0; i < 3; i++) {
                     setTimeout(() => {
                         if (audioCtx.state === 'suspended') {
@@ -153,7 +167,7 @@
                         const gain = audioCtx.createGain();
                         
                         osc.type = 'triangle';
-                        osc.frequency.setValueAtTime(880, audioCtx.currentTime); // Nada tinggi
+                        osc.frequency.setValueAtTime(880, audioCtx.currentTime);
                         osc.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 0.3);
                         
                         gain.gain.setValueAtTime(0.7, audioCtx.currentTime);
@@ -174,21 +188,32 @@
         function switchTab(tab) {
             const ordersTab = document.getElementById('tab-orders');
             const menusTab = document.getElementById('tab-menus');
+            const paymentsTab = document.getElementById('tab-payments');
+            
             const btnOrders = document.getElementById('btn-tab-orders');
             const btnMenus = document.getElementById('btn-tab-menus');
+            const btnPayments = document.getElementById('btn-tab-payments');
+
+            ordersTab.classList.add('hidden');
+            menusTab.classList.add('hidden');
+            paymentsTab.classList.add('hidden');
+            
+            btnOrders.className = "font-bold text-gray-500 pb-2 px-2 transition whitespace-nowrap";
+            btnMenus.className = "font-bold text-gray-500 pb-2 px-2 transition whitespace-nowrap";
+            btnPayments.className = "font-bold text-gray-500 pb-2 px-2 transition whitespace-nowrap";
 
             if (tab === 'orders') {
                 ordersTab.classList.remove('hidden');
-                menusTab.classList.add('hidden');
-                btnOrders.className = "font-bold text-amber-700 border-b-2 border-amber-700 pb-2 px-2 transition";
-                btnMenus.className = "font-bold text-gray-500 pb-2 px-2 transition";
+                btnOrders.className = "font-bold text-amber-700 border-b-2 border-amber-700 pb-2 px-2 transition whitespace-nowrap";
                 loadOrders();
-            } else {
-                ordersTab.classList.add('hidden');
+            } else if (tab === 'menus') {
                 menusTab.classList.remove('hidden');
-                btnMenus.className = "font-bold text-amber-700 border-b-2 border-amber-700 pb-2 px-2 transition";
-                btnOrders.className = "font-bold text-gray-500 pb-2 px-2 transition";
+                btnMenus.className = "font-bold text-amber-700 border-b-2 border-amber-700 pb-2 px-2 transition whitespace-nowrap";
                 loadAdminMenus();
+            } else if (tab === 'payments') {
+                paymentsTab.classList.remove('hidden');
+                btnPayments.className = "font-bold text-amber-700 border-b-2 border-amber-700 pb-2 px-2 transition whitespace-nowrap";
+                loadAdminPayments();
             }
         }
 
@@ -197,7 +222,6 @@
             const tbody = document.getElementById('orders-table-body');
             document.getElementById('stat-orders').innerText = orders.length;
 
-            // Cek jika ada pesanan baru masuk
             if (isPolling && orders.length > lastOrderCount && lastOrderCount !== 0) {
                 playRingSound();
             }
@@ -223,14 +247,14 @@
                     <tr class="hover:bg-gray-50">
                         <td class="p-4 font-medium">${ord.id}<br><small class="text-gray-400">${ord.date}</small></td>
                         <td class="p-4 font-semibold text-gray-800">${ord.name}<br><small class="text-gray-500 font-normal"><i class="fa-solid fa-location-dot mr-1"></i>${ord.address}</small></td>
-                        <td class="p-4"><span class="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs font-bold">${ord.payment || 'QRIS'}</span></td>
+                        <td class="p-4"><span class="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs font-bold">${ord.payment || '-'}</span></td>
                         <td class="p-4 text-gray-600">${itemsStr}</td>
                         <td class="p-4 font-bold text-amber-700">Rp ${ord.total.toLocaleString('id-ID')}</td>
                         <td class="p-4"><span class="px-3 py-1 rounded-full text-xs font-bold ${statusColor}">${ord.status}</span></td>
                         <td class="p-4 text-center space-x-2">
-                            <select onchange="updateOrderStatus(${index}, this.value)" class="border rounded px-2 py-1 text-xs">
+                            <select onchange="updateOrderStatus(${index}, this.value)" class="border rounded px-2 py-1 text-xs font-bold bg-amber-50">
                                 <option value="Pending" ${ord.status === 'Pending' ? 'selected' : ''}>Pending</option>
-                                <option value="Diproses" ${ord.status === 'Diproses' ? 'selected' : ''}>Diproses</option>
+                                <option value="Diproses" ${ord.status === 'Diproses' ? 'selected' : ''}>Diproses (Validasi)</option>
                                 <option value="Selesai" ${ord.status === 'Selesai' ? 'selected' : ''}>Selesai</option>
                             </select>
                             <button onclick="deleteOrder(${index})" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>
@@ -342,9 +366,48 @@
             document.getElementById('cancel-edit').classList.add('hidden');
         }
 
+        // --- KELOLA PEMBAYARAN MANUAL ---
+        function loadAdminPayments() {
+            const listEl = document.getElementById('payment-admin-list');
+            const payments = JSON.parse(localStorage.getItem('warung_payments')) || [];
+
+            listEl.innerHTML = '';
+            payments.forEach((p, idx) => {
+                listEl.innerHTML += `
+                    <div class="p-4 bg-gray-50 rounded-xl border border-gray-200 grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-1">Nama Bank / E-Wallet</label>
+                            <input type="text" id="pay-name-${idx}" value="${p.name}" class="w-full px-3 py-2 border rounded-lg bg-white" readonly>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-1">Nomor Rekening / Tujuan (Kosongkan jika tidak ada)</label>
+                            <input type="text" id="pay-num-${idx}" value="${p.number || ''}" placeholder="Cth: 1234567890" class="w-full px-3 py-2 border rounded-lg bg-white focus:ring-2 focus:ring-amber-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-1">Atas Nama Pemilik</label>
+                            <input type="text" id="pay-holder-${idx}" value="${p.holder || ''}" placeholder="Cth: Nama Anda" class="w-full px-3 py-2 border rounded-lg bg-white focus:ring-2 focus:ring-amber-500 outline-none">
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function savePaymentSettings() {
+            const payments = JSON.parse(localStorage.getItem('warung_payments')) || [];
+            payments.forEach((p, idx) => {
+                const numInput = document.getElementById(`pay-num-${idx}`).value;
+                const holderInput = document.getElementById(`pay-holder-${idx}`).value;
+                p.number = numInput;
+                p.holder = holderInput;
+            });
+
+            localStorage.setItem('warung_payments', JSON.stringify(payments));
+            alert('Pengaturan rekening & pembayaran berhasil disimpan!');
+            loadAdminPayments();
+        }
+
         window.onload = function() {
             loadOrders();
-            // Polling setiap 3 detik untuk mengecek pesanan baru secara real-time & membunyikan alarm
             setInterval(() => {
                 loadOrders(true);
             }, 3000);
