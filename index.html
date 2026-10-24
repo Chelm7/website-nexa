@@ -100,32 +100,25 @@
                         <input type="text" id="buyer-address" class="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-sky-500 outline-none" placeholder="Nomor Meja atau Alamat di Tanjungpinang">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Pilih Metode Pembayaran <span class="text-red-500">*Wajib Bayar</span></label>
-                        <select id="payment-method" onchange="togglePaymentInfo()" class="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-sky-500 outline-none font-medium">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Pilih Metode Pembayaran</label>
+                        <select id="payment-method" class="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-sky-500 outline-none font-medium">
                             <option value="">-- Pilih Pembayaran --</option>
                             <option value="Kasir">Bayar di Kasir (Tunai/Langsung)</option>
-                            <!-- Pilihan Bank dari Admin akan muncul di sini -->
+                            <!-- Pilihan Bank dari Admin muncul di sini tanpa keterangan detail di bawahnya -->
                         </select>
-                    </div>
-
-                    <!-- Info Rekening Bank Admin -->
-                    <div id="bank-info-box" class="hidden bg-sky-50 p-3 rounded-xl border border-sky-200 text-xs text-sky-900">
-                        <p class="font-bold mb-1"><i class="fa-solid fa-circle-info mr-1"></i> Transfer ke Rekening Resto:</p>
-                        <div id="bank-details-list"></div>
-                        <p class="mt-2 text-gray-500 italic">*Wajib selesaikan pembayaran sebelum mengirim pesanan.</p>
                     </div>
 
                     <div>
                         <label class="flex items-center mt-2">
                             <input type="checkbox" id="payment-confirmed" class="w-4 h-4 text-sky-600 rounded">
-                            <span class="ml-2 text-xs text-gray-700 font-medium">Saya menyatakan telah melakukan pembayaran atau siap membayar di kasir.</span>
+                            <span class="ml-2 text-xs text-gray-700 font-medium">Saya centang sebagai konfirmasi bahwa pembayaran telah dilakukan atau siap dibayar di kasir.</span>
                         </label>
                     </div>
                 </div>
             </div>
 
             <button onclick="checkout()" class="w-full bg-white text-sky-600 border-2 border-sky-600 hover:bg-sky-50 font-bold py-3 rounded-xl transition shadow">
-                <i class="fa-solid fa-check mr-2"></i> Konfirmasi & Pesan Sekarang
+                <i class="fa-solid fa-check mr-2"></i> Konfirmasi Pembayaran
             </button>
         </div>
     </div>
@@ -266,7 +259,7 @@
                     <div class="py-3 flex justify-between items-center text-sm">
                         <div>
                             <div class="font-bold text-gray-800">${item.name}</div>
-                            <div class="text-gray-500">Rp ${item.price.toLocaleString('id-ID')} x ${item.qty}</div>
+                            <div class="text-gray-500">Rp ${item.price.toLocaleString('id-ID')} x${item.qty}</div>
                         </div>
                         <div class="flex items-center space-x-2">
                             <button onclick="changeQty(${idx}, -1)" class="bg-gray-100 px-2 py-1 rounded">-</button>
@@ -293,25 +286,10 @@
             const select = document.getElementById('payment-method');
             const banks = JSON.parse(localStorage.getItem('mb_banks')) || [];
             
-            // Keep Kasir option
             select.innerHTML = `<option value="">-- Pilih Pembayaran --</option><option value="Kasir">Bayar di Kasir (Tunai)</option>`;
-            let detailsHtml = '';
-
             banks.forEach(b => {
-                select.innerHTML += `<option value="${b.name}">${b.name} - ${b.account}</option>`;
-                detailsHtml += `<div><b>${b.name}</b>: ${b.account} (a.n. ${b.holder})</div>`;
+                select.innerHTML += `<option value="${b.name} -${b.account} (a.n. ${b.holder})">${b.name} - ${b.account} (a.n.${b.holder})</option>`;
             });
-            document.getElementById('bank-details-list').innerHTML = detailsHtml || 'Belum ada bank diatur admin.';
-        }
-
-        function togglePaymentInfo() {
-            const val = document.getElementById('payment-method').value;
-            const box = document.getElementById('bank-info-box');
-            if (val && val !== 'Kasir') {
-                box.classList.remove('hidden');
-            } else {
-                box.classList.add('hidden');
-            }
         }
 
         function checkout() {
@@ -322,7 +300,7 @@
 
             if (!name || !address) { alert('Nama dan Nomor Meja / Alamat wajib diisi!'); return; }
             if (!payment) { alert('Silakan pilih metode pembayaran terlebih dahulu!'); return; }
-            if (!confirmed) { alert('Wajib mencentang konfirmasi pembayaran / siap bayar di kasir!'); return; }
+            if (!confirmed) { alert('Wajib mencentang kotak konfirmasi pembayaran!'); return; }
             if (cart.length === 0) { alert('Keranjang kosong!'); return; }
 
             const total = cart.reduce((sum, i) => sum + (i.price * i.qty), 0);
@@ -332,7 +310,7 @@
                 name, address, payment,
                 items: [...cart],
                 total,
-                status: 'Diproses'
+                status: 'Pending'
             };
 
             let orders = JSON.parse(localStorage.getItem('mb_orders')) || [];
@@ -342,7 +320,7 @@
             // Bunyi suara sukses
             document.getElementById('success-sound').play().catch(e => console.log(e));
 
-            alert(`Terima kasih ${name}! Pesanan berhasil dibuat dengan ID: ${newOrder.id}. Pembayaran via ${payment} terkonfirmasi. Pesanan Anda sedang diproses.`);
+            alert(`Terima kasih ${name}! Pesanan berhasil dibuat dengan ID: ${newOrder.id}. Status pembayaran: Pending. Silakan tunggu konfirmasi admin.`);
             
             cart = [];
             updateCartUI();
@@ -370,18 +348,6 @@
                 let badgeColor = o.status === 'Diproses' ? 'bg-blue-100 text-blue-800' : (o.status === 'Selesai' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800');
                 html += `
                     <div class="p-3 bg-sky-50 rounded-xl border border-sky-200">
-                        <div class="flex justify-between font-bold"><span>ID: ${o.id}</span> <span class="px-2 py-0.5 rounded-full ${badgeColor}">${o.status}</span></div>
+                        <div class="flex justify-between font-bold"><span>ID: ${o.id}</span> <span class="px-2 py-0.5 rounded-full ${badgeColor}">Status: ${o.status}</span></div>
                         <div>Pemesan: ${o.name} (${o.address})</div>
-                        <div>Total: Rp ${o.total.toLocaleString('id-ID')} | Bayar: ${o.payment}</div>
-                        ${o.status === 'Selesai' ? '<div class="text-green-600 font-bold mt-1">Terima kasih telah memesan di Mie Bangka Teladan! Pesanan Anda telah selesai.</div>' : ''}
-                    </div>
-                `;
-            });
-            html += `</div>`;
-            resultDiv.innerHTML = html;
-        }
-
-        window.onload = initApp;
-    </script>
-</body>
-</html>
+                        <div>Total: Rp ${o.total.toLocaleString('id-ID')} | Pembayaran: ${o.payment}</div>${o.status === 'Selesai' ? '<div class="text-green-600 font-bold mt-1">Terima kasih telah memesan di Mie Bang
