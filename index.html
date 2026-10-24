@@ -130,7 +130,7 @@
         </div>
     </div>
 
-    <!-- Modal Layar Pembayaran (Terkunci & Hitung Mundur 5 Menit - Tanpa Tombol) -->
+    <!-- Modal Layar Pembayaran (Terkunci & Hitung Mundur 5 Menit - Otomatis oleh Admin) -->
     <div id="payment-timer-modal" class="fixed inset-0 bg-black bg-opacity-80 hidden z-50 flex justify-center items-center p-4">
         <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 text-center">
             <div class="w-14 h-14 bg-sky-100 text-sky-600 rounded-full flex items-center justify-center text-2xl mx-auto mb-3">
@@ -158,7 +158,7 @@
                 </div>
             </div>
 
-            <p class="text-[11px] text-gray-500">Menunggu konfirmasi dan verifikasi diproses oleh admin resto...</p>
+            <p class="text-[11px] text-gray-500">Menunggu verifikasi dan konfirmasi diproses oleh admin resto...</p>
         </div>
     </div>
 
@@ -296,7 +296,7 @@
                     <div class="py-3 flex justify-between items-center text-sm">
                         <div>
                             <div class="font-bold text-gray-800">${item.name}</div>
-                            <div class="text-gray-500">Rp ${item.price.toLocaleString('id-ID')} x${item.qty}</div>
+                            <div class="text-gray-500">Rp ${item.price.toLocaleString('id-ID')} x ${item.qty}</div>
                         </div>
                         <div class="flex items-center space-x-2">
                             <button onclick="changeQty(${idx}, -1)" class="bg-gray-100 px-2 py-1 rounded">-</button>
@@ -325,7 +325,7 @@
             
             select.innerHTML = `<option value="">-- Pilih Pembayaran --</option><option value="Kasir">Bayar di Kasir (Tunai)</option>`;
             banks.forEach(b => {
-                select.innerHTML += `<option value="${b.name} -${b.account} (a.n. ${b.holder})">${b.name} - ${b.account} (a.n.${b.holder})</option>`;
+                select.innerHTML += `<option value="${b.name} - ${b.account} (a.n. ${b.holder})">${b.name} - ${b.account} (a.n. ${b.holder})</option>`;
             });
         }
 
@@ -361,7 +361,8 @@
             activeOrderId = newOrder.id;
             document.getElementById('pay-order-id').innerText = newOrder.id;
             document.getElementById('pay-buyer-name').innerText = name;
-            document.getElementById('pay-total-items').innerText = `${totalItemsCount} item`; document.getElementById('pay-total').innerText = `Rp ${total.toLocaleString('id-ID')}`;
+            document.getElementById('pay-total-items').innerText = `${totalItemsCount} item`;
+            document.getElementById('pay-total').innerText = `Rp ${total.toLocaleString('id-ID')}`;
             document.getElementById('pay-method-detail').innerText = payment;
 
             cart = [];
@@ -454,5 +455,15 @@
                 html += `
                     <div class="p-3 bg-sky-50 rounded-xl border border-sky-200">
                         <div class="flex justify-between font-bold"><span>ID: ${o.id} (${o.name})</span> <span class="px-2 py-0.5 rounded-full ${badgeColor}">${o.status}</span></div>
-                        <div class="text-xs text-gray-600 mt-1">Meja/Alamat: ${o.address} \vert{} Total: Rp${o.total.toLocaleString('id-ID')}</div>
-                        <div class="text-xs font-medium text-sky-800 mt-1
+                        <div class="text-xs text-gray-600 mt-1">Meja/Alamat: ${o.address} | Total: Rp ${o.total.toLocaleString('id-ID')}</div>
+                        <div class="text-xs font-medium text-sky-800 mt-1">${noteMsg}</div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        window.onload = initApp;
+    </script>
+</body>
+</html>
