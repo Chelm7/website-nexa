@@ -3,145 +3,241 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mie Bangka - Order Online</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <title>Mie Bangka Asli - Warung Rasa Khas</title>
+    <!-- Tailwind CSS untuk Desain Modern -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    </style>
 </head>
-<body class="bg-gray-100 text-gray-800 font-sans antialiased pb-24">
+<body class="bg-amber-50 text-gray-800 font-sans">
 
-    <!-- Top Header Ala Food Delivery -->
-    <header class="bg-white sticky top-0 z-50 shadow-sm border-b border-gray-100">
-        <div class="max-w-md mx-auto px-4 py-3 flex items-center justify-between">
-            <div class="flex items-center space-x-3">
-                <div class="w-11 h-11 rounded-full overflow-hidden border-2 border-red-600 shadow-sm bg-white flex-shrink-0">
-                    <img src="Merah Oranye Ilustrasi Mie Pedas Logo_20261024_083203_0000.png" alt="Logo Mie Bangka" class="w-full h-full object-cover">
-                </div>
-                <div>
-                    <h1 class="font-extrabold text-base leading-tight text-gray-900">Mie Bangka</h1>
-                    <p class="text-[11px] text-gray-500 flex items-center">
-                        <i class="fa-solid fa-location-dot text-red-600 mr-1"></i> Tanjung Pinang • <span class="text-red-600 font-bold ml-1">Non-Halal</span>
-                    </p>
-                </div>
-            </div>
-            <div class="bg-red-50 text-red-600 text-xs font-bold px-2.5 py-1 rounded-full border border-red-100 flex items-center">
-                <span class="w-2 h-2 bg-red-600 rounded-full animate-pulse mr-1.5"></span> Buka
+    <!-- Navbar -->
+    <header class="bg-amber-700 text-white shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold tracking-wide"><i class="fa-solid fa-bowl-food mr-2"></i> Mie Bangka Teladan</h1>
+            <div class="flex items-center space-x-4">
+                <button onclick="toggleCart()" class="relative bg-amber-800 hover:bg-amber-900 px-4 py-2 rounded-lg font-medium transition flex items-center">
+                    <i class="fa-solid fa-cart-shopping mr-2"></i> Keranjang
+                    <span id="cart-count" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-6 h-6 rounded-full flex items-center justify-center font-bold">0</span>
+                </button>
             </div>
         </div>
     </header>
 
-    <!-- Main Content Container -->
-    <main class="max-w-md mx-auto px-4 pt-4">
-
-            <!-- Banner Promo / Hero Section -->
-        <div class="bg-gradient-to-r from-red-600 to-red-800 text-white rounded-2xl p-4 shadow-md mb-5 relative overflow-hidden flex items-center justify-between">
-            <div class="relative z-10 max-w-[210px]">
-                <span class="bg-amber-400 text-red-950 text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-wider">Legendaris TPI</span>
-                <h2 class="text-lg font-black mt-1 mb-1 leading-tight">Mie Bangka B2</h2>
-                <p class="text-[11px] text-red-100 mb-3 leading-snug">Mie kenyal, pangsit rebus, jeruk kunci segar & sambal air khas!</p>
-                <a href="#menu-list" class="bg-white text-red-700 font-bold text-xs px-3.5 py-2 rounded-xl inline-block shadow-sm">Pesan Sekarang</a>
-            </div>
-            <div class="w-24 h-24 rounded-full overflow-hidden border-2 border-white/80 shadow-lg bg-white flex-shrink-0 z-10">
-                <img src="Merah Oranye Ilustrasi Mie Pedas Logo_20261024_083203_0000.png" alt="Logo Banner" class="w-full h-full object-cover">
-            </div>
+    <!-- Hero Section -->
+    <section class="bg-gradient-to-r from-amber-600 to-amber-800 text-white py-16 px-4 text-center">
+        <div class="container mx-auto max-w-2xl">
+            <h2 class="text-4xl font-extrabold mb-4">Mie Bangka Asli & Halal</h2>
+            <p class="text-lg text-amber-100 mb-6">Nikmati kelezatan mie kenyal dengan topping daging babi/ayam gurih khas Bangka, diracik dengan bumbu rahasia turun-temurun.</p>
+            <a href="#menu-section" class="bg-yellow-400 text-gray-900 font-bold px-6 py-3 rounded-full shadow-lg hover:bg-yellow-300 transition">Pesan Sekarang</a>
         </div>
+    </section>
 
-        <!-- Kategori Menu -->
-        <div class="flex space-x-2 overflow-x-auto no-scrollbar mb-4 py-1">
-            <a href="#menu-list" class="bg-red-600 text-white text-xs font-bold px-4 py-2 rounded-full whitespace-nowrap shadow-sm">Semua Menu</a>
-            <a href="#menu-list" class="bg-white text-gray-700 border border-gray-200 text-xs font-bold px-4 py-2 rounded-full whitespace-nowrap">Varian Mie</a>
-            <a href="#menu-list" class="bg-white text-gray-700 border border-gray-200 text-xs font-bold px-4 py-2 rounded-full whitespace-nowrap">Minuman</a>
+    <!-- Menu Section -->
+    <main id="menu-section" class="container mx-auto px-4 py-12">
+        <h3 class="text-3xl font-bold text-center mb-10 text-amber-900">Daftar Menu Kami</h3>
+        
+        <!-- Grid Menu Dinamis -->
+        <div id="menu-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Menu akan dimuat otomatis via JavaScript dari LocalStorage -->
         </div>
-
-        <!-- Daftar Menu (Card Ala GoFood/ShopeeFood) -->
-        <div id="menu-list" class="space-y-3">
-
-            <!-- Item 1: Mie Kecil -->
-            <div class="bg-white rounded-2xl p-3.5 shadow-sm border border-gray-100 flex justify-between items-center">
-                <div class="pr-3 flex-1">
-                    <div class="flex items-center space-x-1.5 mb-1">
-                        <span class="bg-red-100 text-red-700 text-[9px] font-black px-1.5 py-0.5 rounded">FAVORIT</span>
-                        <h3 class="font-extrabold text-sm text-gray-900">Mie Kecil Topping B2</h3>
-                    </div>
-                    <p class="text-gray-500 text-[11px] leading-snug mb-2">Mie kecil kenyal + topping B2 gurih + pangsit rebus + kuah kaldu + sambal air & jeruk kunci.</p>
-                    <span class="text-red-600 font-black text-sm">Rp 28.000</span>
-                </div>
-                <div class="flex flex-col items-end justify-between min-w-[90px]">
-                    <div class="w-20 h-20 bg-red-50 rounded-xl flex items-center justify-center text-red-500 text-3xl mb-2 border border-red-100">
-                        <i class="fa-solid fa-bowl-food"></i>
-                    </div>
-                    <a href="https://wa.me/6281234567890?text=Halo,%20saya%20mau%20pesan%20Mie%20Kecil%20Topping%20B2" target="_blank" class="w-full text-center bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2 rounded-xl shadow-sm flex items-center justify-center space-x-1">
-                        <i class="fa-brands fa-whatsapp text-sm"></i>
-                        <span>Pesan</span>
-                    </a>
-                </div>
-            </div>
-
-            <!-- Item 2: Mie Lebar -->
-            <div class="bg-white rounded-2xl p-3.5 shadow-sm border border-gray-100 flex justify-between items-center">
-                <div class="pr-3 flex-1">
-                    <div class="flex items-center space-x-1.5 mb-1">
-                        <span class="bg-amber-100 text-amber-800 text-[9px] font-black px-1.5 py-0.5 rounded">ANDALAN</span>
-                        <h3 class="font-extrabold text-sm text-gray-900">Mie Lebar Topping B2</h3>
-                    </div>
-                    <p class="text-gray-500 text-[11px] leading-snug mb-2">Mie lebar mantap + topping B2 gurih + pangsit rebus + kuah kaldu + sambal air & jeruk kunci.</p>
-                    <span class="text-red-600 font-black text-sm">Rp 28.000</span>
-                </div>
-                <div class="flex flex-col items-end justify-between min-w-[90px]">
-                    <div class="w-20 h-20 bg-red-50 rounded-xl flex items-center justify-center text-red-500 text-3xl mb-2 border border-red-100">
-                        <i class="fa-solid fa-utensils"></i>
-                    </div>
-                    <a href="https://wa.me/6281234567890?text=Halo,%20saya%20mau%20pesan%20Mie%20Lebar%20Topping%20B2" target="_blank" class="w-full text-center bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2 rounded-xl shadow-sm flex items-center justify-center space-x-1">
-                        <i class="fa-brands fa-whatsapp text-sm"></i>
-                        <span>Pesan</span>
-                    </a>
-                </div>
-            </div>
-
-            <!-- Item 3: Es Jeruk Kunci -->
-            <div class="bg-white rounded-2xl p-3.5 shadow-sm border border-gray-100 flex justify-between items-center">
-                <div class="pr-3 flex-1">
-                    <div class="flex items-center space-x-1.5 mb-1">
-                        <span class="bg-blue-100 text-blue-700 text-[9px] font-black px-1.5 py-0.5 rounded">SEGAR</span>
-                        <h3 class="font-extrabold text-sm text-gray-900">Es Jeruk Kunci</h3>
-                    </div>
-                    <p class="text-gray-500 text-[11px] leading-snug mb-2">Minuman perasan murni jeruk kunci asli yang asam manis segar dingin.</p>
-                    <span class="text-red-600 font-black text-sm">Rp 8.000</span>
-                </div>
-                <div class="flex flex-col items-end justify-between min-w-[90px]">
-                    <div class="w-20 h-20 bg-red-50 rounded-xl flex items-center justify-center text-red-500 text-3xl mb-2 border border-red-100">
-                        <i class="fa-solid fa-glass-water"></i>
-                    </div>
-                    <a href="https://wa.me/6281234567890?text=Halo,%20saya%20mau%20pesan%20Es%20Jeruk%20Kunci" target="_blank" class="w-full text-center bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2 rounded-xl shadow-sm flex items-center justify-center space-x-1">
-                        <i class="fa-brands fa-whatsapp text-sm"></i>
-                        <span>Pesan</span>
-                    </a>
-                </div>
-            </div>
-
-        </div>
-
     </main>
 
-    <!-- Bottom Navigation Bar Ala Aplikasi -->
-    <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-2 px-6 flex justify-around items-center z-50 shadow-lg">
-        <a href="index.html" class="flex flex-col items-center text-red-600">
-            <i class="fa-solid fa-utensils text-base"></i>
-            <span class="text-[10px] font-bold mt-0.5">Menu</span>
-        </a>
-        <a href="https://wa.me/6281234567890" target="_blank" class="flex flex-col items-center text-gray-400 hover:text-red-600 transition">
-            <i class="fa-brands fa-whatsapp text-base"></i>
-            <span class="text-[10px] font-medium mt-0.5">Bantuan</span>
-        </a>
-        <a href="admin.html" class="flex flex-col items-center text-gray-400 hover:text-red-600 transition">
-            <i class="fa-solid fa-user-shield text-base"></i>
-            <span class="text-[10px] font-medium mt-0.5">Admin</span>
-        </a>
+    <!-- Modal Keranjang / Checkout -->
+    <div id="cart-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex justify-center items-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative max-h-[90vh] overflow-y-auto">
+            <button onclick="toggleCart()" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800 text-xl"><i class="fa-solid fa-xmark"></i></button>
+            <h3 class="text-2xl font-bold mb-4 text-amber-900"><i class="fa-solid fa-basket-shopping mr-2"></i> Keranjang Pesanan</h3>
+            
+            <div id="cart-items" class="divide-y divide-gray-200 mb-4">
+                <!-- Item Keranjang -->
+            </div>
+
+            <div class="border-t pt-4 mb-6">
+                <div class="flex justify-between font-bold text-lg mb-4">
+                    <span>Total:</span>
+                    <span id="cart-total" class="text-amber-700">Rp 0</span>
+                </div>
+                
+                <!-- Form Pemesan -->
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Nama Pemesan</label>
+                        <input type="text" id="buyer-name" class="w-full mt-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none" placeholder="Masukkan nama Anda">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Nomor Meja / Alamat Pengiriman</label>
+                        <input type="text" id="buyer-address" class="w-full mt-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none" placeholder="Contoh: Meja 05 / Jl. Merdeka No. 10">
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="checkout()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl transition shadow-md">
+                <i class="fa-solid fa-check mr-2"></i> Kirim Pesanan Sekarang
+            </button>
+        </div>
     </div>
 
+    <!-- Footer -->
+    <footer class="bg-amber-900 text-amber-100 py-6 text-center mt-12">
+        <p>&copy; 2026 Mie Bangka Teladan (<span id="domain-label">masak-masak.my.id</span>). All rights reserved.</p>
+    </footer>
+
+    <!-- Script Aplikasi Frontend -->
+    <script>
+        // Data Default Menu (Jika belum ada di LocalStorage)
+        const defaultMenu = [
+            { id: 1, name: "Mie Bangka Spesial", price: 25000, desc: "Mie kenyal lengkap dengan topping cincang daging, tauge, dan bakso ikan.", image: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=500&q=80" },
+            { id: 2, name: "Mie Bangka Pangsit Kuah", price: 22000, desc: "Disajikan dengan kuah kaldu hangat dan pangsit isi daging lembut.", image: "https://images.unsplash.com/photo-1612929633738-8fe44f7ec841?auto=format&fit=crop&w=500&q=80" },
+            { id: 3, name: "Es Timun Serut", price: 8000, desc: "Minuman segar pereda pedas dan penyejuk dahaga.", image: "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=500&q=80" }
+        ];
+
+        let cart = [];
+
+        // Inisialisasi Data Menu di LocalStorage jika belum ada
+        function initMenu() {
+            if (!localStorage.getItem('warung_menu')) {
+                localStorage.setItem('warung_menu', JSON.stringify(defaultMenu));
+            }
+            renderMenu();
+        }
+
+        // Tampilkan Menu ke Halaman
+        function renderMenu() {
+            const menuGrid = document.getElementById('menu-grid');
+            const menuList = JSON.parse(localStorage.getItem('warung_menu')) || [];
+            
+            menuGrid.innerHTML = '';
+            if (menuList.length === 0) {
+                menuGrid.innerHTML = `<p class="col-span-3 text-center text-gray-500 py-8">Belum ada menu tersedia saat ini.</p>`;
+                return;
+            }
+
+            menuList.forEach(item => {
+                menuGrid.innerHTML += `
+                    <div class="bg-white rounded-2xl shadow-md overflow-hidden flex flex-col justify-between hover:shadow-xl transition">
+                        <div>
+                            <img src="${item.image || 'https://via.placeholder.com/400x300'}" alt="${item.name}" class="w-full h-48 object-cover">
+                            <div class="p-5">
+                                <h4 class="font-bold text-xl text-amber-900 mb-1">${item.name}</h4>
+                                <p class="text-gray-600 text-sm mb-4">${item.desc}</p>
+                            </div>
+                        </div>
+                        <div class="px-5 pb-5 flex justify-between items-center">
+                            <span class="text-lg font-bold text-amber-700">Rp ${item.price.toLocaleString('id-ID')}</span>
+                            <button onclick="addToCart(${item.id})" class="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition shadow">
+                                <i class="fa-solid fa-plus mr-1"></i> Pesan
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // Tambah ke Keranjang
+        function addToCart(id) {
+            const menuList = JSON.parse(localStorage.getItem('warung_menu')) || [];
+            const product = menuList.find(p => p.id === id);
+            if (!product) return;
+
+            const existing = cart.find(item => item.id === id);
+            if (existing) {
+                existing.qty += 1;
+            } else {
+                cart.push({ ...product, qty: 1 });
+            }
+            updateCartUI();
+            alert(`${product.name} berhasil ditambahkan ke keranjang!`);
+        }
+
+        // Update Tampilan Keranjang
+        function updateCartUI() {
+            const countEl = document.getElementById('cart-count');
+            const itemsEl = document.getElementById('cart-items');
+            const totalEl = document.getElementById('cart-total');
+
+            let totalCount = 0;
+            let totalPrice = 0;
+
+            itemsEl.innerHTML = '';
+            cart.forEach((item, index) => {
+                totalCount += item.qty;
+                totalPrice += item.price * item.qty;
+
+                itemsEl.innerHTML += `
+                    <div class="py-3 flex justify-between items-center">
+                        <div>
+                            <h5 class="font-semibold text-gray-800">${item.name}</h5>
+                            <small class="text-gray-500">Rp ${item.price.toLocaleString('id-ID')} x ${item.qty}</small>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="changeQty(${index}, -1)" class="bg-gray-200 px-2 py-1 rounded text-xs">-</button>
+                            <span class="font-bold">${item.qty}</span>
+                            <button onclick="changeQty(${index}, 1)" class="bg-gray-200 px-2 py-1 rounded text-xs">+</button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            countEl.innerText = totalCount;
+            totalEl.innerText = `Rp ${totalPrice.toLocaleString('id-ID')}`;
+        }
+
+        // Ubah Qty di Keranjang
+        function changeQty(index, change) {
+            cart[index].qty += change;
+            if (cart[index].qty <= 0) {
+                cart.splice(index, 1);
+            }
+            updateCartUI();
+        }
+
+        // Toggle Modal Keranjang
+        function toggleCart() {
+            const modal = document.getElementById('cart-modal');
+            modal.classList.toggle('hidden');
+        }
+
+        // Proses Checkout / Kirim Pesanan
+        function checkout() {
+            const name = document.getElementById('buyer-name').value.trim();
+            const address = document.getElementById('buyer-address').value.trim();
+
+            if (!name || !address) {
+                alert('Silakan masukkan Nama dan Nomor Meja / Alamat terlebih dahulu!');
+                return;
+            }
+
+            if (cart.length === 0) {
+                alert('Keranjang belanja masih kosong!');
+                return;
+            }
+
+            const totalPrice = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+
+            const newOrder = {
+                id: 'ORD-' + Date.now().toString().slice(-6),
+                date: new Date().toLocaleString('id-ID'),
+                name: name,
+                address: address,
+                items: [...cart],
+                total: totalPrice,
+                status: 'Pending'
+            };
+
+            // Simpan ke database local admin
+            let orders = JSON.parse(localStorage.getItem('warung_orders')) || [];
+            orders.unshift(newOrder);
+            localStorage.setItem('warung_orders', JSON.stringify(orders));
+
+            alert(`Pesanan berhasil dikirim! ID Pesanan Anda: ${newOrder.id}`);
+            cart = [];
+            updateCartUI();
+            toggleCart();
+            document.getElementById('buyer-name').value = '';
+            document.getElementById('buyer-address').value = '';
+        }
+
+        window.onload = initMenu;
+    </script>
 </body>
 </html>
