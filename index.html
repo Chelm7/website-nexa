@@ -22,18 +22,33 @@
         </div>
     </header>
 
-    <!-- Hero Section -->
-    <section class="bg-gradient-to-r from-sky-600 to-sky-800 text-white py-16 px-4 text-center">
+    <!-- Banner View Resto -->
+    <section class="w-full bg-sky-900 overflow-hidden shadow-md">
+        <div class="container mx-auto">
+            <img id="resto-banner-img" src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80" alt="Banner Resto Mie Bangka" class="w-full h-64 md:h-80 object-cover opacity-90">
+        </div>
+    </section>
+
+    <!-- Hero / Intro Section -->
+    <section class="bg-gradient-to-r from-sky-600 to-sky-800 text-white py-12 px-4 text-center">
         <div class="container mx-auto max-w-2xl">
-            <h2 class="text-4xl font-extrabold mb-4">Mie Bangka Asli & Halal</h2>
-            <p class="text-lg text-sky-100 mb-6">Nikmati kelezatan mie kenyal dengan topping gurih khas Bangka, diracik dengan bumbu rahasia turun-temurun di resto kami.</p>
+            <h2 class="text-3xl md:text-4xl font-extrabold mb-3">Mie Bangka Asli & Halal</h2>
+            <p class="text-base text-sky-100 mb-6">Nikmati kelezatan mie kenyal dengan topping gurih khas Bangka, diracik dengan bumbu rahasia turun-temurun di resto kami.</p>
             <a href="#menu-section" class="bg-white text-sky-600 font-bold px-6 py-3 rounded-full shadow-lg hover:bg-sky-50 transition border border-sky-300 inline-block">Pesan Sekarang</a>
         </div>
     </section>
 
-    <!-- Menu Section -->
+    <!-- Menu Section dengan Filter Makanan & Minuman -->
     <main id="menu-section" class="container mx-auto px-4 py-12">
-        <h3 class="text-3xl font-bold text-center mb-10 text-sky-900">Daftar Menu Resto Kami</h3>
+        <h3 class="text-3xl font-bold text-center mb-6 text-sky-900">Daftar Menu Resto Kami</h3>
+        
+        <!-- Tombol Filter Kategori -->
+        <div class="flex justify-center space-x-3 mb-10">
+            <button onclick="filterMenu('Semua')" id="btn-filter-semua" class="bg-sky-600 text-white px-5 py-2 rounded-full font-bold shadow transition text-sm">Semua Menu</button>
+            <button onclick="filterMenu('Makanan')" id="btn-filter-makanan" class="bg-white text-sky-600 border border-sky-300 px-5 py-2 rounded-full font-bold shadow transition text-sm hover:bg-sky-50">Makanan</button>
+            <button onclick="filterMenu('Minuman')" id="btn-filter-minuman" class="bg-white text-sky-600 border border-sky-300 px-5 py-2 rounded-full font-bold shadow transition text-sm hover:bg-sky-50">Minuman</button>
+        </div>
+
         <div id="menu-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
             <!-- Menu dinamis -->
         </div>
@@ -124,9 +139,9 @@
     <!-- Script Aplikasi Web -->
     <script>
         const defaultMenu = [
-            { id: 1, name: "Mie Bangka Spesial", price: 25000, desc: "Mie kenyal lengkap dengan topping cincang daging, tauge, dan bakso ikan.", image: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=500&q=80" },
-            { id: 2, name: "Mie Bangka Pangsit Kuah", price: 22000, desc: "Disajikan dengan kuah kaldu hangat dan pangsit isi daging lembut.", image: "https://images.unsplash.com/photo-1612929633738-8fe44f7ec841?auto=format&fit=crop&w=500&q=80" },
-            { id: 3, name: "Es Timun Serut", price: 8000, desc: "Minuman segar pereda pedas dan penyejuk dahaga.", image: "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=500&q=80" }
+            { id: 1, name: "Mie Bangka Spesial", price: 25000, category: "Makanan", desc: "Mie kenyal lengkap dengan topping cincang daging, tauge, dan bakso ikan.", image: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=500&q=80" },
+            { id: 2, name: "Mie Bangka Pangsit Kuah", price: 22000, category: "Makanan", desc: "Disajikan dengan kuah kaldu hangat dan pangsit isi daging lembut.", image: "https://images.unsplash.com/photo-1612929633738-8fe44f7ec841?auto=format&fit=crop&w=500&q=80" },
+            { id: 3, name: "Es Timun Serut", price: 8000, category: "Minuman", desc: "Minuman segar pereda pedas dan penyejuk dahaga.", image: "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=500&q=80" }
         ];
 
         const defaultPayments = [
@@ -138,6 +153,7 @@
 
         let cart = [];
         let pendingOrderData = null;
+        let currentFilter = 'Semua';
 
         function initApp() {
             if (!localStorage.getItem('warung_menu')) {
@@ -146,28 +162,57 @@
             if (!localStorage.getItem('warung_payments')) {
                 localStorage.setItem('warung_payments', JSON.stringify(defaultPayments));
             }
+            loadBanner();
             renderMenu();
             loadPaymentOptions();
             checkMyOrderStatus();
+        }
+
+        function loadBanner() {
+            const savedBanner = localStorage.getItem('resto_banner');
+            if (savedBanner) {
+                document.getElementById('resto-banner-img').src = savedBanner;
+            }
+        }
+
+        function filterMenu(category) {
+            currentFilter = category;
+            
+            // Update styling active button
+            ['Semua', 'Makanan', 'Minuman'].forEach(cat => {
+                const btn = document.getElementById(`btn-filter-${cat.toLowerCase()}`);
+                if (cat === category) {
+                    btn.className = "bg-sky-600 text-white px-5 py-2 rounded-full font-bold shadow transition text-sm";
+                } else {
+                    btn.className = "bg-white text-sky-600 border border-sky-300 px-5 py-2 rounded-full font-bold shadow transition text-sm hover:bg-sky-50";
+                }
+            });
+            renderMenu();
         }
 
         function renderMenu() {
             const menuGrid = document.getElementById('menu-grid');
             const menuList = JSON.parse(localStorage.getItem('warung_menu')) || [];
             
+            let filteredList = menuList;
+            if (currentFilter !== 'Semua') {
+                filteredList = menuList.filter(m => (m.category || 'Makanan') === currentFilter);
+            }
+
             menuGrid.innerHTML = '';
-            if (menuList.length === 0) {
-                menuGrid.innerHTML = `<p class="col-span-3 text-center text-gray-500 py-8">Belum ada menu tersedia saat ini.</p>`;
+            if (filteredList.length === 0) {
+                menuGrid.innerHTML = `<p class="col-span-3 text-center text-gray-500 py-8">Belum ada menu dalam kategori ini.</p>`;
                 return;
             }
 
-            menuList.forEach(item => {
+            filteredList.forEach(item => {
                 menuGrid.innerHTML += `
                     <div class="bg-white rounded-2xl shadow-md overflow-hidden flex flex-col justify-between hover:shadow-xl transition">
                         <div>
                             <img src="${item.image || 'https://via.placeholder.com/400x300'}" alt="${item.name}" class="w-full h-48 object-cover">
                             <div class="p-5">
-                                <h4 class="font-bold text-xl text-sky-900 mb-1">${item.name}</h4>
+                                <span class="text-xs font-bold text-sky-600 bg-sky-50 px-2.5 py-1 rounded-full uppercase">${item.category || 'Makanan'}</span>
+                                <h4 class="font-bold text-xl text-sky-900 mt-2 mb-1">${item.name}</h4>
                                 <p class="text-gray-600 text-sm mb-4">${item.desc}</p>
                             </div>
                         </div>
