@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mie Bangka - Order Online</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -11,108 +12,112 @@
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body class="bg-gray-100 text-gray-800 font-sans antialiased pb-20">
+<body class="bg-gray-100 text-gray-800 font-sans antialiased pb-24">
 
-    <!-- Top Navigation Bar -->
+    <!-- Top Header Ala Food Delivery -->
     <header class="bg-white sticky top-0 z-50 shadow-sm border-b border-gray-100">
         <div class="max-w-md mx-auto px-4 py-3 flex items-center justify-between">
             <div class="flex items-center space-x-3">
-                <!-- Frame Logo Tajam & Presisi -->
-                <div class="w-11 h-11 rounded-full overflow-hidden border-2 border-red-600 shadow-sm flex-shrink-0 bg-white">
-                    <img src="logo.png" alt="Logo Mie Bangka" class="w-full h-full object-cover">
+                <div class="w-11 h-11 rounded-full overflow-hidden border-2 border-red-600 shadow-sm bg-white flex-shrink-0">
+                    <img src="Merah Oranye Ilustrasi Mie Pedas Logo_20261024_083203_0000.png" alt="Logo Mie Bangka" class="w-full h-full object-cover">
                 </div>
                 <div>
                     <h1 class="font-extrabold text-base leading-tight text-gray-900">Mie Bangka</h1>
                     <p class="text-[11px] text-gray-500 flex items-center">
-                        <i class="fa-solid fa-location-dot text-red-600 mr-1"></i> Tanjung Pinang • <span class="text-red-600 font-bold ml-1"> Non-Halal</span>
+                        <i class="fa-solid fa-location-dot text-red-600 mr-1"></i> Tanjung Pinang • <span class="text-red-600 font-bold ml-1">Non-Halal</span>
                     </p>
                 </div>
             </div>
-            <div class="bg-red-50 text-red-600 text-xs font-bold px-2.5 py-1 rounded-full border border-red-100">
-                <i class="fa-solid fa-store mr-1"></i> Buka
+            <div class="bg-red-50 text-red-600 text-xs font-bold px-2.5 py-1 rounded-full border border-red-100 flex items-center">
+                <span class="w-2 h-2 bg-red-600 rounded-full animate-pulse mr-1.5"></span> Buka
             </div>
         </div>
     </header>
 
-    <!-- Main Container -->
+    <!-- Main Content Container -->
     <main class="max-w-md mx-auto px-4 pt-4">
 
-        <!-- Banner Card ShopeeFood / GoFood Style -->
-        <div class="bg-gradient-to-r from-red-600 to-red-700 text-white rounded-2xl p-4 shadow-md mb-5 relative overflow-hidden flex items-center justify-between">
-            <div class="relative z-10 max-w-[200px]">
-                <span class="bg-amber-400 text-red-950 text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-wider">Kuliner Legendaris</span>
-                <h2 class="text-lg font-black mt-1 mb-1">Mie Bangka B2</h2>
-                <p class="text-[11px] text-red-100 mb-3 leading-snug">Mie kenyal, pangsit, jeruk kunci & sambal air pedas segar!</p>
-                <a href="#menu-list" class="bg-white text-red-700 font-bold text-xs px-3 py-1.5 rounded-lg inline-block shadow-sm">Pesan Sekarang</a>
+            <!-- Banner Promo / Hero Section -->
+        <div class="bg-gradient-to-r from-red-600 to-red-800 text-white rounded-2xl p-4 shadow-md mb-5 relative overflow-hidden flex items-center justify-between">
+            <div class="relative z-10 max-w-[210px]">
+                <span class="bg-amber-400 text-red-950 text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-wider">Legendaris TPI</span>
+                <h2 class="text-lg font-black mt-1 mb-1 leading-tight">Mie Bangka B2</h2>
+                <p class="text-[11px] text-red-100 mb-3 leading-snug">Mie kenyal, pangsit rebus, jeruk kunci segar & sambal air khas!</p>
+                <a href="#menu-list" class="bg-white text-red-700 font-bold text-xs px-3.5 py-2 rounded-xl inline-block shadow-sm">Pesan Sekarang</a>
             </div>
-            
-            <!-- Display Logo di Banner Utama -->
             <div class="w-24 h-24 rounded-full overflow-hidden border-2 border-white/80 shadow-lg bg-white flex-shrink-0 z-10">
-                <img src="logo.png" alt="Logo Banner" class="w-full h-full object-cover">
+                <img src="Merah Oranye Ilustrasi Mie Pedas Logo_20261024_083203_0000.png" alt="Logo Banner" class="w-full h-full object-cover">
             </div>
         </div>
 
-        <!-- Menu Title -->
-        <div class="flex items-center justify-between mb-3">
-            <h2 class="font-extrabold text-base text-gray-900">Daftar Menu</h2>
-            <span class="text-xs text-gray-400">Pilih & Pesan via WA</span>
+        <!-- Kategori Menu -->
+        <div class="flex space-x-2 overflow-x-auto no-scrollbar mb-4 py-1">
+            <a href="#menu-list" class="bg-red-600 text-white text-xs font-bold px-4 py-2 rounded-full whitespace-nowrap shadow-sm">Semua Menu</a>
+            <a href="#menu-list" class="bg-white text-gray-700 border border-gray-200 text-xs font-bold px-4 py-2 rounded-full whitespace-nowrap">Varian Mie</a>
+            <a href="#menu-list" class="bg-white text-gray-700 border border-gray-200 text-xs font-bold px-4 py-2 rounded-full whitespace-nowrap">Minuman</a>
         </div>
 
-        <!-- Menu Section (Card Style Ala GoFood) -->
+        <!-- Daftar Menu (Card Ala GoFood/ShopeeFood) -->
         <div id="menu-list" class="space-y-3">
 
             <!-- Item 1: Mie Kecil -->
-            <div class="bg-white rounded-xl p-3 shadow-sm border border-gray-100 flex justify-between items-center">
+            <div class="bg-white rounded-2xl p-3.5 shadow-sm border border-gray-100 flex justify-between items-center">
                 <div class="pr-3 flex-1">
                     <div class="flex items-center space-x-1.5 mb-1">
-                        <span class="bg-red-100 text-red-700 text-[9px] font-bold px-1.5 py-0.5 rounded">FAVORIT</span>
+                        <span class="bg-red-100 text-red-700 text-[9px] font-black px-1.5 py-0.5 rounded">FAVORIT</span>
                         <h3 class="font-extrabold text-sm text-gray-900">Mie Kecil Topping B2</h3>
                     </div>
-                    <p class="text-gray-500 text-[11px] leading-snug mb-2">Mie kecil kenyal + topping B2 gurih + pangsit rebus + kuah + sambal air & jeruk kunci.</p>
+                    <p class="text-gray-500 text-[11px] leading-snug mb-2">Mie kecil kenyal + topping B2 gurih + pangsit rebus + kuah kaldu + sambal air & jeruk kunci.</p>
                     <span class="text-red-600 font-black text-sm">Rp 28.000</span>
                 </div>
-                <div class="flex flex-col items-end justify-between min-w-[85px]">
-                    <div class="w-16 h-16 bg-red-50 rounded-lg flex items-center justify-center text-red-500 text-2xl mb-2">
+                <div class="flex flex-col items-end justify-between min-w-[90px]">
+                    <div class="w-20 h-20 bg-red-50 rounded-xl flex items-center justify-center text-red-500 text-3xl mb-2 border border-red-100">
                         <i class="fa-solid fa-bowl-food"></i>
                     </div>
-                    <a href="https://wa.me/6281234567890?text=Halo,%20saya%20mau%20pesan%20Mie%20Kecil%20Topping%20B2" target="_blank" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm flex items-center space-x-1">
-                        <i class="fa-brands fa-whatsapp"></i>
+                    <a href="https://wa.me/6281234567890?text=Halo,%20saya%20mau%20pesan%20Mie%20Kecil%20Topping%20B2" target="_blank" class="w-full text-center bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2 rounded-xl shadow-sm flex items-center justify-center space-x-1">
+                        <i class="fa-brands fa-whatsapp text-sm"></i>
                         <span>Pesan</span>
                     </a>
                 </div>
             </div>
 
             <!-- Item 2: Mie Lebar -->
-            <div class="bg-white rounded-xl p-3 shadow-sm border border-gray-100 flex justify-between items-center">
+            <div class="bg-white rounded-2xl p-3.5 shadow-sm border border-gray-100 flex justify-between items-center">
                 <div class="pr-3 flex-1">
-                    <h3 class="font-extrabold text-sm text-gray-900 mb-1">Mie Lebar Topping B2</h3>
-                    <p class="text-gray-500 text-[11px] leading-snug mb-2">Mie lebar mantap + topping B2 gurih + pangsit rebus + kuah + sambal air & jeruk kunci.</p>
+                    <div class="flex items-center space-x-1.5 mb-1">
+                        <span class="bg-amber-100 text-amber-800 text-[9px] font-black px-1.5 py-0.5 rounded">ANDALAN</span>
+                        <h3 class="font-extrabold text-sm text-gray-900">Mie Lebar Topping B2</h3>
+                    </div>
+                    <p class="text-gray-500 text-[11px] leading-snug mb-2">Mie lebar mantap + topping B2 gurih + pangsit rebus + kuah kaldu + sambal air & jeruk kunci.</p>
                     <span class="text-red-600 font-black text-sm">Rp 28.000</span>
                 </div>
-                <div class="flex flex-col items-end justify-between min-w-[85px]">
-                    <div class="w-16 h-16 bg-red-50 rounded-lg flex items-center justify-center text-red-500 text-2xl mb-2">
+                <div class="flex flex-col items-end justify-between min-w-[90px]">
+                    <div class="w-20 h-20 bg-red-50 rounded-xl flex items-center justify-center text-red-500 text-3xl mb-2 border border-red-100">
                         <i class="fa-solid fa-utensils"></i>
                     </div>
-                    <a href="https://wa.me/6281234567890?text=Halo,%20saya%20mau%20pesan%20Mie%20Lebar%20Topping%20B2" target="_blank" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm flex items-center space-x-1">
-                        <i class="fa-brands fa-whatsapp"></i>
+                    <a href="https://wa.me/6281234567890?text=Halo,%20saya%20mau%20pesan%20Mie%20Lebar%20Topping%20B2" target="_blank" class="w-full text-center bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2 rounded-xl shadow-sm flex items-center justify-center space-x-1">
+                        <i class="fa-brands fa-whatsapp text-sm"></i>
                         <span>Pesan</span>
                     </a>
                 </div>
             </div>
 
             <!-- Item 3: Es Jeruk Kunci -->
-            <div class="bg-white rounded-xl p-3 shadow-sm border border-gray-100 flex justify-between items-center">
+            <div class="bg-white rounded-2xl p-3.5 shadow-sm border border-gray-100 flex justify-between items-center">
                 <div class="pr-3 flex-1">
-                    <h3 class="font-extrabold text-sm text-gray-900 mb-1">Es Jeruk Kunci</h3>
+                    <div class="flex items-center space-x-1.5 mb-1">
+                        <span class="bg-blue-100 text-blue-700 text-[9px] font-black px-1.5 py-0.5 rounded">SEGAR</span>
+                        <h3 class="font-extrabold text-sm text-gray-900">Es Jeruk Kunci</h3>
+                    </div>
                     <p class="text-gray-500 text-[11px] leading-snug mb-2">Minuman perasan murni jeruk kunci asli yang asam manis segar dingin.</p>
                     <span class="text-red-600 font-black text-sm">Rp 8.000</span>
                 </div>
-                <div class="flex flex-col items-end justify-between min-w-[85px]">
-                    <div class="w-16 h-16 bg-red-50 rounded-lg flex items-center justify-center text-red-500 text-2xl mb-2">
+                <div class="flex flex-col items-end justify-between min-w-[90px]">
+                    <div class="w-20 h-20 bg-red-50 rounded-xl flex items-center justify-center text-red-500 text-3xl mb-2 border border-red-100">
                         <i class="fa-solid fa-glass-water"></i>
                     </div>
-                    <a href="https://wa.me/6281234567890?text=Halo,%20saya%20mau%20pesan%20Es%20Jeruk%20Kunci" target="_blank" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm flex items-center space-x-1">
-                        <i class="fa-brands fa-whatsapp"></i>
+                    <a href="https://wa.me/6281234567890?text=Halo,%20saya%20mau%20pesan%20Es%20Jeruk%20Kunci" target="_blank" class="w-full text-center bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2 rounded-xl shadow-sm flex items-center justify-center space-x-1">
+                        <i class="fa-brands fa-whatsapp text-sm"></i>
                         <span>Pesan</span>
                     </a>
                 </div>
@@ -122,15 +127,19 @@
 
     </main>
 
-    <!-- Bottom Navigation Bar -->
-    <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-2 px-6 flex justify-around items-center z-50">
+    <!-- Bottom Navigation Bar Ala Aplikasi -->
+    <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-2 px-6 flex justify-around items-center z-50 shadow-lg">
         <a href="index.html" class="flex flex-col items-center text-red-600">
             <i class="fa-solid fa-utensils text-base"></i>
             <span class="text-[10px] font-bold mt-0.5">Menu</span>
         </a>
-        <a href="https://wa.me/6281234567890" target="_blank" class="flex flex-col items-center text-gray-400 hover:text-red-600">
+        <a href="https://wa.me/6281234567890" target="_blank" class="flex flex-col items-center text-gray-400 hover:text-red-600 transition">
             <i class="fa-brands fa-whatsapp text-base"></i>
             <span class="text-[10px] font-medium mt-0.5">Bantuan</span>
+        </a>
+        <a href="admin.html" class="flex flex-col items-center text-gray-400 hover:text-red-600 transition">
+            <i class="fa-solid fa-user-shield text-base"></i>
+            <span class="text-[10px] font-medium mt-0.5">Admin</span>
         </a>
     </div>
 
