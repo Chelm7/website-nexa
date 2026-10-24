@@ -9,12 +9,12 @@
 </head>
 <body class="bg-gray-100 text-gray-800 font-sans">
 
-    <!-- Modal Login Admin (Wajib Nama, Sandi, & No HP Verifikasi) -->
+    <!-- Modal Login Admin (Wajib Nomor HP Verifikasi) -->
     <div id="login-modal" class="fixed inset-0 bg-black bg-opacity-70 z-50 flex justify-center items-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 relative">
             <div class="text-center mb-6">
                 <h3 class="text-2xl font-bold text-gray-900"><i class="fa-solid fa-lock text-sky-600 mr-2"></i> Login Admin Resto</h3>
-                <p class="text-sm text-gray-500 mt-1">Masukkan nama, sandi, dan nomor HP terdaftar untuk keamanan.</p>
+                <p class="text-sm text-gray-500 mt-1">Masukkan Nama, Sandi, dan Nomor HP verifikasi resmi.</p>
             </div>
             <form onsubmit="handleAdminLogin(event)" class="space-y-4">
                 <div>
@@ -27,14 +27,14 @@
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Nomor HP Verifikasi Keamanan</label>
-                    <input type="text" id="login-phone" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-sky-500 outline-none" placeholder="081234567890">
+                    <input type="text" id="login-phone" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-sky-500 outline-none" placeholder="081267166886">
                 </div>
                 <button type="submit" class="w-full bg-sky-600 hover:bg-sky-700 text-white font-bold py-3 rounded-xl transition shadow mt-2">
                     Masuk Dashboard
                 </button>
             </form>
             <div class="mt-4 text-center text-xs text-gray-400">
-                Default awal: admin / admin123 / 081234567890 (Dapat diubah di menu pengaturan admin).
+                Catatan: Saat pertama kali masuk, wajib gunakan nomor HP awal <strong>081267166886</strong>. Setelah login, nomor ini dapat diubah di dalam halaman pengaturan admin.
             </div>
         </div>
     </div>
@@ -118,7 +118,7 @@
                 </div>
             </div>
 
-            <!-- TAB 2: KELOLA MENU (Dengan Kategori Makanan/Minuman) -->
+            <!-- TAB 2: KELOLA MENU -->
             <div id="tab-menus" class="hidden space-y-6">
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
                     <h3 id="form-title" class="text-xl font-bold mb-4 text-gray-800">Tambah Menu Baru</h3>
@@ -189,10 +189,10 @@
                     </div>
                 </div>
 
-                <!-- Pengaturan Keamanan Admin (Nama, Sandi, & No HP) -->
+                <!-- Pengaturan Keamanan Admin (Nama, Sandi, & Ganti No HP di Dalam) -->
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
                     <h3 class="text-xl font-bold mb-2 text-gray-800"><i class="fa-solid fa-shield-halved mr-2"></i> Pengaturan Akun & Keamanan Login Admin</h3>
-                    <p class="text-sm text-gray-500 mb-4">Ubah nama pengguna (username), kata sandi, dan nomor HP verifikasi admin.</p>
+                    <p class="text-sm text-gray-500 mb-4">Ubah nama pengguna (username), kata sandi, serta nomor HP verifikasi admin.</p>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
                             <label class="block text-xs font-bold text-gray-600 mb-1">Nama Admin (Username)</label>
@@ -203,12 +203,12 @@
                             <input type="text" id="set-admin-pass" class="w-full px-3 py-2 border rounded-lg bg-white focus:ring-2 focus:ring-sky-500 outline-none" placeholder="Kosongkan jika tetap">
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-gray-600 mb-1">Nomor HP Keamanan</label>
+                            <label class="block text-xs font-bold text-gray-600 mb-1">Nomor HP Verifikasi Baru</label>
                             <input type="text" id="set-admin-phone" class="w-full px-3 py-2 border rounded-lg bg-white focus:ring-2 focus:ring-sky-500 outline-none">
                         </div>
                     </div>
                     <button onclick="saveAdminSecurity()" class="mt-4 bg-sky-600 hover:bg-sky-700 text-white font-bold px-6 py-2.5 rounded-lg transition shadow">
-                        Simpan Kredensial Login
+                        Simpan Perubahan Keamanan
                     </button>
                 </div>
 
@@ -273,7 +273,7 @@
     <script>
         let lastOrderCount = 0;
 
-        // --- SISTEM LOGIN & KEAMANAN ADMIN ---
+        // --- SISTEM LOGIN & KEAMANAN ADMIN (Wajib Nomor HP Awal 081267166886, Bisa Diubah di Dalam) ---
         function checkAdminAuth() {
             const isLogged = sessionStorage.getItem('is_admin_logged');
             if (isLogged === 'true') {
@@ -292,14 +292,20 @@
             const pass = document.getElementById('login-pass').value.trim();
             const phone = document.getElementById('login-phone').value.trim();
 
-            const savedCreds = JSON.parse(localStorage.getItem('admin_credentials')) || { user: 'admin', pass: 'admin123', phone: '081234567890' };
+            let savedCreds = JSON.parse(localStorage.getItem('admin_credentials')) || { user: 'admin', pass: 'admin123', phone: '081267166886' };
 
-            if (user === savedCreds.user && pass === savedCreds.pass && phone === savedCreds.phone) {
+            // Cek nomor HP verifikasi (default 081267166886 atau yang sudah diubah di dalam)
+            if (phone !== savedCreds.phone) {
+                alert('Nomor HP verifikasi salah!');
+                return;
+            }
+
+            if (user === savedCreds.user && pass === savedCreds.pass) {
                 sessionStorage.setItem('is_admin_logged', 'true');
                 alert('Login Berhasil!');
                 checkAdminAuth();
             } else {
-                alert('Nama, Sandi, atau Nomor HP verifikasi salah!');
+                alert('Nama (Username) atau Sandi (Password) salah!');
             }
         }
 
@@ -310,7 +316,7 @@
         }
 
         function loadAdminSecurityForm() {
-            const savedCreds = JSON.parse(localStorage.getItem('admin_credentials')) || { user: 'admin', pass: 'admin123', phone: '081234567890' };
+            const savedCreds = JSON.parse(localStorage.getItem('admin_credentials')) || { user: 'admin', pass: 'admin123', phone: '081267166886' };
             document.getElementById('set-admin-user').value = savedCreds.user;
             document.getElementById('set-admin-pass').value = '';
             document.getElementById('set-admin-phone').value = savedCreds.phone;
@@ -321,7 +327,7 @@
             const newPass = document.getElementById('set-admin-pass').value.trim();
             const newPhone = document.getElementById('set-admin-phone').value.trim();
 
-            let savedCreds = JSON.parse(localStorage.getItem('admin_credentials')) || { user: 'admin', pass: 'admin123', phone: '081234567890' };
+            let savedCreds = JSON.parse(localStorage.getItem('admin_credentials')) || { user: 'admin', pass: 'admin123', phone: '081267166886' };
             
             if (!newUser || !newPhone) {
                 alert('Nama dan Nomor HP tidak boleh kosong!');
@@ -335,7 +341,7 @@
             savedCreds.phone = newPhone;
 
             localStorage.setItem('admin_credentials', JSON.stringify(savedCreds));
-            alert('Pengaturan akun & keamanan berhasil disimpan!');
+            alert('Pengaturan akun & nomor HP verifikasi berhasil disimpan!');
             loadAdminSecurityForm();
         }
 
@@ -358,7 +364,7 @@
         // --- AUDIO NOTIFIKASI TINGGI & SILENT ---
         function playSelectedSound() {
             const soundMode = localStorage.getItem('warung_sound_mode') || 'normal';
-            if (soundMode === 'silent') return; // Jika mode silent, tidak berbunyi
+            if (soundMode === 'silent') return;
 
             const soundType = localStorage.getItem('warung_sound_type') || 'classic';
             try {
@@ -373,9 +379,9 @@
                             const osc = audioCtx.createOscillator();
                             const gain = audioCtx.createGain();
                             osc.type = 'triangle';
-                            osc.frequency.setValueAtTime(1174.66, audioCtx.currentTime); // Nada tinggi D6
+                            osc.frequency.setValueAtTime(1174.66, audioCtx.currentTime);
                             osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.3);
-                            gain.gain.setValueAtTime(0.9, audioCtx.currentTime); // Volume tinggi
+                            gain.gain.setValueAtTime(0.9, audioCtx.currentTime);
                             gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
                             osc.connect(gain); gain.connect(audioCtx.destination);
                             osc.start(); osc.stop(audioCtx.currentTime + 0.3);
@@ -535,10 +541,15 @@
             });
         }
 
+        // Struk dengan Jam Menit Detik Digital Aktif
         function printOrderReceipt(orderId) {
             const orders = JSON.parse(localStorage.getItem('warung_orders')) || [];
             const ord = orders.find(o => o.id === orderId);
             if (!ord) return;
+
+            const now = new Date();
+            const timeString = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+            const dateString = now.toLocaleDateString('id-ID');
 
             let itemsHtml = ord.items.map(i => `
                 <tr>
@@ -564,10 +575,11 @@
                 </head>
                 <body onload="window.print(); window.close();">
                     <div class="text-center bold" style="font-size: 14px;">MIE BANGKA TELADAN</div>
-                    <div class="text-center">masak-masak.my.id</div>
+                    <div class="text-center">Resto Resmi</div>
                     <div class="line"></div>
                     <div>ID: ${ord.id}</div>
-                    <div>Waktu: ${ord.date}</div>
+                    <div>Tanggal: ${dateString}</div>
+                    <div>Waktu Cetak: ${timeString}</div>
                     <div>Pemesan: ${ord.name}</div>
                     <div>Lokasi: ${ord.address}</div>
                     <div>Bayar: ${ord.payment}</div>
