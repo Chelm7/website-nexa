@@ -16,8 +16,8 @@
             <div class="container mx-auto px-4 py-4 flex justify-between items-center">
                 <h1 class="text-xl font-bold"><i class="fa-solid fa-gauge-high mr-2"></i> Admin Panel - Mie Bangka</h1>
                 <div class="flex items-center space-x-3">
-                    <a href="index.html" target="_blank" class="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg text-sm transition">
-                        <i class="fa-solid fa-globe mr-1"></i> Kunjungi Web
+                    <a href="index.html" target="_blank" class="bg-sky-600 hover:bg-sky-700 text-white px-4 py-2 rounded-lg text-sm transition">
+                        <i class="fa-solid fa-globe mr-1"></i> Kunjungi Web Resto
                     </a>
                 </div>
             </div>
@@ -29,7 +29,7 @@
             <!-- Statistik Ringkas -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex items-center">
-                    <div class="p-4 bg-amber-100 text-amber-700 rounded-xl mr-4 text-2xl"><i class="fa-solid fa-clipboard-list"></i></div>
+                    <div class="p-4 bg-sky-100 text-sky-700 rounded-xl mr-4 text-2xl"><i class="fa-solid fa-clipboard-list"></i></div>
                     <div>
                         <p class="text-gray-500 text-sm">Total Pesanan Masuk</p>
                         <h3 id="stat-orders" class="text-2xl font-bold">0</h3>
@@ -53,15 +53,15 @@
 
             <!-- Tab Navigasi -->
             <div class="flex space-x-4 mb-6 border-b border-gray-300 pb-3 overflow-x-auto">
-                <button onclick="switchTab('orders')" id="btn-tab-orders" class="font-bold text-amber-700 border-b-2 border-amber-700 pb-2 px-2 transition whitespace-nowrap">Kelola Pesanan Masuk</button>
+                <button onclick="switchTab('orders')" id="btn-tab-orders" class="font-bold text-sky-700 border-b-2 border-sky-700 pb-2 px-2 transition whitespace-nowrap">Kelola Pesanan Masuk</button>
                 <button onclick="switchTab('menus')" id="btn-tab-menus" class="font-bold text-gray-500 pb-2 px-2 transition whitespace-nowrap">Kelola Daftar Menu</button>
                 <button onclick="switchTab('payments')" id="btn-tab-payments" class="font-bold text-gray-500 pb-2 px-2 transition whitespace-nowrap">Pengaturan Rekening & Suara</button>
             </div>
 
-            <!-- TAB 1: KELOLA PESANAN -->
+            <!-- TAB 1: KELOLA PESANAN & CETAK STRUK -->
             <div id="tab-orders" class="space-y-4">
                 <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-xl font-bold text-gray-800">Daftar Pesanan Pembeli</h3>
+                    <h3 class="text-xl font-bold text-gray-800">Daftar Pesanan & Cetak Struk Bluetooth</h3>
                     <button onclick="clearOrders()" class="bg-red-100 text-red-700 hover:bg-red-200 px-3 py-1.5 rounded-lg text-sm transition">Hapus Semua Riwayat</button>
                 </div>
                 <div class="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-200">
@@ -75,7 +75,7 @@
                                     <th class="p-4">Detail Pesanan</th>
                                     <th class="p-4">Total</th>
                                     <th class="p-4">Status</th>
-                                    <th class="p-4 text-center">Aksi (Proses)</th>
+                                    <th class="p-4 text-center">Aksi / Cetak Struk</th>
                                 </tr>
                             </thead>
                             <tbody id="orders-table-body" class="divide-y divide-gray-200 text-sm"></tbody>
@@ -92,22 +92,22 @@
                         <input type="hidden" id="menu-id">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Nama Menu</label>
-                            <input type="text" id="menu-name" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none">
+                            <input type="text" id="menu-name" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-sky-500 outline-none">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Harga (Rp)</label>
-                            <input type="number" id="menu-price" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none">
+                            <input type="number" id="menu-price" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-sky-500 outline-none">
                         </div>
                         <div class="md:col-span-2">
                             <label class="block text-sm font-medium text-gray-700 mb-1">URL Gambar / Foto</label>
-                            <input type="url" id="menu-image" placeholder="https://images.unsplash.com/..." required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none">
+                            <input type="url" id="menu-image" placeholder="https://images.unsplash.com/..." required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-sky-500 outline-none">
                         </div>
                         <div class="md:col-span-2">
                             <label class="block text-sm font-medium text-gray-700 mb-1">Deskripsi Singkat</label>
-                            <textarea id="menu-desc" rows="2" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"></textarea>
+                            <textarea id="menu-desc" rows="2" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-sky-500 outline-none"></textarea>
                         </div>
                         <div class="md:col-span-2 flex space-x-3">
-                            <button type="submit" class="bg-amber-600 hover:bg-amber-700 text-white px-6 py-2 rounded-lg font-medium transition">Simpan Menu</button>
+                            <button type="submit" class="bg-sky-600 hover:bg-sky-700 text-white px-6 py-2 rounded-lg font-medium transition">Simpan Menu</button>
                             <button type="button" onclick="resetMenuForm()" id="cancel-edit" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-lg font-medium hidden transition">Batal</button>
                         </div>
                     </form>
@@ -141,7 +141,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
                         <div>
                             <label class="block text-xs font-bold text-gray-600 mb-1">Pilih Jenis Suara Dering</label>
-                            <select id="sound-type-select" class="w-full px-3 py-2 border rounded-lg bg-white focus:ring-2 focus:ring-amber-500 outline-none">
+                            <select id="sound-type-select" class="w-full px-3 py-2 border rounded-lg bg-white focus:ring-2 focus:ring-sky-500 outline-none">
                                 <option value="classic">Beep Klasik (Standar)</option>
                                 <option value="chime">Chime Modern (Harmoni Lembut)</option>
                                 <option value="siren">Alarm Sirene (Peringatan Tegas)</option>
@@ -149,7 +149,7 @@
                             </select>
                         </div>
                         <div class="flex items-end space-x-2 pt-2 md:pt-0">
-                            <button onclick="saveSoundSettings()" class="bg-amber-600 hover:bg-amber-700 text-white font-bold px-5 py-2.5 rounded-lg transition shadow">
+                            <button onclick="saveSoundSettings()" class="bg-sky-600 hover:bg-sky-700 text-white font-bold px-5 py-2.5 rounded-lg transition shadow">
                                 Simpan Suara
                             </button>
                             <button onclick="testSelectedSound()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-4 py-2.5 rounded-lg transition">
@@ -159,16 +159,23 @@
                     </div>
                 </div>
 
-                <!-- Pengaturan Rekening -->
+                <!-- Pengaturan Rekening (Dapat Diubah Namanya) -->
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-                    <h3 class="text-xl font-bold mb-2 text-gray-800">Pengaturan Nomor Rekening & E-Wallet</h3>
-                    <p class="text-sm text-gray-500 mb-4">Isi nomor rekening atau E-Wallet di bawah ini agar tampil otomatis di pilihan pembayaran web pembeli. Kosongkan jika tidak ingin ditampilkan.</p>
+                    <div class="flex justify-between items-center mb-4">
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-800">Pengaturan Metode Pembayaran & E-Wallet</h3>
+                            <p class="text-sm text-gray-500">Nama Bank/E-Wallet, Nomor Rekening, dan Pemilik dapat diubah atau ditambah sesuai kebutuhan.</p>
+                        </div>
+                        <button onclick="addNewPaymentMethod()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-bold transition shadow">
+                            <i class="fa-solid fa-plus mr-1"></i> Tambah Metode
+                        </button>
+                    </div>
                     
                     <div id="payment-admin-list" class="space-y-4">
                         <!-- List form pembayaran diisi via JS -->
                     </div>
-                    <button onclick="savePaymentSettings()" class="mt-6 bg-amber-600 hover:bg-amber-700 text-white font-bold px-6 py-2.5 rounded-lg transition shadow">
-                        Simpan Perubahan Rekening
+                    <button onclick="savePaymentSettings()" class="mt-6 bg-sky-600 hover:bg-sky-700 text-white font-bold px-6 py-2.5 rounded-lg transition shadow">
+                        Simpan Perubahan Pembayaran
                     </button>
                 </div>
             </div>
@@ -176,11 +183,10 @@
         </main>
     </div>
 
-    <!-- Script Admin Dashboard & Pengaturan Suara -->
+    <!-- Script Admin Dashboard -->
     <script>
         let lastOrderCount = 0;
 
-        // Pemutar Suara Notifikasi Berdasarkan Pilihan Admin
         function playSelectedSound() {
             const soundType = localStorage.getItem('warung_sound_type') || 'classic';
             try {
@@ -282,15 +288,15 @@
 
             if (tab === 'orders') {
                 ordersTab.classList.remove('hidden');
-                btnOrders.className = "font-bold text-amber-700 border-b-2 border-amber-700 pb-2 px-2 transition whitespace-nowrap";
+                btnOrders.className = "font-bold text-sky-700 border-b-2 border-sky-700 pb-2 px-2 transition whitespace-nowrap";
                 loadOrders();
             } else if (tab === 'menus') {
                 menusTab.classList.remove('hidden');
-                btnMenus.className = "font-bold text-amber-700 border-b-2 border-amber-700 pb-2 px-2 transition whitespace-nowrap";
+                btnMenus.className = "font-bold text-sky-700 border-b-2 border-sky-700 pb-2 px-2 transition whitespace-nowrap";
                 loadAdminMenus();
             } else if (tab === 'payments') {
                 paymentsTab.classList.remove('hidden');
-                btnPayments.className = "font-bold text-amber-700 border-b-2 border-amber-700 pb-2 px-2 transition whitespace-nowrap";
+                btnPayments.className = "font-bold text-sky-700 border-b-2 border-sky-700 pb-2 px-2 transition whitespace-nowrap";
                 loadAdminPayments();
                 loadSoundSettings();
             }
@@ -328,19 +334,77 @@
                         <td class="p-4 font-semibold text-gray-800">${ord.name}<br><small class="text-gray-500 font-normal"><i class="fa-solid fa-location-dot mr-1"></i>${ord.address}</small></td>
                         <td class="p-4"><span class="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs font-bold">${ord.payment || '-'}</span></td>
                         <td class="p-4 text-gray-600">${itemsStr}</td>
-                        <td class="p-4 font-bold text-amber-700">Rp ${ord.total.toLocaleString('id-ID')}</td>
+                        <td class="p-4 font-bold text-sky-700">Rp ${ord.total.toLocaleString('id-ID')}</td>
                         <td class="p-4"><span class="px-3 py-1 rounded-full text-xs font-bold ${statusColor}">${ord.status}</span></td>
                         <td class="p-4 text-center space-x-2">
-                            <select onchange="updateOrderStatus(${index}, this.value)" class="border rounded px-2 py-1 text-xs font-bold bg-amber-50">
+                            <select onchange="updateOrderStatus(${index}, this.value)" class="border rounded px-2 py-1 text-xs font-bold bg-sky-50">
                                 <option value="Pending" ${ord.status === 'Pending' ? 'selected' : ''}>Pending</option>
                                 <option value="Diproses" ${ord.status === 'Diproses' ? 'selected' : ''}>Diproses (Validasi)</option>
                                 <option value="Selesai" ${ord.status === 'Selesai' ? 'selected' : ''}>Selesai</option>
                             </select>
+                            <button onclick="printOrderReceipt('${ord.id}')" title="Cetak Struk Thermal Bluetooth" class="bg-sky-600 hover:bg-sky-700 text-white px-2.5 py-1.5 rounded-lg text-xs transition shadow">
+                                <i class="fa-solid fa-print"></i>
+                            </button>
                             <button onclick="deleteOrder(${index})" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>
                         </td>
                     </tr>
                 `;
             });
+        }
+
+        // Fungsi Cetak Struk (Kompatibel dengan semua printer Bluetooth Thermal via Print Dialog Sistem)
+        function printOrderReceipt(orderId) {
+            const orders = JSON.parse(localStorage.getItem('warung_orders')) || [];
+            const ord = orders.find(o => o.id === orderId);
+            if (!ord) return;
+
+            let itemsHtml = ord.items.map(i => `
+                <tr>
+                    <td style="padding: 4px 0;">${i.name} x${i.qty}</td>
+                    <td style="text-align: right; padding: 4px 0;">Rp ${(i.price * i.qty).toLocaleString('id-ID')}</td>
+                </tr>
+            `).join('');
+
+            let printWindow = window.open('', '_blank', 'width=350,height=600');
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html lang="id">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Struk #${ord.id}</title>
+                    <style>
+                        body { font-family: 'Courier New', monospace; font-size: 12px; width: 58mm; margin: 0 auto; padding: 10px; color: #000; }
+                        .text-center { text-align: center; }
+                        .bold { font-weight: bold; }
+                        .line { border-bottom: 1px dashed #000; margin: 8px 0; }
+                        table { width: 100%; border-collapse: collapse; }
+                    </style>
+                </head>
+                <body onload="window.print(); window.close();">
+                    <div class="text-center bold" style="font-size: 14px;">MIE BANGKA TELADAN</div>
+                    <div class="text-center">masak-masak.my.id</div>
+                    <div class="line"></div>
+                    <div>ID: ${ord.id}</div>
+                    <div>Waktu: ${ord.date}</div>
+                    <div>Pemesan: ${ord.name}</div>
+                    <div>Lokasi: ${ord.address}</div>
+                    <div>Bayar: ${ord.payment}</div>
+                    <div class="line"></div>
+                    <table>
+                        ${itemsHtml}
+                    </table>
+                    <div class="line"></div>
+                    <div style="display: flex; justify-content: space-between;" class="bold">
+                        <span>TOTAL:</span>
+                        <span>Rp ${ord.total.toLocaleString('id-ID')}</span>
+                    </div>
+                    <div class="line"></div>
+                    <div class="text-center bold">STATUS: ${ord.status.toUpperCase()}</div>
+                    <div class="text-center" style="margin-top: 10px;">Terima Kasih!</div>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
         }
 
         function updateOrderStatus(index, status) {
@@ -377,7 +441,7 @@
                     <tr class="hover:bg-gray-50">
                         <td class="p-4"><img src="${item.image}" class="w-16 h-16 object-cover rounded-lg"></td>
                         <td class="p-4"><h5 class="font-bold text-gray-800">${item.name}</h5><p class="text-gray-500 text-xs">${item.desc}</p></td>
-                        <td class="p-4 font-bold text-amber-700">Rp ${item.price.toLocaleString('id-ID')}</td>
+                        <td class="p-4 font-bold text-sky-700">Rp ${item.price.toLocaleString('id-ID')}</td>
                         <td class="p-4 text-center space-x-2">
                             <button onclick="editMenu(${item.id})" class="text-blue-600 hover:text-blue-800"><i class="fa-solid fa-pen-to-square"></i></button>
                             <button onclick="deleteMenu(${item.id})" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>
@@ -445,42 +509,65 @@
             document.getElementById('cancel-edit').classList.add('hidden');
         }
 
+        // --- KELOLA PEMBAYARAN / REKENING DANA & E-WALLET (BISA DIUBAH & TAMBAH) ---
         function loadAdminPayments() {
             const listEl = document.getElementById('payment-admin-list');
-            const payments = JSON.parse(localStorage.getItem('warung_payments')) || [];
+            let payments = JSON.parse(localStorage.getItem('warung_payments')) || [];
 
             listEl.innerHTML = '';
             payments.forEach((p, idx) => {
                 listEl.innerHTML += `
-                    <div class="p-4 bg-gray-50 rounded-xl border border-gray-200 grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                    <div class="p-4 bg-gray-50 rounded-xl border border-gray-200 grid grid-cols-1 md:grid-cols-4 gap-4 items-center relative">
                         <div>
                             <label class="block text-xs font-bold text-gray-600 mb-1">Nama Bank / E-Wallet</label>
-                            <input type="text" id="pay-name-${idx}" value="${p.name}" class="w-full px-3 py-2 border rounded-lg bg-white" readonly>
+                            <input type="text" id="pay-name-${idx}" value="${p.name}" class="w-full px-3 py-2 border rounded-lg bg-white focus:ring-2 focus:ring-sky-500 outline-none">
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-gray-600 mb-1">Nomor Rekening / Tujuan (Kosongkan jika tidak ada)</label>
-                            <input type="text" id="pay-num-${idx}" value="${p.number || ''}" placeholder="Cth: 1234567890" class="w-full px-3 py-2 border rounded-lg bg-white focus:ring-2 focus:ring-amber-500 outline-none">
+                            <label class="block text-xs font-bold text-gray-600 mb-1">Nomor Rekening / Tujuan</label>
+                            <input type="text" id="pay-num-${idx}" value="${p.number || ''}" placeholder="Cth: 0812345678" class="w-full px-3 py-2 border rounded-lg bg-white focus:ring-2 focus:ring-sky-500 outline-none">
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-gray-600 mb-1">Atas Nama Pemilik</label>
-                            <input type="text" id="pay-holder-${idx}" value="${p.holder || ''}" placeholder="Cth: Nama Anda" class="w-full px-3 py-2 border rounded-lg bg-white focus:ring-2 focus:ring-amber-500 outline-none">
+                            <input type="text" id="pay-holder-${idx}" value="${p.holder || ''}" placeholder="Cth: Nama Anda" class="w-full px-3 py-2 border rounded-lg bg-white focus:ring-2 focus:ring-sky-500 outline-none">
+                        </div>
+                        <div class="flex items-end pt-5">
+                            <button onclick="removePaymentMethod(${idx})" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-2 rounded-lg text-xs font-bold transition w-full">
+                                <i class="fa-solid fa-trash mr-1"></i> Hapus
+                            </button>
                         </div>
                     </div>
                 `;
             });
         }
 
+        function addNewPaymentMethod() {
+            let payments = JSON.parse(localStorage.getItem('warung_payments')) || [];
+            const newId = payments.length > 0 ? Math.max(...payments.map(p => p.id || 0)) + 1 : 1;
+            payments.push({ id: newId, name: "Metode Baru", number: "", holder: "" });
+            localStorage.setItem('warung_payments', JSON.stringify(payments));
+            loadAdminPayments();
+        }
+
+        function removePaymentMethod(idx) {
+            let payments = JSON.parse(localStorage.getItem('warung_payments')) || [];
+            payments.splice(idx, 1);
+            localStorage.setItem('warung_payments', JSON.stringify(payments));
+            loadAdminPayments();
+        }
+
         function savePaymentSettings() {
-            const payments = JSON.parse(localStorage.getItem('warung_payments')) || [];
+            let payments = JSON.parse(localStorage.getItem('warung_payments')) || [];
             payments.forEach((p, idx) => {
+                const nameInput = document.getElementById(`pay-name-${idx}`).value;
                 const numInput = document.getElementById(`pay-num-${idx}`).value;
                 const holderInput = document.getElementById(`pay-holder-${idx}`).value;
+                p.name = nameInput;
                 p.number = numInput;
                 p.holder = holderInput;
             });
 
             localStorage.setItem('warung_payments', JSON.stringify(payments));
-            alert('Pengaturan rekening & pembayaran berhasil disimpan!');
+            alert('Pengaturan rekening & E-Wallet berhasil disimpan!');
             loadAdminPayments();
         }
 
