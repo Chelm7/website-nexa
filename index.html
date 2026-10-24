@@ -3,279 +3,184 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mie Bangka Asli - Resto Rasa Khas</title>
+    <title>Mie Bangka Asli - Warung Rasa Khas</title>
+    <!-- Tailwind CSS untuk Desain Modern -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Animasi Transisi Banner Slider */
+        .banner-slide {
+            display: none;
+        }
+        .banner-slide.active {
+            display: block;
+            animation: fadeIn 0.8s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0.4; }
+            to { opacity: 1; }
+        }
+    </style>
 </head>
-<body class="bg-sky-50 text-gray-800 font-sans">
-
-    <!-- Jam Digital Aktif di Atas Kiri -->
-    <div class="bg-sky-900 text-sky-100 px-4 py-1.5 text-xs font-mono flex items-center justify-between shadow-inner">
-        <div class="flex items-center space-x-2">
-            <i class="fa-solid fa-clock text-sky-400"></i>
-            <span id="live-digital-clock">00:00:00</span>
-        </div>
-        <div class="text-[11px] text-sky-300">Resto Mie Bangka Teladan</div>
-    </div>
+<body class="bg-amber-50 text-gray-800 font-sans relative">
 
     <!-- Navbar -->
-    <header class="bg-sky-700 text-white shadow-md sticky top-0 z-50">
+    <header class="bg-amber-700 text-white shadow-md sticky top-0 z-50">
         <div class="container mx-auto px-4 py-4 flex justify-between items-center">
-            <h1 class="text-2xl font-bold tracking-wide"><i class="fa-solid fa-bowl-food mr-2"></i> Mie Bangka Teladan</h1>
+            <h1 class="text-2xl font-bold tracking-wide"><i class="fa-solid fa-bowl-food mr-2"></i> Kota Tanjungpinang</h1>
             <div class="flex items-center space-x-4">
-                <button onclick="toggleCart()" class="bg-white text-sky-600 hover:bg-sky-50 px-4 py-2 rounded-lg font-bold transition flex items-center border border-sky-300 shadow-sm">
+                <button onclick="toggleCart()" class="relative bg-amber-800 hover:bg-amber-900 px-4 py-2 rounded-lg font-medium transition flex items-center">
                     <i class="fa-solid fa-cart-shopping mr-2"></i> Keranjang
-                    <span id="cart-count" class="ml-2 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold">0</span>
+                    <span id="cart-count" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-6 h-6 rounded-full flex items-center justify-center font-bold">0</span>
                 </button>
             </div>
         </div>
     </header>
 
-    <!-- Slide Banner Otomatis (PNG / Gambar Resto) -->
-    <section class="w-full bg-sky-900 overflow-hidden shadow-md relative">
-        <div class="container mx-auto">
-            <img id="resto-banner-img" src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80" alt="Banner Resto Mie Bangka" class="w-full h-64 md:h-80 object-cover opacity-90 transition-all duration-700">
-        </div>
-    </section>
-
-    <!-- Hero / Intro Section -->
-    <section class="bg-gradient-to-r from-sky-600 to-sky-800 text-white py-12 px-4 text-center">
-        <div class="container mx-auto max-w-2xl">
-            <h2 class="text-3xl md:text-4xl font-extrabold mb-3">Mie Bangka Asli</h2>
-            <p class="text-base text-sky-100 mb-6">Nikmati kelezatan mie kenyal dengan topping gurih khas Bangka, diracik dengan bumbu rahasia turun-temurun di resto kami.</p>
-            <a href="#menu-section" class="bg-white text-sky-600 font-bold px-6 py-3 rounded-full shadow-lg hover:bg-sky-50 transition border border-sky-300 inline-block">Pesan Sekarang</a>
-        </div>
-    </section>
-
-    <!-- Menu Section dengan Filter Makanan & Minuman -->
-    <main id="menu-section" class="container mx-auto px-4 py-12">
-        <h3 class="text-3xl font-bold text-center mb-6 text-sky-900">Daftar Menu Resto Kami</h3>
-        
-        <!-- Tombol Filter Kategori -->
-        <div class="flex justify-center space-x-3 mb-10">
-            <button onclick="filterMenu('Semua')" id="btn-filter-semua" class="bg-sky-600 text-white px-5 py-2 rounded-full font-bold shadow transition text-sm">Semua Menu</button>
-            <button onclick="filterMenu('Makanan')" id="btn-filter-makanan" class="bg-white text-sky-600 border border-sky-300 px-5 py-2 rounded-full font-bold shadow transition text-sm hover:bg-sky-50">Makanan</button>
-            <button onclick="filterMenu('Minuman')" id="btn-filter-minuman" class="bg-white text-sky-600 border border-sky-300 px-5 py-2 rounded-full font-bold shadow transition text-sm hover:bg-sky-50">Minuman</button>
-        </div>
-
-        <div id="menu-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-            <!-- Menu dinamis -->
-        </div>
-
-        <!-- Cek Status Pesanan Saya -->
-        <section class="bg-white rounded-2xl shadow-md p-6 max-w-2xl mx-auto border border-sky-200">
-            <h3 class="text-xl font-bold text-sky-900 mb-2"><i class="fa-solid fa-clock-rotate-left mr-2"></i> Status Pesanan Terakhir Saya</h3>
-            <p class="text-sm text-gray-600 mb-4">Pesanan baru akan divalidasi dan diproses langsung oleh Resto.</p>
-            <div id="my-order-status-box" class="bg-sky-50 p-4 rounded-xl text-sm text-gray-700">
-                Belum ada pesanan aktif di perangkat ini.
+    <!-- Hero Banner Slider Section dengan Tombol Panah Kanan -->
+    <section class="relative bg-gradient-to-r from-amber-600 to-amber-800 text-white py-20 px-4 text-center overflow-hidden">
+        <!-- Container Slider -->
+        <div class="container mx-auto max-w-3xl relative min-h-[180px] flex items-center justify-center">
+            
+            <!-- Slide 1 -->
+            <div class="banner-slide active w-full">
+                <h2 class="text-4xl font-extrabold mb-4">Mie Bangka Asli & Halal</h2>
+                <p class="text-lg text-amber-100 mb-6">Nikmati kelezatan mie kenyal dengan topping daging gurih khas Bangka, diracik dengan bumbu rahasia turun-temurun.</p>
+                <a href="#menu-section" class="bg-yellow-400 text-gray-900 font-bold px-6 py-3 rounded-full shadow-lg hover:bg-yellow-300 transition inline-block">Pesan Sekarang</a>
             </div>
-        </section>
-    </main>
 
-    <!-- Tombol Panah Scroll Cepat (Hanya muncul saat disentuh / di-hover) -->
-    <div class="fixed bottom-6 right-6 z-40 opacity-20 hover:opacity-100 active:opacity-100 transition-opacity duration-300 flex flex-col space-y-2 bg-sky-900 bg-opacity-90 p-2 rounded-xl shadow-xl border border-sky-400">
-        <button onclick="scrollToTop()" title="Ke Paling Atas" class="w-10 h-10 bg-white text-sky-700 rounded-lg flex items-center justify-center font-bold hover:bg-sky-50 transition shadow">
-            <i class="fa-solid fa-arrow-up"></i>
+            <!-- Slide 2 -->
+            <div class="banner-slide w-full">
+                <h2 class="text-4xl font-extrabold mb-4">Cita Rasa Legendaris</h2>
+                <p class="text-lg text-amber-100 mb-6">Disajikan hangat dengan kaldu pilihan dan pangsit lembut yang memanjakan lidah Anda setiap hari.</p>
+                <a href="#menu-section" class="bg-yellow-400 text-gray-900 font-bold px-6 py-3 rounded-full shadow-lg hover:bg-yellow-300 transition inline-block">Lihat Menu</a>
+            </div>
+
+            <!-- Slide 3 -->
+            <div class="banner-slide w-full">
+                <h2 class="text-4xl font-extrabold mb-4">Promo & Menu Spesial</h2>
+                <p class="text-lg text-amber-100 mb-6">Pesan langsung dari meja Anda dengan mudah, cepat, dan higienis tanpa ribet.</p>
+                <a href="#menu-section" class="bg-yellow-400 text-gray-900 font-bold px-6 py-3 rounded-full shadow-lg hover:bg-yellow-300 transition inline-block">Pesan Menu Favorit</a>
+            </div>
+
+        </div>
+
+        <!-- Tombol Panah Kanan untuk Manual Slide -->
+        <button onclick="nextSlide()" class="absolute right-4 top-1/2 -translate-y-1/2 bg-black bg-opacity-30 hover:bg-opacity-50 text-white w-10 h-10 rounded-full flex items-center justify-center transition z-10" title="Geser Banner">
+            <i class="fa-solid fa-chevron-right"></i>
         </button>
-        <button onclick="scrollToBottom()" title="Ke Paling Bawah" class="w-10 h-10 bg-white text-sky-700 rounded-lg flex items-center justify-center font-bold hover:bg-sky-50 transition shadow">
-            <i class="fa-solid fa-arrow-down"></i>
-        </button>
-    </div>
+    </section>
+
+    <!-- Menu Section -->
+    <main id="menu-section" class="container mx-auto px-4 py-12">
+        <h3 class="text-3xl font-bold text-center mb-10 text-amber-900">Daftar Menu Kami</h3>
+        
+        <!-- Grid Menu Dinamis -->
+        <div id="menu-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Menu akan dimuat otomatis via JavaScript dari LocalStorage -->
+        </div>
+    </main>
 
     <!-- Modal Keranjang / Checkout -->
     <div id="cart-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex justify-center items-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative max-h-[90vh] overflow-y-auto">
             <button onclick="toggleCart()" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800 text-xl"><i class="fa-solid fa-xmark"></i></button>
-            <h3 class="text-2xl font-bold mb-4 text-sky-900"><i class="fa-solid fa-basket-shopping mr-2"></i> Keranjang Pesanan</h3>
+            <h3 class="text-2xl font-bold mb-4 text-amber-900"><i class="fa-solid fa-basket-shopping mr-2"></i> Keranjang Pesanan</h3>
             
-            <div id="cart-items" class="divide-y divide-gray-200 mb-4"></div>
+            <div id="cart-items" class="divide-y divide-gray-200 mb-4">
+                <!-- Item Keranjang -->
+            </div>
 
             <div class="border-t pt-4 mb-6">
                 <div class="flex justify-between font-bold text-lg mb-4">
                     <span>Total:</span>
-                    <span id="cart-total" class="text-sky-700">Rp 0</span>
+                    <span id="cart-total" class="text-amber-700">Rp 0</span>
                 </div>
                 
+                <!-- Form Pemesan -->
                 <div class="space-y-3">
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Nama Pemesan</label>
-                        <input type="text" id="buyer-name" class="w-full mt-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-sky-500 outline-none" placeholder="Masukkan nama Anda">
+                        <input type="text" id="buyer-name" class="w-full mt-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none" placeholder="Masukkan nama Anda">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Nomor Meja / Alamat Pengiriman</label>
-                        <input type="text" id="buyer-address" class="w-full mt-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-sky-500 outline-none" placeholder="Contoh: Meja 05 / Jl. Merdeka">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Metode Pembayaran (Rekening/E-Wallet)</label>
-                        <select id="payment-method" class="w-full mt-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-sky-500 outline-none">
-                            <!-- Dimuat dinamis -->
-                        </select>
+                        <input type="text" id="buyer-address" class="w-full mt-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none" placeholder="Contoh: Meja 05 / Jl. Merdeka No. 10">
                     </div>
                 </div>
             </div>
 
-            <button onclick="proceedToPayment()" class="w-full bg-white text-sky-600 hover:bg-sky-50 font-bold py-3 rounded-xl transition shadow border border-sky-300">
-                <i class="fa-solid fa-file-invoice-dollar mr-2"></i> Lanjutkan & Lihat Info Pembayaran
+            <button onclick="checkout()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl transition shadow-md">
+                <i class="fa-solid fa-check mr-2"></i> Kirim Pesanan Sekarang
             </button>
         </div>
     </div>
 
-    <!-- Modal Instruksi Pembayaran -->
-    <div id="payment-modal" class="fixed inset-0 bg-black bg-opacity-60 hidden z-50 flex justify-center items-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center relative">
-            <h3 class="text-xl font-bold mb-2 text-sky-900">Instruksi Pembayaran</h3>
-            <p class="text-sm text-gray-600 mb-4">Silakan transfer / bayar sesuai data di bawah ini:</p>
-            
-            <div class="bg-sky-50 p-4 rounded-xl mb-6 border border-sky-200 text-left space-y-2">
-                <p class="text-xs text-gray-500 font-semibold uppercase tracking-wider">Metode Pilihan:</p>
-                <p id="pay-method-name" class="font-bold text-sky-900 text-base">-</p>
-                <p class="text-xs text-gray-500 font-semibold uppercase tracking-wider">Nomor Tujuan / Rekening:</p>
-                <p id="pay-acc-number" class="font-mono font-bold text-lg text-gray-800 bg-white px-3 py-1.5 rounded border border-sky-300">-</p>
-                <p class="text-xs text-gray-500 font-semibold uppercase tracking-wider">Atas Nama / Keterangan:</p>
-                <p id="pay-acc-holder" class="font-medium text-gray-700 text-sm">-</p>
-                <div class="pt-2 border-t border-sky-200 flex justify-between text-sm font-bold text-sky-800">
-                    <span>Total Tagihan:</span>
-                    <span id="pay-total-amount">Rp 0</span>
-                </div>
-            </div>
-
-            <div class="space-y-2">
-                <button onclick="finishCheckout()" class="w-full bg-white text-sky-600 hover:bg-sky-50 font-bold py-2.5 rounded-xl transition shadow border border-sky-300">
-                    Kirim Pesanan Sekarang
-                </button>
-                <button onclick="closePaymentModal()" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm font-medium py-2 rounded-xl transition">
-                    Kembali
-                </button>
-            </div>
-        </div>
-    </div>
-
     <!-- Footer -->
-    <footer class="bg-sky-900 text-sky-100 py-6 text-center mt-12">
-        <p>&copy; 2026 Resto Mie Bangka Teladan. All rights reserved.</p>
+    <footer class="bg-amber-900 text-amber-100 py-6 text-center mt-12">
+        <p>&copy; 2026 Kota Tanjungpinang (<span id="domain-label">masak-masak.my.id</span>). All rights reserved.</p>
     </footer>
 
-    <!-- Script Aplikasi Web -->
+    <!-- Script Aplikasi Frontend -->
     <script>
-        // Jam Digital Aktif
-        function updateLiveClock() {
-            const now = new Date();
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            const seconds = String(now.getSeconds()).padStart(2, '0');
-            const clockEl = document.getElementById('live-digital-clock');
-            if (clockEl) {
-                clockEl.innerText = `${hours}:${minutes}:${seconds}`;
-            }
-        }
-        setInterval(updateLiveClock, 1000);
-        updateLiveClock();
-
-        // Scroll Cepat
-        function scrollToTop() {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-        function scrollToBottom() {
-            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-        }
-
+        // Data Default Menu
         const defaultMenu = [
-            { id: 1, name: "Mie Bangka Spesial", price: 25000, category: "Makanan", desc: "Mie kenyal lengkap dengan topping cincang daging, tauge, dan bakso ikan.", image: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=500&q=80" },
-            { id: 2, name: "Mie Bangka Pangsit Kuah", price: 22000, category: "Makanan", desc: "Disajikan dengan kuah kaldu hangat dan pangsit isi daging lembut.", image: "https://images.unsplash.com/photo-1612929633738-8fe44f7ec841?auto=format&fit=crop&w=500&q=80" },
-            { id: 3, name: "Es Timun Serut", price: 8000, category: "Minuman", desc: "Minuman segar pereda pedas dan penyejuk dahaga.", image: "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=500&q=80" }
-        ];
-
-        const defaultPayments = [
-            { id: 1, name: "BCA", number: "1234567890", holder: "Mie Bangka Teladan" },
-            { id: 2, name: "Mandiri", number: "0987654321", holder: "Mie Bangka Teladan" },
-            { id: 3, name: "DANA", number: "081234567890", holder: "Mie Bangka Teladan" },
-            { id: 4, name: "Bayar di Tempat (COD)", number: "Tunai", holder: "Bayar ke Kasir Resto" }
+            { id: 1, name: "Mie Bangka Spesial", price: 25000, desc: "Mie kenyal lengkap dengan topping cincang daging, tauge, dan bakso ikan.", image: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=500&q=80" },
+            { id: 2, name: "Mie Bangka Pangsit Kuah", price: 22000, desc: "Disajikan dengan kuah kaldu hangat dan pangsit isi daging lembut.", image: "https://images.unsplash.com/photo-1612929633738-8fe44f7ec841?auto=format&fit=crop&w=500&q=80" },
+            { id: 3, name: "Es Timun Serut", price: 8000, desc: "Minuman segar pereda pedas dan penyejuk dahaga.", image: "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=500&q=80" }
         ];
 
         let cart = [];
-        let pendingOrderData = null;
-        let currentFilter = 'Semua';
+        let currentSlide = 0;
+        const slides = document.getElementsByClassName('banner-slide');
 
-        function initApp() {
+        // Otomatis Slide Banner setiap 4 detik
+        function autoSlide() {
+            slides[currentSlide].classList.remove('active');
+            currentSlide = (currentSlide + 1) % slides.length;
+            slides[currentSlide].classList.add('active');
+        }
+        setInterval(autoSlide, 4000);
+
+        // Manual Slide via Panah Kanan
+        function nextSlide() {
+            slides[currentSlide].classList.remove('active');
+            currentSlide = (currentSlide + 1) % slides.length;
+            slides[currentSlide].classList.add('active');
+        }
+
+        // Inisialisasi Menu
+        function initMenu() {
             if (!localStorage.getItem('warung_menu')) {
                 localStorage.setItem('warung_menu', JSON.stringify(defaultMenu));
             }
-            if (!localStorage.getItem('warung_payments')) {
-                localStorage.setItem('warung_payments', JSON.stringify(defaultPayments));
-            }
-            initSlidingBanner();
-            renderMenu();
-            loadPaymentOptions();
-            checkMyOrderStatus();
-        }
-
-        // Sliding Banner Otomatis
-        function initSlidingBanner() {
-            const defaultBanners = [
-                "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80",
-                "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=1200&q=80"
-            ];
-            const banners = JSON.parse(localStorage.getItem('resto_banners')) || defaultBanners;
-            const bannerImg = document.getElementById('resto-banner-img');
-            
-            if (banners.length > 0 && bannerImg) {
-                let currentIndex = 0;
-                bannerImg.src = banners[currentIndex];
-                if (banners.length > 1) {
-                    setInterval(() => {
-                        currentIndex = (currentIndex + 1) % banners.length;
-                        bannerImg.style.opacity = '0.3';
-                        setTimeout(() => {
-                            bannerImg.src = banners[currentIndex];
-                            bannerImg.style.opacity = '0.9';
-                        }, 300);
-                    }, 4000); // Ganti setiap 4 detik
-                }
-            }
-        }
-
-        function filterMenu(category) {
-            currentFilter = category;
-            ['Semua', 'Makanan', 'Minuman'].forEach(cat => {
-                const btn = document.getElementById(`btn-filter-${cat.toLowerCase()}`);
-                if (cat === category) {
-                    btn.className = "bg-sky-600 text-white px-5 py-2 rounded-full font-bold shadow transition text-sm";
-                } else {
-                    btn.className = "bg-white text-sky-600 border border-sky-300 px-5 py-2 rounded-full font-bold shadow transition text-sm hover:bg-sky-50";
-                }
-            });
             renderMenu();
         }
 
+        // Tampilkan Menu ke Halaman
         function renderMenu() {
             const menuGrid = document.getElementById('menu-grid');
             const menuList = JSON.parse(localStorage.getItem('warung_menu')) || [];
             
-            let filteredList = menuList;
-            if (currentFilter !== 'Semua') {
-                filteredList = menuList.filter(m => (m.category || 'Makanan') === currentFilter);
-            }
-
             menuGrid.innerHTML = '';
-            if (filteredList.length === 0) {
-                menuGrid.innerHTML = `<p class="col-span-3 text-center text-gray-500 py-8">Belum ada menu dalam kategori ini.</p>`;
+            if (menuList.length === 0) {
+                menuGrid.innerHTML = `<p class="col-span-3 text-center text-gray-500 py-8">Belum ada menu tersedia saat ini.</p>`;
                 return;
             }
 
-            filteredList.forEach(item => {
+            menuList.forEach(item => {
                 menuGrid.innerHTML += `
                     <div class="bg-white rounded-2xl shadow-md overflow-hidden flex flex-col justify-between hover:shadow-xl transition">
                         <div>
                             <img src="${item.image || 'https://via.placeholder.com/400x300'}" alt="${item.name}" class="w-full h-48 object-cover">
                             <div class="p-5">
-                                <span class="text-xs font-bold text-sky-600 bg-sky-50 px-2.5 py-1 rounded-full uppercase">${item.category || 'Makanan'}</span>
-                                <h4 class="font-bold text-xl text-sky-900 mt-2 mb-1">${item.name}</h4>
+                                <h4 class="font-bold text-xl text-amber-900 mb-1">${item.name}</h4>
                                 <p class="text-gray-600 text-sm mb-4">${item.desc}</p>
                             </div>
                         </div>
                         <div class="px-5 pb-5 flex justify-between items-center">
-                            <span class="text-lg font-bold text-sky-700">Rp ${item.price.toLocaleString('id-ID')}</span>
-                            <button onclick="addToCart(${item.id})" class="bg-white text-sky-600 hover:bg-sky-50 px-4 py-2 rounded-xl text-sm font-bold transition shadow border border-sky-300">
+                            <span class="text-lg font-bold text-amber-700">Rp ${item.price.toLocaleString('id-ID')}</span>
+                            <button onclick="addToCart(${item.id})" class="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition shadow">
                                 <i class="fa-solid fa-plus mr-1"></i> Pesan
                             </button>
                         </div>
@@ -284,25 +189,7 @@
             });
         }
 
-        function loadPaymentOptions() {
-            const selectEl = document.getElementById('payment-method');
-            const payments = JSON.parse(localStorage.getItem('warung_payments')) || [];
-            
-            selectEl.innerHTML = '';
-            let validCount = 0;
-
-            payments.forEach(p => {
-                if (p.number && p.number.trim() !== '') {
-                    validCount++;
-                    selectEl.innerHTML += `<option value="${p.id}">${p.name} (No: ${p.number} - A/N ${p.holder})</option>`;
-                }
-            });
-
-            if (validCount === 0) {
-                selectEl.innerHTML = `<option value="">Metode pembayaran belum diatur oleh Resto</option>`;
-            }
-        }
-
+        // Tambah ke Keranjang
         function addToCart(id) {
             const menuList = JSON.parse(localStorage.getItem('warung_menu')) || [];
             const product = menuList.find(p => p.id === id);
@@ -318,6 +205,7 @@
             alert(`${product.name} berhasil ditambahkan ke keranjang!`);
         }
 
+        // Update Tampilan Keranjang
         function updateCartUI() {
             const countEl = document.getElementById('cart-count');
             const itemsEl = document.getElementById('cart-items');
@@ -338,9 +226,9 @@
                             <small class="text-gray-500">Rp ${item.price.toLocaleString('id-ID')} x ${item.qty}</small>
                         </div>
                         <div class="flex items-center space-x-2">
-                            <button onclick="changeQty(${index}, -1)" class="bg-gray-100 px-2.5 py-1 rounded text-xs font-bold">-</button>
+                            <button onclick="changeQty(${index}, -1)" class="bg-gray-200 px-2 py-1 rounded text-xs">-</button>
                             <span class="font-bold">${item.qty}</span>
-                            <button onclick="changeQty(${index}, 1)" class="bg-gray-100 px-2.5 py-1 rounded text-xs font-bold">+</button>
+                            <button onclick="changeQty(${index}, 1)" class="bg-gray-200 px-2 py-1 rounded text-xs">+</button>
                         </div>
                     </div>
                 `;
@@ -350,6 +238,7 @@
             totalEl.innerText = `Rp ${totalPrice.toLocaleString('id-ID')}`;
         }
 
+        // Ubah Qty di Keranjang
         function changeQty(index, change) {
             cart[index].qty += change;
             if (cart[index].qty <= 0) {
@@ -358,22 +247,19 @@
             updateCartUI();
         }
 
+        // Toggle Modal Keranjang
         function toggleCart() {
-            document.getElementById('cart-modal').classList.toggle('hidden');
+            const modal = document.getElementById('cart-modal');
+            modal.classList.toggle('hidden');
         }
 
-        function proceedToPayment() {
+        // Proses Checkout / Kirim Pesanan
+        function checkout() {
             const name = document.getElementById('buyer-name').value.trim();
             const address = document.getElementById('buyer-address').value.trim();
-            const paymentId = document.getElementById('payment-method').value;
 
             if (!name || !address) {
                 alert('Silakan masukkan Nama dan Nomor Meja / Alamat terlebih dahulu!');
-                return;
-            }
-
-            if (!paymentId) {
-                alert('Pilih metode pembayaran yang tersedia terlebih dahulu!');
                 return;
             }
 
@@ -382,91 +268,31 @@
                 return;
             }
 
-            const payments = JSON.parse(localStorage.getItem('warung_payments')) || [];
-            const selectedPay = payments.find(p => p.id == paymentId);
             const totalPrice = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
 
-            pendingOrderData = {
+            const newOrder = {
                 id: 'ORD-' + Date.now().toString().slice(-6),
                 date: new Date().toLocaleString('id-ID'),
                 name: name,
                 address: address,
-                payment: `${selectedPay.name} (${selectedPay.number})`,
                 items: [...cart],
                 total: totalPrice,
                 status: 'Pending'
             };
 
-            document.getElementById('pay-method-name').innerText = selectedPay.name;
-            document.getElementById('pay-acc-number').innerText = selectedPay.number;
-            document.getElementById('pay-acc-holder').innerText = selectedPay.holder;
-            document.getElementById('pay-total-amount').innerText = `Rp ${totalPrice.toLocaleString('id-ID')}`;
-
-            toggleCart();
-            document.getElementById('payment-modal').classList.remove('hidden');
-        }
-
-        function closePaymentModal() {
-            document.getElementById('payment-modal').classList.add('hidden');
-        }
-
-        function finishCheckout() {
-            if (!pendingOrderData) return;
-
             let orders = JSON.parse(localStorage.getItem('warung_orders')) || [];
-            orders.unshift(pendingOrderData);
+            orders.unshift(newOrder);
             localStorage.setItem('warung_orders', JSON.stringify(orders));
 
-            localStorage.setItem('last_order_id', pendingOrderData.id);
-
-            alert(`Pesanan berhasil dikirim! ID: ${pendingOrderData.id}. Menunggu konfirmasi & proses dari Resto.`);
-            
+            alert(`Pesanan berhasil dikirim! ID Pesanan Anda: ${newOrder.id}`);
             cart = [];
             updateCartUI();
-            pendingOrderData = null;
-            closePaymentModal();
+            toggleCart();
             document.getElementById('buyer-name').value = '';
             document.getElementById('buyer-address').value = '';
-            checkMyOrderStatus();
         }
 
-        function checkMyOrderStatus() {
-            const lastId = localStorage.getItem('last_order_id');
-            const box = document.getElementById('my-order-status-box');
-            if (!lastId) return;
-
-            const orders = JSON.parse(localStorage.getItem('warung_orders')) || [];
-            const myOrder = orders.find(o => o.id === lastId);
-
-            if (!myOrder) {
-                box.innerHTML = `Pesanan dengan ID ${lastId} tidak ditemukan dalam riwayat.`;
-                return;
-            }
-
-            let badgeColor = myOrder.status === 'Pending' ? 'bg-yellow-100 text-yellow-800 border-yellow-300' : (myOrder.status === 'Diproses' ? 'bg-blue-100 text-blue-800 border-blue-300' : 'bg-green-100 text-green-800 border-green-300');
-            
-            let statusDesc = '';
-            if (myOrder.status === 'Pending') {
-                statusDesc = 'Pesanan diterima, menunggu Resto memproses.';
-            } else if (myOrder.status === 'Diproses') {
-                statusDesc = 'Pesanan sedang disiapkan / dimasak oleh dapur Resto!';
-            } else if (myOrder.status === 'Selesai') {
-                const finishTime = new Date().toLocaleTimeString('id-ID');
-                statusDesc = `Pesanan telah selesai/diantar pada jam <strong>${finishTime}</strong>! <br><strong class="text-sky-800 text-base mt-2 block">✨ Terima kasih banyak atas pesanan Anda di Resto Mie Bangka! Pembayaran & pesanan telah selesai diproses. Selamat menikmati hidangan kami! 🙏🍜</strong>`;
-            }
-
-            box.innerHTML = `
-                <div class="flex justify-between items-center mb-2">
-                    <span class="font-bold text-sky-900">${myOrder.id}</span>
-                    <span class="px-3 py-1 rounded-full text-xs font-bold border ${badgeColor}">${myOrder.status}</span>
-                </div>
-                <p class="text-gray-600 mb-1"><strong>Pemesan:</strong> ${myOrder.name} (${myOrder.address})</p>
-                <p class="text-gray-600 mb-2"><strong>Total:</strong> Rp ${myOrder.total.toLocaleString('id-ID')} (${myOrder.payment})</p>
-                <p class="text-xs italic text-sky-800 font-medium">${statusDesc}</p>
-            `;
-        }
-
-        window.onload = initApp;
+        window.onload = initMenu;
     </script>
 </body>
 </html>
