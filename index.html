@@ -147,7 +147,8 @@
             <div class="bg-sky-50 p-3 rounded-2xl text-left text-xs space-y-2 mb-4 border border-sky-100">
                 <div><b>ID Pesanan:</b> <span id="pay-order-id"></span></div>
                 <div><b>Nama Pemesan:</b> <span id="pay-buyer-name"></span></div>
-                <div><b>Total Harga:</b> <span id="pay-total" class="font-bold text-sky-700"></span></div>
+                <div><b>Total Item:</b> <span id="pay-total-items" class="font-bold"></span></div>
+                <div><b>Total Harga:</b> <span id="pay-total" class="text-2xl font-black text-sky-700 block mt-1"></span></div>
                 <div>
                     <b>Metode Pembayaran:</b>
                     <div class="flex justify-between items-center mt-1 bg-white p-2 rounded-xl border">
@@ -157,10 +158,10 @@
                 </div>
             </div>
 
-            <p class="text-[11px] text-gray-500 mb-4">Layar ini terkunci sementara. Setelah Anda berhasil membayar, klik tombol di bawah.</p>
+            <p class="text-[11px] text-gray-500 mb-4">Layar ini terkunci sementara. Jika waktu habis tanpa pembayaran, pesanan otomatis dibatalkan.</p>
 
             <button onclick="confirmSuccessfulPayment()" class="w-full bg-sky-600 hover:bg-sky-700 text-white font-bold py-3 rounded-xl transition shadow">
-                Saya Sudah Berhasil Membayar
+                Menunggu Verifikasi Resto
             </button>
         </div>
     </div>
@@ -343,6 +344,8 @@
             if (cart.length === 0) { alert('Keranjang belanja Anda masih kosong.'); return; }
 
             const total = cart.reduce((sum, i) => sum + (i.price * i.qty), 0);
+            const totalItemsCount = cart.reduce((sum, i) => sum + i.qty, 0);
+
             const newOrder = {
                 id: 'ORD-' + Date.now().toString().slice(-6),
                 date: new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' }),
@@ -361,6 +364,7 @@
             activeOrderId = newOrder.id;
             document.getElementById('pay-order-id').innerText = newOrder.id;
             document.getElementById('pay-buyer-name').innerText = name;
+            document.getElementById('pay-total-items').innerText = `${totalItemsCount} item`;
             document.getElementById('pay-total').innerText = `Rp ${total.toLocaleString('id-ID')}`;
             document.getElementById('pay-method-detail').innerText = payment;
 
@@ -391,8 +395,22 @@
 
                 if (--timer < 0) {
                     clearInterval(timerInterval);
+                    cancelExpiredOrder();
                 }
             }, 1000);
+        }
+
+        function cancelExpiredOrder() {
+            if (!activeOrderId) return;
+            let orders = JSON.parse(localStorage.getItem('mb_orders')) || [];
+            // Hapus pesanan dari penyimpanan jika waktu habis tanpa lunas
+            orders = orders.filter(o => o.id !== activeOrderId);
+            localStorage.setItem('mb_orders', JSON.stringify(orders));
+            
+            document.getElementById('payment-timer-modal').classList.add('hidden');
+            alert('Waktu pembayaran telah habis. Pesanan dibatalkan otomatis dan tidak terekam.');
+            activeOrderId = null;
+            loadCustomerOrders();
         }
 
         function copyPaymentInfo() {
