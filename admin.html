@@ -7,6 +7,27 @@
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        // --- SISTEM KEAMANAN / PROTEKSI PASSWORD ---
+        // Ubah kata sandi di bawah ini sesuai keinginan Anda
+        const ADMIN_PASSWORD = "tanjungpinang123"; 
+
+        function checkAuth() {
+            let isAuth = sessionStorage.getItem('admin_logged_in');
+            if (isAuth !== 'true') {
+                let pwd = prompt("Masukkan Password Admin untuk mengakses halaman ini:");
+                if (pwd === ADMIN_PASSWORD) {
+                    sessionStorage.setItem('admin_logged_in', 'true');
+                    alert('Login Admin Berhasil!');
+                } else {
+                    alert('Password salah! Anda tidak memiliki akses.');
+                    window.location.href = 'index.html'; // Lempar kembali ke halaman utama
+                }
+            }
+        }
+        // Jalankan pengecekan keamanan sebelum halaman dimuat
+        checkAuth();
+    </script>
 </head>
 <body class="bg-gray-100 text-gray-800 font-sans">
 
@@ -17,9 +38,14 @@
         <header class="bg-gray-900 text-white shadow-md">
             <div class="container mx-auto px-4 py-4 flex justify-between items-center">
                 <h1 class="text-xl font-bold"><i class="fa-solid fa-gauge-high mr-2"></i> Admin Panel - Kota Tanjungpinang</h1>
-                <a href="index.html" target="_blank" class="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg text-sm transition">
-                    <i class="fa-solid fa-globe mr-1"></i> Kunjungi Web
-                </a>
+                <div class="flex items-center space-x-3">
+                    <button onclick="logoutAdmin()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg text-sm transition">
+                        <i class="fa-solid fa-right-from-bracket mr-1"></i> Keluar
+                    </button>
+                    <a href="index.html" target="_blank" class="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg text-sm transition">
+                        <i class="fa-solid fa-globe mr-1"></i> Kunjungi Web
+                    </a>
+                </div>
             </div>
         </header>
 
@@ -139,6 +165,13 @@
 
     <!-- Script Admin Dashboard -->
     <script>
+        function logoutAdmin() {
+            if (confirm('Keluar dari panel admin?')) {
+                sessionStorage.removeItem('admin_logged_in');
+                window.location.href = 'index.html';
+            }
+        }
+
         function switchTab(tab) {
             const ordersTab = document.getElementById('tab-orders');
             const menusTab = document.getElementById('tab-menus');
