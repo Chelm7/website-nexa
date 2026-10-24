@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mie Bangka Asli - Warung Rasa Khas</title>
-    <!-- Tailwind CSS untuk Desain Modern -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -27,7 +26,7 @@
     <section class="bg-gradient-to-r from-amber-600 to-amber-800 text-white py-16 px-4 text-center">
         <div class="container mx-auto max-w-2xl">
             <h2 class="text-4xl font-extrabold mb-4">Mie Bangka Asli & Halal</h2>
-            <p class="text-lg text-amber-100 mb-6">Nikmati kelezatan mie kenyal dengan topping daging babi/ayam gurih khas Bangka, diracik dengan bumbu rahasia turun-temurun.</p>
+            <p class="text-lg text-amber-100 mb-6">Nikmati kelezatan mie kenyal dengan topping gurih khas Bangka, diracik dengan bumbu rahasia turun-temurun.</p>
             <a href="#menu-section" class="bg-yellow-400 text-gray-900 font-bold px-6 py-3 rounded-full shadow-lg hover:bg-yellow-300 transition">Pesan Sekarang</a>
         </div>
     </section>
@@ -35,10 +34,8 @@
     <!-- Menu Section -->
     <main id="menu-section" class="container mx-auto px-4 py-12">
         <h3 class="text-3xl font-bold text-center mb-10 text-amber-900">Daftar Menu Kami</h3>
-        
-        <!-- Grid Menu Dinamis -->
         <div id="menu-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <!-- Menu akan dimuat otomatis via JavaScript dari LocalStorage -->
+            <!-- Menu dinamis dari localStorage -->
         </div>
     </main>
 
@@ -48,9 +45,7 @@
             <button onclick="toggleCart()" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800 text-xl"><i class="fa-solid fa-xmark"></i></button>
             <h3 class="text-2xl font-bold mb-4 text-amber-900"><i class="fa-solid fa-basket-shopping mr-2"></i> Keranjang Pesanan</h3>
             
-            <div id="cart-items" class="divide-y divide-gray-200 mb-4">
-                <!-- Item Keranjang -->
-            </div>
+            <div id="cart-items" class="divide-y divide-gray-200 mb-4"></div>
 
             <div class="border-t pt-4 mb-6">
                 <div class="flex justify-between font-bold text-lg mb-4">
@@ -58,7 +53,6 @@
                     <span id="cart-total" class="text-amber-700">Rp 0</span>
                 </div>
                 
-                <!-- Form Pemesan -->
                 <div class="space-y-3">
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Nama Pemesan</label>
@@ -66,14 +60,46 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Nomor Meja / Alamat Pengiriman</label>
-                        <input type="text" id="buyer-address" class="w-full mt-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none" placeholder="Contoh: Meja 05 / Jl. Merdeka No. 10">
+                        <input type="text" id="buyer-address" class="w-full mt-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none" placeholder="Contoh: Meja 05 / Jl. Merdeka">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Metode Pembayaran</label>
+                        <select id="payment-method" class="w-full mt-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none">
+                            <option value="QRIS">QRIS (Scan Semua E-Wallet / Bank)</option>
+                            <option value="BCA">Transfer Bank BCA (No. Rek: 1234567890)</option>
+                            <option value="MANDIRI">Transfer Bank Mandiri (No. Rek: 0987654321)</option>
+                            <option value="COD">Bayar di Tempat / Kasir (Tunai)</option>
+                        </select>
                     </div>
                 </div>
             </div>
 
-            <button onclick="checkout()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl transition shadow-md">
-                <i class="fa-solid fa-check mr-2"></i> Kirim Pesanan Sekarang
+            <button onclick="proceedToPayment()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl transition shadow-md">
+                <i class="fa-solid fa-qrcode mr-2"></i> Lanjutkan Pembayaran & Pesan
             </button>
+        </div>
+    </div>
+
+    <!-- Modal Barcode / Instruksi Pembayaran -->
+    <div id="payment-modal" class="fixed inset-0 bg-black bg-opacity-60 hidden z-50 flex justify-center items-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center relative">
+            <h3 class="text-xl font-bold mb-2 text-amber-900">Selesaikan Pembayaran</h3>
+            <p id="payment-info-text" class="text-sm text-gray-600 mb-4">Silakan lakukan pembayaran sesuai metode yang dipilih.</p>
+            
+            <!-- Kotak Barcode / QR -->
+            <div id="barcode-container" class="bg-gray-100 p-4 rounded-xl mb-4 flex flex-col items-center justify-center border border-dashed border-gray-400">
+                <img id="qr-image" src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=MIE-BANGKA-TELADAN-PAYMENT" alt="QR Code Pembayaran" class="w-44 h-44 object-contain mb-2 bg-white p-2 rounded shadow-sm">
+                <span id="payment-detail-text" class="text-xs font-semibold text-gray-700">Scan QRIS untuk Bayar</span>
+            </div>
+
+            <div class="space-y-2">
+                <button onclick="finishCheckout()" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-2.5 rounded-xl transition shadow">
+                    Saya Sudah Bayar / Pesan Sekarang
+                </button>
+                <button onclick="closePaymentModal()" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm font-medium py-2 rounded-xl transition">
+                    Kembali
+                </button>
+            </div>
         </div>
     </div>
 
@@ -84,7 +110,6 @@
 
     <!-- Script Aplikasi Frontend -->
     <script>
-        // Data Default Menu (Jika belum ada di LocalStorage)
         const defaultMenu = [
             { id: 1, name: "Mie Bangka Spesial", price: 25000, desc: "Mie kenyal lengkap dengan topping cincang daging, tauge, dan bakso ikan.", image: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=500&q=80" },
             { id: 2, name: "Mie Bangka Pangsit Kuah", price: 22000, desc: "Disajikan dengan kuah kaldu hangat dan pangsit isi daging lembut.", image: "https://images.unsplash.com/photo-1612929633738-8fe44f7ec841?auto=format&fit=crop&w=500&q=80" },
@@ -92,8 +117,8 @@
         ];
 
         let cart = [];
+        let pendingOrderData = null;
 
-        // Inisialisasi Data Menu di LocalStorage jika belum ada
         function initMenu() {
             if (!localStorage.getItem('warung_menu')) {
                 localStorage.setItem('warung_menu', JSON.stringify(defaultMenu));
@@ -101,7 +126,6 @@
             renderMenu();
         }
 
-        // Tampilkan Menu ke Halaman
         function renderMenu() {
             const menuGrid = document.getElementById('menu-grid');
             const menuList = JSON.parse(localStorage.getItem('warung_menu')) || [];
@@ -133,7 +157,6 @@
             });
         }
 
-        // Tambah ke Keranjang
         function addToCart(id) {
             const menuList = JSON.parse(localStorage.getItem('warung_menu')) || [];
             const product = menuList.find(p => p.id === id);
@@ -149,7 +172,6 @@
             alert(`${product.name} berhasil ditambahkan ke keranjang!`);
         }
 
-        // Update Tampilan Keranjang
         function updateCartUI() {
             const countEl = document.getElementById('cart-count');
             const itemsEl = document.getElementById('cart-items');
@@ -182,7 +204,6 @@
             totalEl.innerText = `Rp ${totalPrice.toLocaleString('id-ID')}`;
         }
 
-        // Ubah Qty di Keranjang
         function changeQty(index, change) {
             cart[index].qty += change;
             if (cart[index].qty <= 0) {
@@ -191,16 +212,14 @@
             updateCartUI();
         }
 
-        // Toggle Modal Keranjang
         function toggleCart() {
-            const modal = document.getElementById('cart-modal');
-            modal.classList.toggle('hidden');
+            document.getElementById('cart-modal').classList.toggle('hidden');
         }
 
-        // Proses Checkout / Kirim Pesanan
-        function checkout() {
+        function proceedToPayment() {
             const name = document.getElementById('buyer-name').value.trim();
             const address = document.getElementById('buyer-address').value.trim();
+            const paymentMethod = document.getElementById('payment-method').value;
 
             if (!name || !address) {
                 alert('Silakan masukkan Nama dan Nomor Meja / Alamat terlebih dahulu!');
@@ -214,25 +233,62 @@
 
             const totalPrice = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
 
-            const newOrder = {
+            pendingOrderData = {
                 id: 'ORD-' + Date.now().toString().slice(-6),
                 date: new Date().toLocaleString('id-ID'),
                 name: name,
                 address: address,
+                payment: paymentMethod,
                 items: [...cart],
                 total: totalPrice,
                 status: 'Pending'
             };
 
-            // Simpan ke database local admin
+            // Setup tampilan modal pembayaran sesuai pilihan
+            const payText = document.getElementById('payment-detail-text');
+            const qrImg = document.getElementById('qr-image');
+            const infoText = document.getElementById('payment-info-text');
+
+            if (paymentMethod === 'QRIS') {
+                infoText.innerText = `Total Tagihan: Rp ${totalPrice.toLocaleString('id-ID')}. Scan QRIS di bawah ini:`;
+                qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=QRIS-MIEBANGKA-${pendingOrderData.id}-${totalPrice}`;
+                payText.innerText = "Scan menggunakan GoPay, OVO, Dana, BCA Mobile, dll.";
+            } else if (paymentMethod === 'BCA') {
+                infoText.innerText = `Total Tagihan: Rp ${totalPrice.toLocaleString('id-ID')}`;
+                qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=BCA-1234567890-AN-WARUNG`;
+                payText.innerText = "No. Rek BCA: 1234567890 (A/N Mie Bangka)";
+            } else if (paymentMethod === 'MANDIRI') {
+                infoText.innerText = `Total Tagihan: Rp ${totalPrice.toLocaleString('id-ID')}`;
+                qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=MANDIRI-0987654321-AN-WARUNG`;
+                payText.innerText = "No. Rek Mandiri: 0987654321 (A/N Mie Bangka)";
+            } else {
+                infoText.innerText = `Total Tagihan: Rp ${totalPrice.toLocaleString('id-ID')}`;
+                qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=CASH-ON-DELIVERY`;
+                payText.innerText = "Silakan bayar langsung di kasir / saat pesanan diantar.";
+            }
+
+            // Tutup modal keranjang, buka modal pembayaran
+            toggleCart();
+            document.getElementById('payment-modal').classList.remove('hidden');
+        }
+
+        function closePaymentModal() {
+            document.getElementById('payment-modal').classList.add('hidden');
+        }
+
+        function finishCheckout() {
+            if (!pendingOrderData) return;
+
             let orders = JSON.parse(localStorage.getItem('warung_orders')) || [];
-            orders.unshift(newOrder);
+            orders.unshift(pendingOrderData);
             localStorage.setItem('warung_orders', JSON.stringify(orders));
 
-            alert(`Pesanan berhasil dikirim! ID Pesanan Anda: ${newOrder.id}`);
+            alert(`Pesanan berhasil dibuat! ID: ${pendingOrderData.id}. Terima kasih.`);
+            
             cart = [];
             updateCartUI();
-            toggleCart();
+            pendingOrderData = null;
+            closePaymentModal();
             document.getElementById('buyer-name').value = '';
             document.getElementById('buyer-address').value = '';
         }
