@@ -3,46 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mie Bangka Asli - Warung Rasa Khas</title>
+    <title>Mie Bangka Asli - Resto Rasa Khas</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body class="bg-amber-50 text-gray-800 font-sans">
+<body class="bg-sky-50 text-gray-800 font-sans">
 
     <!-- Navbar -->
-    <header class="bg-amber-700 text-white shadow-md sticky top-0 z-50">
+    <header class="bg-sky-700 text-white shadow-md sticky top-0 z-50">
         <div class="container mx-auto px-4 py-4 flex justify-between items-center">
             <h1 class="text-2xl font-bold tracking-wide"><i class="fa-solid fa-bowl-food mr-2"></i> Mie Bangka Teladan</h1>
             <div class="flex items-center space-x-4">
-                <button onclick="toggleCart()" class="relative bg-amber-800 hover:bg-amber-900 px-4 py-2 rounded-lg font-medium transition flex items-center">
+                <button onclick="toggleCart()" class="bg-white text-sky-600 hover:bg-sky-50 px-4 py-2 rounded-lg font-bold transition flex items-center border border-sky-300 shadow-sm">
                     <i class="fa-solid fa-cart-shopping mr-2"></i> Keranjang
-                    <span id="cart-count" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-6 h-6 rounded-full flex items-center justify-center font-bold">0</span>
+                    <span id="cart-count" class="ml-2 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold">0</span>
                 </button>
             </div>
         </div>
     </header>
 
     <!-- Hero Section -->
-    <section class="bg-gradient-to-r from-amber-600 to-amber-800 text-white py-16 px-4 text-center">
+    <section class="bg-gradient-to-r from-sky-600 to-sky-800 text-white py-16 px-4 text-center">
         <div class="container mx-auto max-w-2xl">
             <h2 class="text-4xl font-extrabold mb-4">Mie Bangka Asli & Halal</h2>
-            <p class="text-lg text-amber-100 mb-6">Nikmati kelezatan mie kenyal dengan topping gurih khas Bangka, diracik dengan bumbu rahasia turun-temurun.</p>
-            <a href="#menu-section" class="bg-yellow-400 text-gray-900 font-bold px-6 py-3 rounded-full shadow-lg hover:bg-yellow-300 transition">Pesan Sekarang</a>
+            <p class="text-lg text-sky-100 mb-6">Nikmati kelezatan mie kenyal dengan topping gurih khas Bangka, diracik dengan bumbu rahasia turun-temurun di resto kami.</p>
+            <a href="#menu-section" class="bg-white text-sky-600 font-bold px-6 py-3 rounded-full shadow-lg hover:bg-sky-50 transition border border-sky-300 inline-block">Pesan Sekarang</a>
         </div>
     </section>
 
     <!-- Menu Section -->
     <main id="menu-section" class="container mx-auto px-4 py-12">
-        <h3 class="text-3xl font-bold text-center mb-10 text-amber-900">Daftar Menu Kami</h3>
+        <h3 class="text-3xl font-bold text-center mb-10 text-sky-900">Daftar Menu Resto Kami</h3>
         <div id="menu-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
             <!-- Menu dinamis -->
         </div>
 
         <!-- Cek Status Pesanan Saya -->
-        <section class="bg-white rounded-2xl shadow-md p-6 max-w-2xl mx-auto border border-amber-200">
-            <h3 class="text-xl font-bold text-amber-900 mb-2"><i class="fa-solid fa-clock-rotate-left mr-2"></i> Status Pesanan Terakhir Saya</h3>
-            <p class="text-sm text-gray-600 mb-4">Pesanan baru akan divalidasi dan diproses langsung oleh Admin warung.</p>
-            <div id="my-order-status-box" class="bg-amber-50 p-4 rounded-xl text-sm text-gray-700">
+        <section class="bg-white rounded-2xl shadow-md p-6 max-w-2xl mx-auto border border-sky-200">
+            <h3 class="text-xl font-bold text-sky-900 mb-2"><i class="fa-solid fa-clock-rotate-left mr-2"></i> Status Pesanan Terakhir Saya</h3>
+            <p class="text-sm text-gray-600 mb-4">Pesanan baru akan divalidasi dan diproses langsung oleh Resto.</p>
+            <div id="my-order-status-box" class="bg-sky-50 p-4 rounded-xl text-sm text-gray-700">
                 Belum ada pesanan aktif di perangkat ini.
             </div>
         </section>
@@ -52,35 +52,35 @@
     <div id="cart-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex justify-center items-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative max-h-[90vh] overflow-y-auto">
             <button onclick="toggleCart()" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800 text-xl"><i class="fa-solid fa-xmark"></i></button>
-            <h3 class="text-2xl font-bold mb-4 text-amber-900"><i class="fa-solid fa-basket-shopping mr-2"></i> Keranjang Pesanan</h3>
+            <h3 class="text-2xl font-bold mb-4 text-sky-900"><i class="fa-solid fa-basket-shopping mr-2"></i> Keranjang Pesanan</h3>
             
             <div id="cart-items" class="divide-y divide-gray-200 mb-4"></div>
 
             <div class="border-t pt-4 mb-6">
                 <div class="flex justify-between font-bold text-lg mb-4">
                     <span>Total:</span>
-                    <span id="cart-total" class="text-amber-700">Rp 0</span>
+                    <span id="cart-total" class="text-sky-700">Rp 0</span>
                 </div>
                 
                 <div class="space-y-3">
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Nama Pemesan</label>
-                        <input type="text" id="buyer-name" class="w-full mt-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none" placeholder="Masukkan nama Anda">
+                        <input type="text" id="buyer-name" class="w-full mt-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-sky-500 outline-none" placeholder="Masukkan nama Anda">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Nomor Meja / Alamat Pengiriman</label>
-                        <input type="text" id="buyer-address" class="w-full mt-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none" placeholder="Contoh: Meja 05 / Jl. Merdeka">
+                        <input type="text" id="buyer-address" class="w-full mt-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-sky-500 outline-none" placeholder="Contoh: Meja 05 / Jl. Merdeka">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Metode Pembayaran (Rekening/E-Wallet)</label>
-                        <select id="payment-method" class="w-full mt-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none">
-                            <!-- Dimuat dinamis dari pengaturan admin -->
+                        <select id="payment-method" class="w-full mt-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-sky-500 outline-none">
+                            <!-- Dimuat dinamis -->
                         </select>
                     </div>
                 </div>
             </div>
 
-            <button onclick="proceedToPayment()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl transition shadow-md">
+            <button onclick="proceedToPayment()" class="w-full bg-white text-sky-600 hover:bg-sky-50 font-bold py-3 rounded-xl transition shadow border border-sky-300">
                 <i class="fa-solid fa-file-invoice-dollar mr-2"></i> Lanjutkan & Lihat Info Pembayaran
             </button>
         </div>
@@ -89,27 +89,27 @@
     <!-- Modal Instruksi Pembayaran -->
     <div id="payment-modal" class="fixed inset-0 bg-black bg-opacity-60 hidden z-50 flex justify-center items-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center relative">
-            <h3 class="text-xl font-bold mb-2 text-amber-900">Instruksi Pembayaran</h3>
+            <h3 class="text-xl font-bold mb-2 text-sky-900">Instruksi Pembayaran</h3>
             <p class="text-sm text-gray-600 mb-4">Silakan transfer / bayar sesuai data di bawah ini:</p>
             
-            <div class="bg-amber-50 p-4 rounded-xl mb-6 border border-amber-200 text-left space-y-2">
+            <div class="bg-sky-50 p-4 rounded-xl mb-6 border border-sky-200 text-left space-y-2">
                 <p class="text-xs text-gray-500 font-semibold uppercase tracking-wider">Metode Pilihan:</p>
-                <p id="pay-method-name" class="font-bold text-amber-900 text-base">-</p>
+                <p id="pay-method-name" class="font-bold text-sky-900 text-base">-</p>
                 <p class="text-xs text-gray-500 font-semibold uppercase tracking-wider">Nomor Tujuan / Rekening:</p>
-                <p id="pay-acc-number" class="font-mono font-bold text-lg text-gray-800 bg-white px-3 py-1.5 rounded border border-amber-300">-</p>
+                <p id="pay-acc-number" class="font-mono font-bold text-lg text-gray-800 bg-white px-3 py-1.5 rounded border border-sky-300">-</p>
                 <p class="text-xs text-gray-500 font-semibold uppercase tracking-wider">Atas Nama / Keterangan:</p>
                 <p id="pay-acc-holder" class="font-medium text-gray-700 text-sm">-</p>
-                <div class="pt-2 border-t border-amber-200 flex justify-between text-sm font-bold text-amber-800">
+                <div class="pt-2 border-t border-sky-200 flex justify-between text-sm font-bold text-sky-800">
                     <span>Total Tagihan:</span>
                     <span id="pay-total-amount">Rp 0</span>
                 </div>
             </div>
 
             <div class="space-y-2">
-                <button onclick="finishCheckout()" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-2.5 rounded-xl transition shadow">
+                <button onclick="finishCheckout()" class="w-full bg-white text-sky-600 hover:bg-sky-50 font-bold py-2.5 rounded-xl transition shadow border border-sky-300">
                     Kirim Pesanan Sekarang
                 </button>
-                <button onclick="closePaymentModal()" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm font-medium py-2 rounded-xl transition">
+                <button onclick="closePaymentModal()" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm font-medium py-2 rounded-xl transition">
                     Kembali
                 </button>
             </div>
@@ -117,11 +117,11 @@
     </div>
 
     <!-- Footer -->
-    <footer class="bg-amber-900 text-amber-100 py-6 text-center mt-12">
-        <p>&copy; 2026 Mie Bangka Teladan (<span id="domain-label">masak-masak.my.id</span>). All rights reserved.</p>
+    <footer class="bg-sky-900 text-sky-100 py-6 text-center mt-12">
+        <p>&copy; 2026 Resto Mie Bangka Teladan (<span id="domain-label">masak-masak.my.id</span>). All rights reserved.</p>
     </footer>
 
-    <!-- Script Aplikasi Frontend -->
+    <!-- Script Aplikasi Web -->
     <script>
         const defaultMenu = [
             { id: 1, name: "Mie Bangka Spesial", price: 25000, desc: "Mie kenyal lengkap dengan topping cincang daging, tauge, dan bakso ikan.", image: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=500&q=80" },
@@ -132,8 +132,8 @@
         const defaultPayments = [
             { id: 1, name: "BCA", number: "1234567890", holder: "Mie Bangka Teladan" },
             { id: 2, name: "Mandiri", number: "0987654321", holder: "Mie Bangka Teladan" },
-            { id: 3, name: "DANA / E-Wallet", number: "081234567890", holder: "Mie Bangka Teladan" },
-            { id: 4, name: "Bayar di Tempat (COD)", number: "Tunai", holder: "Bayar ke Kasir" }
+            { id: 3, name: "DANA", number: "081234567890", holder: "Mie Bangka Teladan" },
+            { id: 4, name: "Bayar di Tempat (COD)", number: "Tunai", holder: "Bayar ke Kasir Resto" }
         ];
 
         let cart = [];
@@ -167,13 +167,13 @@
                         <div>
                             <img src="${item.image || 'https://via.placeholder.com/400x300'}" alt="${item.name}" class="w-full h-48 object-cover">
                             <div class="p-5">
-                                <h4 class="font-bold text-xl text-amber-900 mb-1">${item.name}</h4>
+                                <h4 class="font-bold text-xl text-sky-900 mb-1">${item.name}</h4>
                                 <p class="text-gray-600 text-sm mb-4">${item.desc}</p>
                             </div>
                         </div>
                         <div class="px-5 pb-5 flex justify-between items-center">
-                            <span class="text-lg font-bold text-amber-700">Rp ${item.price.toLocaleString('id-ID')}</span>
-                            <button onclick="addToCart(${item.id})" class="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition shadow">
+                            <span class="text-lg font-bold text-sky-700">Rp ${item.price.toLocaleString('id-ID')}</span>
+                            <button onclick="addToCart(${item.id})" class="bg-white text-sky-600 hover:bg-sky-50 px-4 py-2 rounded-xl text-sm font-bold transition shadow border border-sky-300">
                                 <i class="fa-solid fa-plus mr-1"></i> Pesan
                             </button>
                         </div>
@@ -197,7 +197,7 @@
             });
 
             if (validCount === 0) {
-                selectEl.innerHTML = `<option value="">Metode pembayaran belum diatur oleh admin</option>`;
+                selectEl.innerHTML = `<option value="">Metode pembayaran belum diatur oleh Resto</option>`;
             }
         }
 
@@ -236,9 +236,9 @@
                             <small class="text-gray-500">Rp ${item.price.toLocaleString('id-ID')} x ${item.qty}</small>
                         </div>
                         <div class="flex items-center space-x-2">
-                            <button onclick="changeQty(${index}, -1)" class="bg-gray-200 px-2 py-1 rounded text-xs">-</button>
+                            <button onclick="changeQty(${index}, -1)" class="bg-gray-100 px-2.5 py-1 rounded text-xs font-bold">-</button>
                             <span class="font-bold">${item.qty}</span>
-                            <button onclick="changeQty(${index}, 1)" class="bg-gray-200 px-2 py-1 rounded text-xs">+</button>
+                            <button onclick="changeQty(${index}, 1)" class="bg-gray-100 px-2.5 py-1 rounded text-xs font-bold">+</button>
                         </div>
                     </div>
                 `;
@@ -317,7 +317,7 @@
 
             localStorage.setItem('last_order_id', pendingOrderData.id);
 
-            alert(`Pesanan berhasil dikirim! ID: ${pendingOrderData.id}. Menunggu konfirmasi & proses dari Admin.`);
+            alert(`Pesanan berhasil dikirim! ID: ${pendingOrderData.id}. Menunggu konfirmasi & proses dari Resto.`);
             
             cart = [];
             updateCartUI();
@@ -343,16 +343,23 @@
 
             let badgeColor = myOrder.status === 'Pending' ? 'bg-yellow-100 text-yellow-800 border-yellow-300' : (myOrder.status === 'Diproses' ? 'bg-blue-100 text-blue-800 border-blue-300' : 'bg-green-100 text-green-800 border-green-300');
             
-            let statusDesc = myOrder.status === 'Pending' ? 'Pesanan diterima, menunggu Admin memproses.' : (myOrder.status === 'Diproses' ? 'Pesanan sedang disiapkan / dimasak oleh dapur!' : 'Pesanan telah selesai/diantar!');
+            let statusDesc = '';
+            if (myOrder.status === 'Pending') {
+                statusDesc = 'Pesanan diterima, menunggu Resto memproses.';
+            } else if (myOrder.status === 'Diproses') {
+                statusDesc = 'Pesanan sedang disiapkan / dimasak oleh dapur Resto!';
+            } else if (myOrder.status === 'Selesai') {
+                statusDesc = 'Pesanan telah selesai/diantar! <br><strong class="text-sky-800 text-base mt-2 block">✨ Terima kasih banyak atas pesanan Anda di Resto Mie Bangka! Pembayaran & pesanan telah selesai diproses. Selamat menikmati hidangan kami! 🙏🍜</strong>';
+            }
 
             box.innerHTML = `
                 <div class="flex justify-between items-center mb-2">
-                    <span class="font-bold text-amber-900">${myOrder.id}</span>
+                    <span class="font-bold text-sky-900">${myOrder.id}</span>
                     <span class="px-3 py-1 rounded-full text-xs font-bold border ${badgeColor}">${myOrder.status}</span>
                 </div>
                 <p class="text-gray-600 mb-1"><strong>Pemesan:</strong> ${myOrder.name} (${myOrder.address})</p>
                 <p class="text-gray-600 mb-2"><strong>Total:</strong> Rp ${myOrder.total.toLocaleString('id-ID')} (${myOrder.payment})</p>
-                <p class="text-xs italic text-amber-800 font-medium"><i class="fa-solid fa-circle-info mr-1"></i> ${statusDesc}</p>
+                <p class="text-xs italic text-sky-800 font-medium">${statusDesc}</p>
             `;
         }
 
