@@ -31,10 +31,10 @@
         </div>
     </header>
 
-    <!-- Banner View Resto -->
-    <section class="w-full bg-sky-900 overflow-hidden shadow-md">
+    <!-- Slide Banner Otomatis (PNG / Gambar Resto) -->
+    <section class="w-full bg-sky-900 overflow-hidden shadow-md relative">
         <div class="container mx-auto">
-            <img id="resto-banner-img" src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80" alt="Banner Resto Mie Bangka" class="w-full h-64 md:h-80 object-cover opacity-90">
+            <img id="resto-banner-img" src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80" alt="Banner Resto Mie Bangka" class="w-full h-64 md:h-80 object-cover opacity-90 transition-all duration-700">
         </div>
     </section>
 
@@ -71,6 +71,16 @@
             </div>
         </section>
     </main>
+
+    <!-- Tombol Panah Scroll Cepat (Hanya muncul saat disentuh / di-hover) -->
+    <div class="fixed bottom-6 right-6 z-40 opacity-20 hover:opacity-100 active:opacity-100 transition-opacity duration-300 flex flex-col space-y-2 bg-sky-900 bg-opacity-90 p-2 rounded-xl shadow-xl border border-sky-400">
+        <button onclick="scrollToTop()" title="Ke Paling Atas" class="w-10 h-10 bg-white text-sky-700 rounded-lg flex items-center justify-center font-bold hover:bg-sky-50 transition shadow">
+            <i class="fa-solid fa-arrow-up"></i>
+        </button>
+        <button onclick="scrollToBottom()" title="Ke Paling Bawah" class="w-10 h-10 bg-white text-sky-700 rounded-lg flex items-center justify-center font-bold hover:bg-sky-50 transition shadow">
+            <i class="fa-solid fa-arrow-down"></i>
+        </button>
+    </div>
 
     <!-- Modal Keranjang / Checkout -->
     <div id="cart-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex justify-center items-center p-4">
@@ -140,7 +150,7 @@
         </div>
     </div>
 
-    <!-- Footer (Domain dihapus) -->
+    <!-- Footer -->
     <footer class="bg-sky-900 text-sky-100 py-6 text-center mt-12">
         <p>&copy; 2026 Resto Mie Bangka Teladan. All rights reserved.</p>
     </footer>
@@ -160,6 +170,14 @@
         }
         setInterval(updateLiveClock, 1000);
         updateLiveClock();
+
+        // Scroll Cepat
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        function scrollToBottom() {
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        }
 
         const defaultMenu = [
             { id: 1, name: "Mie Bangka Spesial", price: 25000, category: "Makanan", desc: "Mie kenyal lengkap dengan topping cincang daging, tauge, dan bakso ikan.", image: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=500&q=80" },
@@ -185,16 +203,34 @@
             if (!localStorage.getItem('warung_payments')) {
                 localStorage.setItem('warung_payments', JSON.stringify(defaultPayments));
             }
-            loadBanner();
+            initSlidingBanner();
             renderMenu();
             loadPaymentOptions();
             checkMyOrderStatus();
         }
 
-        function loadBanner() {
-            const savedBanner = localStorage.getItem('resto_banner');
-            if (savedBanner) {
-                document.getElementById('resto-banner-img').src = savedBanner;
+        // Sliding Banner Otomatis
+        function initSlidingBanner() {
+            const defaultBanners = [
+                "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80",
+                "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=1200&q=80"
+            ];
+            const banners = JSON.parse(localStorage.getItem('resto_banners')) || defaultBanners;
+            const bannerImg = document.getElementById('resto-banner-img');
+            
+            if (banners.length > 0 && bannerImg) {
+                let currentIndex = 0;
+                bannerImg.src = banners[currentIndex];
+                if (banners.length > 1) {
+                    setInterval(() => {
+                        currentIndex = (currentIndex + 1) % banners.length;
+                        bannerImg.style.opacity = '0.3';
+                        setTimeout(() => {
+                            bannerImg.src = banners[currentIndex];
+                            bannerImg.style.opacity = '0.9';
+                        }, 300);
+                    }, 4000); // Ganti setiap 4 detik
+                }
             }
         }
 
