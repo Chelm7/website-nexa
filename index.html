@@ -9,6 +9,15 @@
 </head>
 <body class="bg-sky-50 text-gray-800 font-sans">
 
+    <!-- Jam Digital Aktif di Atas Kiri -->
+    <div class="bg-sky-900 text-sky-100 px-4 py-1.5 text-xs font-mono flex items-center justify-between shadow-inner">
+        <div class="flex items-center space-x-2">
+            <i class="fa-solid fa-clock text-sky-400"></i>
+            <span id="live-digital-clock">00:00:00</span>
+        </div>
+        <div class="text-[11px] text-sky-300">Resto Mie Bangka Teladan</div>
+    </div>
+
     <!-- Navbar -->
     <header class="bg-sky-700 text-white shadow-md sticky top-0 z-50">
         <div class="container mx-auto px-4 py-4 flex justify-between items-center">
@@ -32,7 +41,7 @@
     <!-- Hero / Intro Section -->
     <section class="bg-gradient-to-r from-sky-600 to-sky-800 text-white py-12 px-4 text-center">
         <div class="container mx-auto max-w-2xl">
-            <h2 class="text-3xl md:text-4xl font-extrabold mb-3">Mie Bangka Asli & Halal</h2>
+            <h2 class="text-3xl md:text-4xl font-extrabold mb-3">Mie Bangka Asli</h2>
             <p class="text-base text-sky-100 mb-6">Nikmati kelezatan mie kenyal dengan topping gurih khas Bangka, diracik dengan bumbu rahasia turun-temurun di resto kami.</p>
             <a href="#menu-section" class="bg-white text-sky-600 font-bold px-6 py-3 rounded-full shadow-lg hover:bg-sky-50 transition border border-sky-300 inline-block">Pesan Sekarang</a>
         </div>
@@ -131,13 +140,27 @@
         </div>
     </div>
 
-    <!-- Footer -->
+    <!-- Footer (Domain dihapus) -->
     <footer class="bg-sky-900 text-sky-100 py-6 text-center mt-12">
-        <p>&copy; 2026 Resto Mie Bangka Teladan (<span id="domain-label">masak-masak.my.id</span>). All rights reserved.</p>
+        <p>&copy; 2026 Resto Mie Bangka Teladan. All rights reserved.</p>
     </footer>
 
     <!-- Script Aplikasi Web -->
     <script>
+        // Jam Digital Aktif
+        function updateLiveClock() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const clockEl = document.getElementById('live-digital-clock');
+            if (clockEl) {
+                clockEl.innerText = `${hours}:${minutes}:${seconds}`;
+            }
+        }
+        setInterval(updateLiveClock, 1000);
+        updateLiveClock();
+
         const defaultMenu = [
             { id: 1, name: "Mie Bangka Spesial", price: 25000, category: "Makanan", desc: "Mie kenyal lengkap dengan topping cincang daging, tauge, dan bakso ikan.", image: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=500&q=80" },
             { id: 2, name: "Mie Bangka Pangsit Kuah", price: 22000, category: "Makanan", desc: "Disajikan dengan kuah kaldu hangat dan pangsit isi daging lembut.", image: "https://images.unsplash.com/photo-1612929633738-8fe44f7ec841?auto=format&fit=crop&w=500&q=80" },
@@ -177,8 +200,6 @@
 
         function filterMenu(category) {
             currentFilter = category;
-            
-            // Update styling active button
             ['Semua', 'Makanan', 'Minuman'].forEach(cat => {
                 const btn = document.getElementById(`btn-filter-${cat.toLowerCase()}`);
                 if (cat === category) {
@@ -394,7 +415,8 @@
             } else if (myOrder.status === 'Diproses') {
                 statusDesc = 'Pesanan sedang disiapkan / dimasak oleh dapur Resto!';
             } else if (myOrder.status === 'Selesai') {
-                statusDesc = 'Pesanan telah selesai/diantar! <br><strong class="text-sky-800 text-base mt-2 block">✨ Terima kasih banyak atas pesanan Anda di Resto Mie Bangka! Pembayaran & pesanan telah selesai diproses. Selamat menikmati hidangan kami! 🙏🍜</strong>';
+                const finishTime = new Date().toLocaleTimeString('id-ID');
+                statusDesc = `Pesanan telah selesai/diantar pada jam <strong>${finishTime}</strong>! <br><strong class="text-sky-800 text-base mt-2 block">✨ Terima kasih banyak atas pesanan Anda di Resto Mie Bangka! Pembayaran & pesanan telah selesai diproses. Selamat menikmati hidangan kami! 🙏🍜</strong>`;
             }
 
             box.innerHTML = `
