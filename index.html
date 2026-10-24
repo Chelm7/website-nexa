@@ -86,13 +86,12 @@
         </div>
     </div>
 
-    <!-- Modal Instruksi Pembayaran (Tanpa Barcode) -->
+    <!-- Modal Instruksi Pembayaran -->
     <div id="payment-modal" class="fixed inset-0 bg-black bg-opacity-60 hidden z-50 flex justify-center items-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center relative">
             <h3 class="text-xl font-bold mb-2 text-amber-900">Instruksi Pembayaran</h3>
             <p class="text-sm text-gray-600 mb-4">Silakan transfer / bayar sesuai data di bawah ini:</p>
             
-            <!-- Kotak Info Rekening dari Admin -->
             <div class="bg-amber-50 p-4 rounded-xl mb-6 border border-amber-200 text-left space-y-2">
                 <p class="text-xs text-gray-500 font-semibold uppercase tracking-wider">Metode Pilihan:</p>
                 <p id="pay-method-name" class="font-bold text-amber-900 text-base">-</p>
@@ -191,7 +190,6 @@
             let validCount = 0;
 
             payments.forEach(p => {
-                // Hanya tampilkan jika nomor rekening diisi oleh admin
                 if (p.number && p.number.trim() !== '') {
                     validCount++;
                     selectEl.innerHTML += `<option value="${p.id}">${p.name} (No: ${p.number} - A/N ${p.holder})</option>`;
@@ -297,7 +295,6 @@
                 status: 'Pending'
             };
 
-            // Tampilkan detail instruksi pembayaran di modal
             document.getElementById('pay-method-name').innerText = selectedPay.name;
             document.getElementById('pay-acc-number').innerText = selectedPay.number;
             document.getElementById('pay-acc-holder').innerText = selectedPay.holder;
@@ -318,7 +315,6 @@
             orders.unshift(pendingOrderData);
             localStorage.setItem('warung_orders', JSON.stringify(orders));
 
-            // Simpan ID pesanan terakhir di browser lokal untuk pengecekan status
             localStorage.setItem('last_order_id', pendingOrderData.id);
 
             alert(`Pesanan berhasil dikirim! ID: ${pendingOrderData.id}. Menunggu konfirmasi & proses dari Admin.`);
