@@ -70,7 +70,7 @@
             <!-- Menu dinamis -->
         </div>
 
-        <!-- Status Pesanan Pelanggan (Tujuan Tombol Status Pesanan) -->
+        <!-- Status Pesanan Pelanggan -->
         <div id="status-pesanan-section" class="mt-16 bg-white p-6 rounded-2xl shadow-md border border-sky-100 max-w-2xl mx-auto scroll-mt-24">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-xl font-bold text-sky-900"><i class="fa-solid fa-list-check mr-2"></i> Status Pesanan Pelanggan</h3>
@@ -130,18 +130,37 @@
         </div>
     </div>
 
-    <!-- Custom Modal Sukses dengan Tombol Status Pesanan -->
-    <div id="success-modal" class="fixed inset-0 bg-black bg-opacity-60 hidden z-50 flex justify-center items-center p-4">
+    <!-- Modal Layar Pembayaran (Terkunci & Hitung Mundur 5 Menit) -->
+    <div id="payment-timer-modal" class="fixed inset-0 bg-black bg-opacity-80 hidden z-50 flex justify-center items-center p-4">
         <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 text-center">
-            <div class="w-16 h-16 bg-sky-100 text-sky-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">
-                <i class="fa-solid fa-face-smile-beam"></i>
+            <div class="w-14 h-14 bg-sky-100 text-sky-600 rounded-full flex items-center justify-center text-2xl mx-auto mb-3">
+                <i class="fa-solid fa-clock"></i>
             </div>
-            <h3 class="text-2xl font-extrabold text-sky-900 mb-2">Pesanan Berhasil</h3>
-            <p id="success-message" class="text-gray-600 text-sm mb-6 leading-relaxed">
-                Pesanan Anda telah kami terima dengan senang hati.
-            </p>
-            <button onclick="goToOrderStatus()" class="w-full bg-sky-600 hover:bg-sky-700 text-white font-bold py-3 rounded-xl transition shadow">
-                Status Pesanan
+            <h3 class="text-xl font-extrabold text-sky-900 mb-1">Selesaikan Pembayaran</h3>
+            <p class="text-xs text-gray-500 mb-3">Mohon lakukan pembayaran dalam batas waktu:</p>
+            
+            <!-- Timer 5 Menit -->
+            <div id="countdown-timer" class="text-3xl font-black text-red-600 mb-4 tracking-widest bg-red-50 py-2 rounded-xl border border-red-200">
+                05:00
+            </div>
+
+            <div class="bg-sky-50 p-3 rounded-2xl text-left text-xs space-y-2 mb-4 border border-sky-100">
+                <div><b>ID Pesanan:</b> <span id="pay-order-id"></span></div>
+                <div><b>Nama Pemesan:</b> <span id="pay-buyer-name"></span></div>
+                <div><b>Total Harga:</b> <span id="pay-total" class="font-bold text-sky-700"></span></div>
+                <div>
+                    <b>Metode Pembayaran:</b>
+                    <div class="flex justify-between items-center mt-1 bg-white p-2 rounded-xl border">
+                        <span id="pay-method-detail" class="font-medium text-gray-800"></span>
+                        <button onclick="copyPaymentInfo()" class="bg-sky-600 text-white px-2.5 py-1 rounded-lg text-xs font-bold hover:bg-sky-700"><i class="fa-solid fa-copy mr-1"></i> Salin</button>
+                    </div>
+                </div>
+            </div>
+
+            <p class="text-[11px] text-gray-500 mb-4">Layar ini terkunci sementara. Setelah Anda berhasil membayar, klik tombol di bawah.</p>
+
+            <button onclick="confirmSuccessfulPayment()" class="w-full bg-sky-600 hover:bg-sky-700 text-white font-bold py-3 rounded-xl transition shadow">
+                Saya Sudah Berhasil Membayar
             </button>
         </div>
     </div>
@@ -174,6 +193,8 @@
         let cart = [];
         let currentCategory = 'all';
         let currentSlideIndex = 0;
+        let activeOrderId = null;
+        let timerInterval = null;
 
         function initApp() {
             if (!localStorage.getItem('mb_menu')) {
@@ -337,21 +358,65 @@
 
             document.getElementById('success-sound').play().catch(e => console.log(e));
 
-            // Pesan disederhanakan tanpa teks bawah yang berlebihan
-            document.getElementById('success-message').innerHTML = `Terima kasih banyak <b>${name}</b>!<br>Pesanan Anda berhasil dibuat dengan ID: <b>${newOrder.id}</b>.<br><span class="text-sky-700 font-medium">Status: Menunggu Verifikasi Resto.</span>`;
-            document.getElementById('success-modal').classList.remove('hidden');
-            
+            activeOrderId = newOrder.id;
+            document.getElementById('pay-order-id').innerText = newOrder.id;
+            document.getElementById('pay-buyer-name').innerText = name;
+            document.getElementById('pay-total').innerText = `Rp ${total.toLocaleString('id-ID')}`;
+            document.getElementById('pay-method-detail').innerText = payment;
+
             cart = [];
             updateCartUI();
             toggleCart();
             document.getElementById('buyer-name').value = '';
             document.getElementById('buyer-address').value = '';
             document.getElementById('payment-confirmed').checked = false;
-            loadCustomerOrders();
+
+            // Tampilkan modal timer pembayaran 5 menit (Terkunci)
+            document.getElementById('payment-timer-modal').classList.remove('hidden');
+            startCountdown(5 * 60);
         }
 
-        function goToOrderStatus() {
-            document.getElementById('success-modal').classList.add('hidden');
+        function startCountdown(duration) {
+            let timer = duration, minutes, seconds;
+            if (timerInterval) clearInterval(timerInterval);
+
+            timerInterval = setInterval(function () {
+                minutes = parseInt(timer / 60, 10);
+                seconds = parseInt(timer % 60, 10);
+
+                minutes = minutes < 10 ? "0" + minutes : minutes;
+                seconds = seconds < 10 ? "0" + seconds : seconds;
+
+                document.getElementById('countdown-timer').innerText = minutes + ":" + seconds;
+
+                if (--timer < 0) {
+                    clearInterval(timerInterval);
+                }
+            }, 1000);
+        }
+
+        function copyPaymentInfo() {
+            const textToCopy = document.getElementById('pay-method-detail').innerText;
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                alert('Nomor pembayaran / rekening berhasil disalin.');
+            }).catch(err => {
+                alert('Gagal menyalin teks.');
+            });
+        }
+
+        function confirmSuccessfulPayment() {
+            if (!activeOrderId) return;
+            let orders = JSON.parse(localStorage.getItem('mb_orders')) || [];
+            let order = orders.find(o => o.id === activeOrderId);
+            if (order) {
+                order.status = 'Diproses';
+                localStorage.setItem('mb_orders', JSON.stringify(orders));
+            }
+
+            if (timerInterval) clearInterval(timerInterval);
+            document.getElementById('payment-timer-modal').classList.add('hidden');
+            loadCustomerOrders();
+
             const target = document.getElementById('status-pesanan-section');
             if (target) {
                 target.scrollIntoView({ behavior: 'smooth' });
