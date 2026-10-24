@@ -3,57 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - Mie Bangka Teladan</title>
+    <title>Admin Dashboard - Kota Tanjungpinang</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="bg-gray-100 text-gray-800 font-sans">
 
-    <!-- Modal Login Admin (Wajib Nomor HP Verifikasi) -->
-    <div id="login-modal" class="fixed inset-0 bg-black bg-opacity-70 z-50 flex justify-center items-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 relative">
-            <div class="text-center mb-6">
-                <h3 class="text-2xl font-bold text-gray-900"><i class="fa-solid fa-lock text-sky-600 mr-2"></i> Login Admin Resto</h3>
-                <p class="text-sm text-gray-500 mt-1">Masukkan Nama, Sandi, dan Nomor HP verifikasi resmi.</p>
-            </div>
-            <form onsubmit="handleAdminLogin(event)" class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Nama (Username)</label>
-                    <input type="text" id="login-user" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-sky-500 outline-none" placeholder="admin">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Sandi (Password)</label>
-                    <input type="password" id="login-pass" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-sky-500 outline-none" placeholder="••••••••">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Nomor HP Verifikasi Keamanan</label>
-                    <input type="text" id="login-phone" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-sky-500 outline-none" placeholder="081267166886">
-                </div>
-                <button type="submit" class="w-full bg-sky-600 hover:bg-sky-700 text-white font-bold py-3 rounded-xl transition shadow mt-2">
-                    Masuk Dashboard
-                </button>
-            </form>
-            <div class="mt-4 text-center text-xs text-gray-400">
-                Catatan: Nomor HP verifikasi awal adalah <strong>081267166886</strong>. Dapat diubah di dalam setelah login.
-            </div>
-        </div>
-    </div>
-
-    <!-- Dashboard Wrapper -->
-    <div id="admin-dashboard-wrapper" class="min-h-screen flex flex-col hidden">
+    <!-- Wrapper -->
+    <div class="min-h-screen flex flex-col">
         
         <!-- Header Admin -->
         <header class="bg-gray-900 text-white shadow-md">
             <div class="container mx-auto px-4 py-4 flex justify-between items-center">
-                <h1 class="text-xl font-bold"><i class="fa-solid fa-gauge-high mr-2"></i> Admin Panel - Mie Bangka</h1>
-                <div class="flex items-center space-x-3">
-                    <a href="index.html" target="_blank" class="bg-sky-600 hover:bg-sky-700 text-white px-4 py-2 rounded-lg text-sm transition">
-                        <i class="fa-solid fa-globe mr-1"></i> Kunjungi Web Resto
-                    </a>
-                    <button onclick="adminLogout()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg text-sm transition">
-                        <i class="fa-solid fa-right-from-bracket"></i> Keluar
-                    </button>
-                </div>
+                <h1 class="text-xl font-bold"><i class="fa-solid fa-gauge-high mr-2"></i> Admin Panel - Kota Tanjungpinang</h1>
+                <a href="index.html" target="_blank" class="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg text-sm transition">
+                    <i class="fa-solid fa-globe mr-1"></i> Kunjungi Web
+                </a>
             </div>
         </header>
 
@@ -63,7 +29,7 @@
             <!-- Statistik Ringkas -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex items-center">
-                    <div class="p-4 bg-sky-100 text-sky-700 rounded-xl mr-4 text-2xl"><i class="fa-solid fa-clipboard-list"></i></div>
+                    <div class="p-4 bg-amber-100 text-amber-700 rounded-xl mr-4 text-2xl"><i class="fa-solid fa-clipboard-list"></i></div>
                     <div>
                         <p class="text-gray-500 text-sm">Total Pesanan Masuk</p>
                         <h3 id="stat-orders" class="text-2xl font-bold">0</h3>
@@ -86,16 +52,15 @@
             </div>
 
             <!-- Tab Navigasi -->
-            <div class="flex space-x-4 mb-6 border-b border-gray-300 pb-3 overflow-x-auto">
-                <button onclick="switchTab('orders')" id="btn-tab-orders" class="font-bold text-sky-700 border-b-2 border-sky-700 pb-2 px-2 transition whitespace-nowrap">Kelola Pesanan Masuk</button>
-                <button onclick="switchTab('menus')" id="btn-tab-menus" class="font-bold text-gray-500 pb-2 px-2 transition whitespace-nowrap">Kelola Daftar Menu</button>
-                <button onclick="switchTab('settings')" id="btn-tab-settings" class="font-bold text-gray-500 pb-2 px-2 transition whitespace-nowrap">Pengaturan Resto & Keamanan</button>
+            <div class="flex space-x-4 mb-6 border-b border-gray-300 pb-3">
+                <button onclick="switchTab('orders')" id="btn-tab-orders" class="font-bold text-amber-700 border-b-2 border-amber-700 pb-2 px-2 transition">Kelola Pesanan Masuk</button>
+                <button onclick="switchTab('menus')" id="btn-tab-menus" class="font-bold text-gray-500 pb-2 px-2 transition">Kelola Daftar Menu</button>
             </div>
 
-            <!-- TAB 1: KELOLA PESANAN & CETAK STRUK -->
+            <!-- TAB 1: KELOLA PESANAN -->
             <div id="tab-orders" class="space-y-4">
                 <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-xl font-bold text-gray-800">Daftar Pesanan & Cetak Struk Bluetooth</h3>
+                    <h3 class="text-xl font-bold text-gray-800">Daftar Pesanan Pembeli</h3>
                     <button onclick="clearOrders()" class="bg-red-100 text-red-700 hover:bg-red-200 px-3 py-1.5 rounded-lg text-sm transition">Hapus Semua Riwayat</button>
                 </div>
                 <div class="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-200">
@@ -104,15 +69,16 @@
                             <thead>
                                 <tr class="bg-gray-50 border-b text-gray-600 text-sm">
                                     <th class="p-4">ID / Waktu</th>
-                                    <th class="p-4">Pemesan & Lokasi</th>
-                                    <th class="p-4">Pembayaran</th>
+                                    <th class="p-4">Pemesan & Alamat</th>
                                     <th class="p-4">Detail Pesanan</th>
                                     <th class="p-4">Total</th>
                                     <th class="p-4">Status</th>
-                                    <th class="p-4 text-center">Aksi / Cetak Struk</th>
+                                    <th class="p-4 text-center">Aksi</th>
                                 </tr>
                             </thead>
-                            <tbody id="orders-table-body" class="divide-y divide-gray-200 text-sm"></tbody>
+                            <tbody id="orders-table-body" class="divide-y divide-gray-200 text-sm">
+                                <!-- Data Pesanan -->
+                            </tbody>
                         </table>
                     </div>
                 </div>
@@ -126,34 +92,28 @@
                         <input type="hidden" id="menu-id">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Nama Menu</label>
-                            <input type="text" id="menu-name" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-sky-500 outline-none">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Kategori Menu</label>
-                            <select id="menu-category" class="w-full px-3 py-2 border rounded-lg bg-white focus:ring-2 focus:ring-sky-500 outline-none">
-                                <option value="Makanan">Makanan</option>
-                                <option value="Minuman">Minuman</option>
-                            </select>
+                            <input type="text" id="menu-name" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Harga (Rp)</label>
-                            <input type="number" id="menu-price" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-sky-500 outline-none">
+                            <input type="number" id="menu-price" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none">
                         </div>
-                        <div>
+                        <div class="md:col-span-2">
                             <label class="block text-sm font-medium text-gray-700 mb-1">URL Gambar / Foto</label>
-                            <input type="url" id="menu-image" placeholder="https://images.unsplash.com/..." required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-sky-500 outline-none">
+                            <input type="url" id="menu-image" placeholder="https://images.unsplash.com/..." required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none">
                         </div>
                         <div class="md:col-span-2">
                             <label class="block text-sm font-medium text-gray-700 mb-1">Deskripsi Singkat</label>
-                            <textarea id="menu-desc" rows="2" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-sky-500 outline-none"></textarea>
+                            <textarea id="menu-desc" rows="2" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"></textarea>
                         </div>
                         <div class="md:col-span-2 flex space-x-3">
-                            <button type="submit" class="bg-sky-600 hover:bg-sky-700 text-white px-6 py-2 rounded-lg font-medium transition">Simpan Menu</button>
+                            <button type="submit" class="bg-amber-600 hover:bg-amber-700 text-white px-6 py-2 rounded-lg font-medium transition">Simpan Menu</button>
                             <button type="button" onclick="resetMenuForm()" id="cancel-edit" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-lg font-medium hidden transition">Batal</button>
                         </div>
                     </form>
                 </div>
 
+                <!-- Daftar Menu Tabel -->
                 <div class="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-200">
                     <div class="p-4 border-b font-bold text-gray-800">Daftar Menu Saat Ini di Web</div>
                     <div class="overflow-x-auto">
@@ -161,113 +121,16 @@
                             <thead>
                                 <tr class="bg-gray-50 border-b text-gray-600 text-sm">
                                     <th class="p-4">Gambar</th>
-                                    <th class="p-4">Nama, Kategori & Deskripsi</th>
+                                    <th class="p-4">Nama & Deskripsi</th>
                                     <th class="p-4">Harga</th>
                                     <th class="p-4 text-center">Aksi</th>
                                 </tr>
                             </thead>
-                            <tbody id="admin-menu-list" class="divide-y divide-gray-200 text-sm"></tbody>
+                            <tbody id="admin-menu-list" class="divide-y divide-gray-200 text-sm">
+                                <!-- List Menu -->
+                            </tbody>
                         </table>
                     </div>
-                </div>
-            </div>
-
-            <!-- TAB 3: PENGATURAN RESTO, SLIDE BANNER (PNG), LOGIN, & SUARA -->
-            <div id="tab-settings" class="hidden space-y-6">
-                <!-- Pengaturan Slide Banner PNG/Gambar -->
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-                    <div class="flex justify-between items-center mb-4">
-                        <div>
-                            <h3 class="text-xl font-bold text-gray-800"><i class="fa-solid fa-images mr-2"></i> Pengaturan Slide Banner Web (PNG/Gambar)</h3>
-                            <p class="text-sm text-gray-500">Tambah, ubah, atau hapus link gambar banner untuk slide otomatis di web depan.</p>
-                        </div>
-                        <button onclick="addNewBannerInput()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-bold transition shadow">
-                            <i class="fa-solid fa-plus mr-1"></i> Tambah Banner
-                        </button>
-                    </div>
-                    
-                    <div id="banner-admin-list" class="space-y-3">
-                        <!-- List input banner diisi via JS -->
-                    </div>
-                    <button onclick="saveBannersSettings()" class="mt-6 bg-sky-600 hover:bg-sky-700 text-white font-bold px-6 py-2.5 rounded-lg transition shadow">
-                        Simpan Slide Banner
-                    </button>
-                </div>
-
-                <!-- Pengaturan Keamanan Admin (Nama, Sandi, & Ganti No HP di Dalam) -->
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-                    <h3 class="text-xl font-bold mb-2 text-gray-800"><i class="fa-solid fa-shield-halved mr-2"></i> Pengaturan Akun & Keamanan Login Admin</h3>
-                    <p class="text-sm text-gray-500 mb-4">Ubah nama pengguna (username), kata sandi, serta nomor HP verifikasi admin.</p>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                            <label class="block text-xs font-bold text-gray-600 mb-1">Nama Admin (Username)</label>
-                            <input type="text" id="set-admin-user" class="w-full px-3 py-2 border rounded-lg bg-white focus:ring-2 focus:ring-sky-500 outline-none">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-600 mb-1">Kata Sandi Baru</label>
-                            <input type="text" id="set-admin-pass" class="w-full px-3 py-2 border rounded-lg bg-white focus:ring-2 focus:ring-sky-500 outline-none" placeholder="Kosongkan jika tetap">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-600 mb-1">Nomor HP Verifikasi Baru</label>
-                            <input type="text" id="set-admin-phone" class="w-full px-3 py-2 border rounded-lg bg-white focus:ring-2 focus:ring-sky-500 outline-none">
-                        </div>
-                    </div>
-                    <button onclick="saveAdminSecurity()" class="mt-4 bg-sky-600 hover:bg-sky-700 text-white font-bold px-6 py-2.5 rounded-lg transition shadow">
-                        Simpan Perubahan Keamanan
-                    </button>
-                </div>
-
-                <!-- Pengaturan Suara (Suara Tinggi / Silent) -->
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-                    <h3 class="text-xl font-bold mb-2 text-gray-800"><i class="fa-solid fa-volume-high mr-2"></i> Pengaturan Bunyi Dering Orderan Masuk</h3>
-                    <p class="text-sm text-gray-500 mb-4">Atur nada dering tinggi atau aktifkan mode silent (senyap).</p>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
-                        <div>
-                            <label class="block text-xs font-bold text-gray-600 mb-1">Mode Suara Notifikasi</label>
-                            <select id="sound-mode-select" class="w-full px-3 py-2 border rounded-lg bg-white focus:ring-2 focus:ring-sky-500 outline-none">
-                                <option value="normal">Aktif (Suara Tinggi)</option>
-                                <option value="silent">Silent / Senyap (Mati)</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-600 mb-1">Pilih Nada Suara</label>
-                            <select id="sound-type-select" class="w-full px-3 py-2 border rounded-lg bg-white focus:ring-2 focus:ring-sky-500 outline-none">
-                                <option value="classic">Beep Klasik Tinggi</option>
-                                <option value="chime">Chime Modern</option>
-                                <option value="siren">Alarm Sirene Peringatan</option>
-                                <option value="bell">Bel Digital Toko</option>
-                            </select>
-                        </div>
-                        <div class="flex items-end space-x-2 pt-5">
-                            <button onclick="saveSoundSettings()" class="bg-sky-600 hover:bg-sky-700 text-white font-bold px-4 py-2.5 rounded-lg transition shadow w-full">
-                                Simpan Suara
-                            </button>
-                            <button onclick="testSelectedSound()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-3 py-2.5 rounded-lg transition">
-                                <i class="fa-solid fa-play"></i> Tes
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Pengaturan Rekening -->
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-                    <div class="flex justify-between items-center mb-4">
-                        <div>
-                            <h3 class="text-xl font-bold text-gray-800">Pengaturan Metode Pembayaran & E-Wallet</h3>
-                            <p class="text-sm text-gray-500">Nama Bank/E-Wallet, Nomor Rekening, dan Pemilik dapat diubah atau ditambah.</p>
-                        </div>
-                        <button onclick="addNewPaymentMethod()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-bold transition shadow">
-                            <i class="fa-solid fa-plus mr-1"></i> Tambah Metode
-                        </button>
-                    </div>
-                    
-                    <div id="payment-admin-list" class="space-y-4">
-                        <!-- List form pembayaran diisi via JS -->
-                    </div>
-                    <button onclick="savePaymentSettings()" class="mt-6 bg-sky-600 hover:bg-sky-700 text-white font-bold px-6 py-2.5 rounded-lg transition shadow">
-                        Simpan Perubahan Pembayaran
-                    </button>
                 </div>
             </div>
 
@@ -276,277 +139,32 @@
 
     <!-- Script Admin Dashboard -->
     <script>
-        let lastOrderCount = 0;
-
-        // --- SISTEM LOGIN & KEAMANAN ADMIN ---
-        function checkAdminAuth() {
-            const isLogged = sessionStorage.getItem('is_admin_logged');
-            if (isLogged === 'true') {
-                document.getElementById('login-modal').classList.add('hidden');
-                document.getElementById('admin-dashboard-wrapper').classList.remove('hidden');
-                initAdminData();
-            } else {
-                document.getElementById('login-modal').classList.remove('hidden');
-                document.getElementById('admin-dashboard-wrapper').classList.add('hidden');
-            }
-        }
-
-        function handleAdminLogin(e) {
-            e.preventDefault();
-            const user = document.getElementById('login-user').value.trim();
-            const pass = document.getElementById('login-pass').value.trim();
-            const phone = document.getElementById('login-phone').value.trim();
-
-            let savedCreds = JSON.parse(localStorage.getItem('admin_credentials')) || { user: 'admin', pass: 'admin123', phone: '081267166886' };
-
-            if (phone !== savedCreds.phone) {
-                alert('Nomor HP verifikasi salah!');
-                return;
-            }
-
-            if (user === savedCreds.user && pass === savedCreds.pass) {
-                sessionStorage.setItem('is_admin_logged', 'true');
-                alert('Login Berhasil!');
-                checkAdminAuth();
-            } else {
-                alert('Nama (Username) atau Sandi (Password) salah!');
-            }
-        }
-
-        function adminLogout() {
-            sessionStorage.removeItem('is_admin_logged');
-            alert('Anda telah keluar dari dashboard admin.');
-            checkAdminAuth();
-        }
-
-        function loadAdminSecurityForm() {
-            const savedCreds = JSON.parse(localStorage.getItem('admin_credentials')) || { user: 'admin', pass: 'admin123', phone: '081267166886' };
-            document.getElementById('set-admin-user').value = savedCreds.user;
-            document.getElementById('set-admin-pass').value = '';
-            document.getElementById('set-admin-phone').value = savedCreds.phone;
-        }
-
-        function saveAdminSecurity() {
-            const newUser = document.getElementById('set-admin-user').value.trim();
-            const newPass = document.getElementById('set-admin-pass').value.trim();
-            const newPhone = document.getElementById('set-admin-phone').value.trim();
-
-            let savedCreds = JSON.parse(localStorage.getItem('admin_credentials')) || { user: 'admin', pass: 'admin123', phone: '081267166886' };
-            
-            if (!newUser || !newPhone) {
-                alert('Nama dan Nomor HP tidak boleh kosong!');
-                return;
-            }
-
-            savedCreds.user = newUser;
-            if (newPass) {
-                savedCreds.pass = newPass;
-            }
-            savedCreds.phone = newPhone;
-
-            localStorage.setItem('admin_credentials', JSON.stringify(savedCreds));
-            alert('Pengaturan akun & nomor HP verifikasi berhasil disimpan!');
-            loadAdminSecurityForm();
-        }
-
-        // --- PENGATURAN SLIDE BANNER (PNG/GAMBAR) ---
-        function loadBannerAdminList() {
-            const defaultBanners = [
-                "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80",
-                "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=1200&q=80"
-            ];
-            const banners = JSON.parse(localStorage.getItem('resto_banners')) || defaultBanners;
-            const container = document.getElementById('banner-admin-list');
-            
-            container.innerHTML = '';
-            banners.forEach((url, idx) => {
-                container.innerHTML += `
-                    <div class="flex items-center space-x-3 bg-gray-50 p-3 rounded-xl border border-gray-200">
-                        <input type="url" id="banner-url-${idx}" value="${url}" placeholder="https://... (PNG/JPG)" class="w-full px-3 py-2 border rounded-lg bg-white focus:ring-2 focus:ring-sky-500 outline-none text-sm">
-                        <button onclick="removeBannerInput(${idx})" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-2 rounded-lg text-xs font-bold transition">
-                            <i class="fa-solid fa-trash"></i>
-                        </button>
-                    </div>
-                `;
-            });
-        }
-
-        function addNewBannerInput() {
-            const defaultBanners = [
-                "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80",
-                "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=1200&q=80"
-            ];
-            let banners = JSON.parse(localStorage.getItem('resto_banners')) || defaultBanners;
-            banners.push("");
-            localStorage.setItem('resto_banners', JSON.stringify(banners));
-            loadBannerAdminList();
-        }
-
-        function removeBannerInput(idx) {
-            let banners = JSON.parse(localStorage.getItem('resto_banners')) || [];
-            banners.splice(idx, 1);
-            localStorage.setItem('resto_banners', JSON.stringify(banners));
-            loadBannerAdminList();
-        }
-
-        function saveBannersSettings() {
-            const inputs = document.querySelectorAll('[id^="banner-url-"]');
-            let newBanners = [];
-            inputs.forEach(input => {
-                if (input.value.trim() !== '') {
-                    newBanners.push(input.value.trim());
-                }
-            });
-
-            if (newBanners.length === 0) {
-                alert('Minimal harus ada 1 banner!');
-                return;
-            }
-
-            localStorage.setItem('resto_banners', JSON.stringify(newBanners));
-            alert('Slide banner berhasil disimpan dan diperbarui di web!');
-            loadBannerAdminList();
-        }
-
-        // --- AUDIO NOTIFIKASI TINGGI & SILENT ---
-        function playSelectedSound() {
-            const soundMode = localStorage.getItem('warung_sound_mode') || 'normal';
-            if (soundMode === 'silent') return;
-
-            const soundType = localStorage.getItem('warung_sound_type') || 'classic';
-            try {
-                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                if (audioCtx.state === 'suspended') {
-                    audioCtx.resume();
-                }
-
-                if (soundType === 'classic') {
-                    for (let i = 0; i < 3; i++) {
-                        setTimeout(() => {
-                            const osc = audioCtx.createOscillator();
-                            const gain = audioCtx.createGain();
-                            osc.type = 'triangle';
-                            osc.frequency.setValueAtTime(1174.66, audioCtx.currentTime);
-                            osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.3);
-                            gain.gain.setValueAtTime(0.9, audioCtx.currentTime);
-                            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
-                            osc.connect(gain); gain.connect(audioCtx.destination);
-                            osc.start(); osc.stop(audioCtx.currentTime + 0.3);
-                        }, i * 400);
-                    }
-                } else if (soundType === 'chime') {
-                    [880, 1046.50, 1318.51, 1567.98].forEach((freq, i) => {
-                        setTimeout(() => {
-                            const osc = audioCtx.createOscillator();
-                            const gain = audioCtx.createGain();
-                            osc.type = 'sine';
-                            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-                            gain.gain.setValueAtTime(0.8, audioCtx.currentTime);
-                            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
-                            osc.connect(gain); gain.connect(audioCtx.destination);
-                            osc.start(); osc.stop(audioCtx.currentTime + 0.5);
-                        }, i * 150);
-                    });
-                } else if (soundType === 'siren') {
-                    for (let i = 0; i < 4; i++) {
-                        setTimeout(() => {
-                            const osc = audioCtx.createOscillator();
-                            const gain = audioCtx.createGain();
-                            osc.type = 'square';
-                            osc.frequency.setValueAtTime(i % 2 === 0 ? 800 : 1200, audioCtx.currentTime);
-                            gain.gain.setValueAtTime(0.6, audioCtx.currentTime);
-                            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
-                            osc.connect(gain); gain.connect(audioCtx.destination);
-                            osc.start(); osc.stop(audioCtx.currentTime + 0.25);
-                        }, i * 300);
-                    }
-                } else if (soundType === 'bell') {
-                    const osc = audioCtx.createOscillator();
-                    const gain = audioCtx.createGain();
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(1760, audioCtx.currentTime);
-                    osc.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 0.8);
-                    gain.gain.setValueAtTime(0.9, audioCtx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.8);
-                    osc.connect(gain); gain.connect(audioCtx.destination);
-                    osc.start(); osc.stop(audioCtx.currentTime + 0.8);
-                }
-            } catch(e) {
-                console.log("Audio alert error: ", e);
-            }
-        }
-
-        function testSelectedSound() {
-            const mode = document.getElementById('sound-mode-select').value;
-            if (mode === 'silent') {
-                alert('Mode saat ini diatur ke Silent. Ubah ke Aktif untuk mendengarkan tes suara.');
-                return;
-            }
-            const type = document.getElementById('sound-type-select').value;
-            localStorage.setItem('warung_sound_mode', mode);
-            localStorage.setItem('warung_sound_type', type);
-            playSelectedSound();
-        }
-
-        function saveSoundSettings() {
-            const mode = document.getElementById('sound-mode-select').value;
-            const type = document.getElementById('sound-type-select').value;
-            localStorage.setItem('warung_sound_mode', mode);
-            localStorage.setItem('warung_sound_type', type);
-            alert('Pengaturan suara notifikasi berhasil disimpan!');
-        }
-
-        function loadSoundSettings() {
-            const savedMode = localStorage.getItem('warung_sound_mode') || 'normal';
-            const savedType = localStorage.getItem('warung_sound_type') || 'classic';
-            document.getElementById('sound-mode-select').value = savedMode;
-            document.getElementById('sound-type-select').value = savedType;
-        }
-
         function switchTab(tab) {
             const ordersTab = document.getElementById('tab-orders');
             const menusTab = document.getElementById('tab-menus');
-            const settingsTab = document.getElementById('tab-settings');
-            
             const btnOrders = document.getElementById('btn-tab-orders');
             const btnMenus = document.getElementById('btn-tab-menus');
-            const btnSettings = document.getElementById('btn-tab-settings');
-
-            ordersTab.classList.add('hidden');
-            menusTab.classList.add('hidden');
-            settingsTab.classList.add('hidden');
-            
-            btnOrders.className = "font-bold text-gray-500 pb-2 px-2 transition whitespace-nowrap";
-            btnMenus.className = "font-bold text-gray-500 pb-2 px-2 transition whitespace-nowrap";
-            btnSettings.className = "font-bold text-gray-500 pb-2 px-2 transition whitespace-nowrap";
 
             if (tab === 'orders') {
                 ordersTab.classList.remove('hidden');
-                btnOrders.className = "font-bold text-sky-700 border-b-2 border-sky-700 pb-2 px-2 transition whitespace-nowrap";
+                menusTab.classList.add('hidden');
+                btnOrders.className = "font-bold text-amber-700 border-b-2 border-amber-700 pb-2 px-2 transition";
+                btnMenus.className = "font-bold text-gray-500 pb-2 px-2 transition";
                 loadOrders();
-            } else if (tab === 'menus') {
+            } else {
+                ordersTab.classList.add('hidden');
                 menusTab.classList.remove('hidden');
-                btnMenus.className = "font-bold text-sky-700 border-b-2 border-sky-700 pb-2 px-2 transition whitespace-nowrap";
+                btnMenus.className = "font-bold text-amber-700 border-b-2 border-amber-700 pb-2 px-2 transition";
+                btnOrders.className = "font-bold text-gray-500 pb-2 px-2 transition";
                 loadAdminMenus();
-            } else if (tab === 'settings') {
-                settingsTab.classList.remove('hidden');
-                btnSettings.className = "font-bold text-sky-700 border-b-2 border-sky-700 pb-2 px-2 transition whitespace-nowrap";
-                loadAdminPayments();
-                loadSoundSettings();
-                loadBannerAdminList();
-                loadAdminSecurityForm();
             }
         }
 
-        function loadOrders(isPolling = false) {
+        // --- MANAJEMEN PESANAN ---
+        function loadOrders() {
             const orders = JSON.parse(localStorage.getItem('warung_orders')) || [];
             const tbody = document.getElementById('orders-table-body');
             document.getElementById('stat-orders').innerText = orders.length;
-
-            if (isPolling && orders.length > lastOrderCount && lastOrderCount !== 0) {
-                playSelectedSound();
-            }
-            lastOrderCount = orders.length;
 
             let revenue = 0;
             orders.forEach(o => {
@@ -556,7 +174,7 @@
 
             tbody.innerHTML = '';
             if (orders.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-gray-500">Belum ada pesanan masuk.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-gray-500">Belum ada pesanan masuk.</td></tr>`;
                 return;
             }
 
@@ -568,84 +186,20 @@
                     <tr class="hover:bg-gray-50">
                         <td class="p-4 font-medium">${ord.id}<br><small class="text-gray-400">${ord.date}</small></td>
                         <td class="p-4 font-semibold text-gray-800">${ord.name}<br><small class="text-gray-500 font-normal"><i class="fa-solid fa-location-dot mr-1"></i>${ord.address}</small></td>
-                        <td class="p-4"><span class="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs font-bold">${ord.payment || '-'}</span></td>
                         <td class="p-4 text-gray-600">${itemsStr}</td>
-                        <td class="p-4 font-bold text-sky-700">Rp ${ord.total.toLocaleString('id-ID')}</td>
+                        <td class="p-4 font-bold text-amber-700">Rp ${ord.total.toLocaleString('id-ID')}</td>
                         <td class="p-4"><span class="px-3 py-1 rounded-full text-xs font-bold ${statusColor}">${ord.status}</span></td>
                         <td class="p-4 text-center space-x-2">
-                            <select onchange="updateOrderStatus(${index}, this.value)" class="border rounded px-2 py-1 text-xs font-bold bg-sky-50">
+                            <select onchange="updateOrderStatus(${index}, this.value)" class="border rounded px-2 py-1 text-xs">
                                 <option value="Pending" ${ord.status === 'Pending' ? 'selected' : ''}>Pending</option>
-                                <option value="Diproses" ${ord.status === 'Diproses' ? 'selected' : ''}>Diproses (Validasi)</option>
+                                <option value="Diproses" ${ord.status === 'Diproses' ? 'selected' : ''}>Diproses</option>
                                 <option value="Selesai" ${ord.status === 'Selesai' ? 'selected' : ''}>Selesai</option>
                             </select>
-                            <button onclick="printOrderReceipt('${ord.id}')" title="Cetak Struk Thermal Bluetooth" class="bg-sky-600 hover:bg-sky-700 text-white px-2.5 py-1.5 rounded-lg text-xs transition shadow">
-                                <i class="fa-solid fa-print"></i>
-                            </button>
                             <button onclick="deleteOrder(${index})" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>
                         </td>
                     </tr>
                 `;
             });
-        }
-
-        // Struk dengan Jam Menit Detik Digital Aktif
-        function printOrderReceipt(orderId) {
-            const orders = JSON.parse(localStorage.getItem('warung_orders')) || [];
-            const ord = orders.find(o => o.id === orderId);
-            if (!ord) return;
-
-            const now = new Date();
-            const timeString = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
-            const dateString = now.toLocaleDateString('id-ID');
-
-            let itemsHtml = ord.items.map(i => `
-                <tr>
-                    <td style="padding: 4px 0;">${i.name} x${i.qty}</td>
-                    <td style="text-align: right; padding: 4px 0;">Rp ${(i.price * i.qty).toLocaleString('id-ID')}</td>
-                </tr>
-            `).join('');
-
-            let printWindow = window.open('', '_blank', 'width=350,height=600');
-            printWindow.document.write(`
-                <!DOCTYPE html>
-                <html lang="id">
-                <head>
-                    <meta charset="UTF-8">
-                    <title>Struk #${ord.id}</title>
-                    <style>
-                        body { font-family: 'Courier New', monospace; font-size: 12px; width: 58mm; margin: 0 auto; padding: 10px; color: #000; }
-                        .text-center { text-align: center; }
-                        .bold { font-weight: bold; }
-                        .line { border-bottom: 1px dashed #000; margin: 8px 0; }
-                        table { width: 100%; border-collapse: collapse; }
-                    </style>
-                </head>
-                <body onload="window.print(); window.close();">
-                    <div class="text-center bold" style="font-size: 14px;">MIE BANGKA TELADAN</div>
-                    <div class="text-center">Resto Resmi</div>
-                    <div class="line"></div>
-                    <div>ID: ${ord.id}</div>
-                    <div>Tanggal: ${dateString}</div>
-                    <div>Waktu Cetak: ${timeString}</div>
-                    <div>Pemesan: ${ord.name}</div>
-                    <div>Lokasi: ${ord.address}</div>
-                    <div>Bayar: ${ord.payment}</div>
-                    <div class="line"></div>
-                    <table>
-                        ${itemsHtml}
-                    </table>
-                    <div class="line"></div>
-                    <div style="display: flex; justify-content: space-between;" class="bold">
-                        <span>TOTAL:</span>
-                        <span>Rp ${ord.total.toLocaleString('id-ID')}</span>
-                    </div>
-                    <div class="line"></div>
-                    <div class="text-center bold">STATUS: ${ord.status.toUpperCase()}</div>
-                    <div class="text-center" style="margin-top: 10px;">Terima Kasih!</div>
-                </body>
-                </html>
-            `);
-            printWindow.document.close();
         }
 
         function updateOrderStatus(index, status) {
@@ -671,22 +225,19 @@
             }
         }
 
+        // --- MANAJEMEN MENU ---
         function loadAdminMenus() {
             const menuList = JSON.parse(localStorage.getItem('warung_menu')) || [];
             const tbody = document.getElementById('admin-menu-list');
             document.getElementById('stat-menus').innerText = menuList.length;
 
             tbody.innerHTML = '';
-            menuList.forEach((item) => {
+            menuList.forEach((item, index) => {
                 tbody.innerHTML += `
                     <tr class="hover:bg-gray-50">
                         <td class="p-4"><img src="${item.image}" class="w-16 h-16 object-cover rounded-lg"></td>
-                        <td class="p-4">
-                            <span class="text-xs font-bold text-sky-600 bg-sky-50 px-2 py-0.5 rounded uppercase">${item.category || 'Makanan'}</span>
-                            <h5 class="font-bold text-gray-800 mt-1">${item.name}</h5>
-                            <p class="text-gray-500 text-xs">${item.desc}</p>
-                        </td>
-                        <td class="p-4 font-bold text-sky-700">Rp ${item.price.toLocaleString('id-ID')}</td>
+                        <td class="p-4"><h5 class="font-bold text-gray-800">${item.name}</h5><p class="text-gray-500 text-xs">${item.desc}</p></td>
+                        <td class="p-4 font-bold text-amber-700">Rp ${item.price.toLocaleString('id-ID')}</td>
                         <td class="p-4 text-center space-x-2">
                             <button onclick="editMenu(${item.id})" class="text-blue-600 hover:text-blue-800"><i class="fa-solid fa-pen-to-square"></i></button>
                             <button onclick="deleteMenu(${item.id})" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>
@@ -700,7 +251,6 @@
             e.preventDefault();
             const id = document.getElementById('menu-id').value;
             const name = document.getElementById('menu-name').value;
-            const category = document.getElementById('menu-category').value;
             const price = Number(document.getElementById('menu-price').value);
             const image = document.getElementById('menu-image').value;
             const desc = document.getElementById('menu-desc').value;
@@ -710,11 +260,11 @@
             if (id) {
                 let index = menuList.findIndex(m => m.id == id);
                 if (index !== -1) {
-                    menuList[index] = { id: Number(id), name, category, price, image, desc };
+                    menuList[index] = { id: Number(id), name, price, image, desc };
                 }
             } else {
                 const newId = menuList.length > 0 ? Math.max(...menuList.map(m => m.id)) + 1 : 1;
-                menuList.push({ id: newId, name, category, price, image, desc });
+                menuList.push({ id: newId, name, price, image, desc });
             }
 
             localStorage.setItem('warung_menu', JSON.stringify(menuList));
@@ -730,7 +280,6 @@
 
             document.getElementById('menu-id').value = item.id;
             document.getElementById('menu-name').value = item.name;
-            document.getElementById('menu-category').value = item.category || 'Makanan';
             document.getElementById('menu-price').value = item.price;
             document.getElementById('menu-image').value = item.image;
             document.getElementById('menu-desc').value = item.desc;
@@ -756,77 +305,7 @@
             document.getElementById('cancel-edit').classList.add('hidden');
         }
 
-        function loadAdminPayments() {
-            const listEl = document.getElementById('payment-admin-list');
-            let payments = JSON.parse(localStorage.getItem('warung_payments')) || [];
-
-            listEl.innerHTML = '';
-            payments.forEach((p, idx) => {
-                listEl.innerHTML += `
-                    <div class="p-4 bg-gray-50 rounded-xl border border-gray-200 grid grid-cols-1 md:grid-cols-4 gap-4 items-center relative">
-                        <div>
-                            <label class="block text-xs font-bold text-gray-600 mb-1">Nama Bank / E-Wallet</label>
-                            <input type="text" id="pay-name-${idx}" value="${p.name}" class="w-full px-3 py-2 border rounded-lg bg-white focus:ring-2 focus:ring-sky-500 outline-none">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-600 mb-1">Nomor Rekening / Tujuan</label>
-                            <input type="text" id="pay-num-${idx}" value="${p.number || ''}" placeholder="Cth: 0812345678" class="w-full px-3 py-2 border rounded-lg bg-white focus:ring-2 focus:ring-sky-500 outline-none">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-600 mb-1">Atas Nama Pemilik</label>
-                            <input type="text" id="pay-holder-${idx}" value="${p.holder || ''}" placeholder="Cth: Nama Anda" class="w-full px-3 py-2 border rounded-lg bg-white focus:ring-2 focus:ring-sky-500 outline-none">
-                        </div>
-                        <div class="flex items-end pt-5">
-                            <button onclick="removePaymentMethod(${idx})" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-2 rounded-lg text-xs font-bold transition w-full">
-                                <i class="fa-solid fa-trash mr-1"></i> Hapus
-                            </button>
-                        </div>
-                    </div>
-                `;
-            });
-        }
-
-        function addNewPaymentMethod() {
-            let payments = JSON.parse(localStorage.getItem('warung_payments')) || [];
-            const newId = payments.length > 0 ? Math.max(...payments.map(p => p.id || 0)) + 1 : 1;
-            payments.push({ id: newId, name: "Metode Baru", number: "", holder: "" });
-            localStorage.setItem('warung_payments', JSON.stringify(payments));
-            loadAdminPayments();
-        }
-
-        function removePaymentMethod(idx) {
-            let payments = JSON.parse(localStorage.getItem('warung_payments')) || [];
-            payments.splice(idx, 1);
-            localStorage.setItem('warung_payments', JSON.stringify(payments));
-            loadAdminPayments();
-        }
-
-        function savePaymentSettings() {
-            let payments = JSON.parse(localStorage.getItem('warung_payments')) || [];
-            payments.forEach((p, idx) => {
-                const nameInput = document.getElementById(`pay-name-${idx}`).value;
-                const numInput = document.getElementById(`pay-num-${idx}`).value;
-                const holderInput = document.getElementById(`pay-holder-${idx}`).value;
-                p.name = nameInput;
-                p.number = numInput;
-                p.holder = holderInput;
-            });
-
-            localStorage.setItem('warung_payments', JSON.stringify(payments));
-            alert('Pengaturan rekening & E-Wallet berhasil disimpan!');
-            loadAdminPayments();
-        }
-
-        function initAdminData() {
-            loadOrders();
-            setInterval(() => {
-                loadOrders(true);
-            }, 3000);
-        }
-
-        window.onload = function() {
-            checkAdminAuth();
-        };
+        window.onload = loadOrders;
     </script>
 </body>
 </html>
