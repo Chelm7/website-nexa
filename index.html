@@ -34,9 +34,18 @@
     <!-- Menu Section -->
     <main id="menu-section" class="container mx-auto px-4 py-12">
         <h3 class="text-3xl font-bold text-center mb-10 text-amber-900">Daftar Menu Kami</h3>
-        <div id="menu-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <!-- Menu dinamis dari localStorage -->
+        <div id="menu-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+            <!-- Menu dinamis -->
         </div>
+
+        <!-- Cek Status Pesanan Saya -->
+        <section class="bg-white rounded-2xl shadow-md p-6 max-w-2xl mx-auto border border-amber-200">
+            <h3 class="text-xl font-bold text-amber-900 mb-2"><i class="fa-solid fa-clock-rotate-left mr-2"></i> Status Pesanan Terakhir Saya</h3>
+            <p class="text-sm text-gray-600 mb-4">Pesanan baru akan divalidasi dan diproses langsung oleh Admin warung.</p>
+            <div id="my-order-status-box" class="bg-amber-50 p-4 rounded-xl text-sm text-gray-700">
+                Belum ada pesanan aktif di perangkat ini.
+            </div>
+        </section>
     </main>
 
     <!-- Modal Keranjang / Checkout -->
@@ -63,38 +72,43 @@
                         <input type="text" id="buyer-address" class="w-full mt-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none" placeholder="Contoh: Meja 05 / Jl. Merdeka">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">Metode Pembayaran</label>
+                        <label class="block text-sm font-medium text-gray-700">Metode Pembayaran (Rekening/E-Wallet)</label>
                         <select id="payment-method" class="w-full mt-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none">
-                            <option value="QRIS">QRIS (Scan Semua E-Wallet / Bank)</option>
-                            <option value="BCA">Transfer Bank BCA (No. Rek: 1234567890)</option>
-                            <option value="MANDIRI">Transfer Bank Mandiri (No. Rek: 0987654321)</option>
-                            <option value="COD">Bayar di Tempat / Kasir (Tunai)</option>
+                            <!-- Dimuat dinamis dari pengaturan admin -->
                         </select>
                     </div>
                 </div>
             </div>
 
             <button onclick="proceedToPayment()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl transition shadow-md">
-                <i class="fa-solid fa-qrcode mr-2"></i> Lanjutkan Pembayaran & Pesan
+                <i class="fa-solid fa-file-invoice-dollar mr-2"></i> Lanjutkan & Lihat Info Pembayaran
             </button>
         </div>
     </div>
 
-    <!-- Modal Barcode / Instruksi Pembayaran -->
+    <!-- Modal Instruksi Pembayaran (Tanpa Barcode) -->
     <div id="payment-modal" class="fixed inset-0 bg-black bg-opacity-60 hidden z-50 flex justify-center items-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center relative">
-            <h3 class="text-xl font-bold mb-2 text-amber-900">Selesaikan Pembayaran</h3>
-            <p id="payment-info-text" class="text-sm text-gray-600 mb-4">Silakan lakukan pembayaran sesuai metode yang dipilih.</p>
+            <h3 class="text-xl font-bold mb-2 text-amber-900">Instruksi Pembayaran</h3>
+            <p class="text-sm text-gray-600 mb-4">Silakan transfer / bayar sesuai data di bawah ini:</p>
             
-            <!-- Kotak Barcode / QR -->
-            <div id="barcode-container" class="bg-gray-100 p-4 rounded-xl mb-4 flex flex-col items-center justify-center border border-dashed border-gray-400">
-                <img id="qr-image" src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=MIE-BANGKA-TELADAN-PAYMENT" alt="QR Code Pembayaran" class="w-44 h-44 object-contain mb-2 bg-white p-2 rounded shadow-sm">
-                <span id="payment-detail-text" class="text-xs font-semibold text-gray-700">Scan QRIS untuk Bayar</span>
+            <!-- Kotak Info Rekening dari Admin -->
+            <div class="bg-amber-50 p-4 rounded-xl mb-6 border border-amber-200 text-left space-y-2">
+                <p class="text-xs text-gray-500 font-semibold uppercase tracking-wider">Metode Pilihan:</p>
+                <p id="pay-method-name" class="font-bold text-amber-900 text-base">-</p>
+                <p class="text-xs text-gray-500 font-semibold uppercase tracking-wider">Nomor Tujuan / Rekening:</p>
+                <p id="pay-acc-number" class="font-mono font-bold text-lg text-gray-800 bg-white px-3 py-1.5 rounded border border-amber-300">-</p>
+                <p class="text-xs text-gray-500 font-semibold uppercase tracking-wider">Atas Nama / Keterangan:</p>
+                <p id="pay-acc-holder" class="font-medium text-gray-700 text-sm">-</p>
+                <div class="pt-2 border-t border-amber-200 flex justify-between text-sm font-bold text-amber-800">
+                    <span>Total Tagihan:</span>
+                    <span id="pay-total-amount">Rp 0</span>
+                </div>
             </div>
 
             <div class="space-y-2">
                 <button onclick="finishCheckout()" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-2.5 rounded-xl transition shadow">
-                    Saya Sudah Bayar / Pesan Sekarang
+                    Kirim Pesanan Sekarang
                 </button>
                 <button onclick="closePaymentModal()" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm font-medium py-2 rounded-xl transition">
                     Kembali
@@ -116,14 +130,26 @@
             { id: 3, name: "Es Timun Serut", price: 8000, desc: "Minuman segar pereda pedas dan penyejuk dahaga.", image: "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=500&q=80" }
         ];
 
+        const defaultPayments = [
+            { id: 1, name: "BCA", number: "1234567890", holder: "Mie Bangka Teladan" },
+            { id: 2, name: "Mandiri", number: "0987654321", holder: "Mie Bangka Teladan" },
+            { id: 3, name: "DANA / E-Wallet", number: "081234567890", holder: "Mie Bangka Teladan" },
+            { id: 4, name: "Bayar di Tempat (COD)", number: "Tunai", holder: "Bayar ke Kasir" }
+        ];
+
         let cart = [];
         let pendingOrderData = null;
 
-        function initMenu() {
+        function initApp() {
             if (!localStorage.getItem('warung_menu')) {
                 localStorage.setItem('warung_menu', JSON.stringify(defaultMenu));
             }
+            if (!localStorage.getItem('warung_payments')) {
+                localStorage.setItem('warung_payments', JSON.stringify(defaultPayments));
+            }
             renderMenu();
+            loadPaymentOptions();
+            checkMyOrderStatus();
         }
 
         function renderMenu() {
@@ -155,6 +181,26 @@
                     </div>
                 `;
             });
+        }
+
+        function loadPaymentOptions() {
+            const selectEl = document.getElementById('payment-method');
+            const payments = JSON.parse(localStorage.getItem('warung_payments')) || [];
+            
+            selectEl.innerHTML = '';
+            let validCount = 0;
+
+            payments.forEach(p => {
+                // Hanya tampilkan jika nomor rekening diisi oleh admin
+                if (p.number && p.number.trim() !== '') {
+                    validCount++;
+                    selectEl.innerHTML += `<option value="${p.id}">${p.name} (No: ${p.number} - A/N ${p.holder})</option>`;
+                }
+            });
+
+            if (validCount === 0) {
+                selectEl.innerHTML = `<option value="">Metode pembayaran belum diatur oleh admin</option>`;
+            }
         }
 
         function addToCart(id) {
@@ -219,10 +265,15 @@
         function proceedToPayment() {
             const name = document.getElementById('buyer-name').value.trim();
             const address = document.getElementById('buyer-address').value.trim();
-            const paymentMethod = document.getElementById('payment-method').value;
+            const paymentId = document.getElementById('payment-method').value;
 
             if (!name || !address) {
                 alert('Silakan masukkan Nama dan Nomor Meja / Alamat terlebih dahulu!');
+                return;
+            }
+
+            if (!paymentId) {
+                alert('Pilih metode pembayaran yang tersedia terlebih dahulu!');
                 return;
             }
 
@@ -231,6 +282,8 @@
                 return;
             }
 
+            const payments = JSON.parse(localStorage.getItem('warung_payments')) || [];
+            const selectedPay = payments.find(p => p.id == paymentId);
             const totalPrice = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
 
             pendingOrderData = {
@@ -238,36 +291,18 @@
                 date: new Date().toLocaleString('id-ID'),
                 name: name,
                 address: address,
-                payment: paymentMethod,
+                payment: `${selectedPay.name} (${selectedPay.number})`,
                 items: [...cart],
                 total: totalPrice,
                 status: 'Pending'
             };
 
-            // Setup tampilan modal pembayaran sesuai pilihan
-            const payText = document.getElementById('payment-detail-text');
-            const qrImg = document.getElementById('qr-image');
-            const infoText = document.getElementById('payment-info-text');
+            // Tampilkan detail instruksi pembayaran di modal
+            document.getElementById('pay-method-name').innerText = selectedPay.name;
+            document.getElementById('pay-acc-number').innerText = selectedPay.number;
+            document.getElementById('pay-acc-holder').innerText = selectedPay.holder;
+            document.getElementById('pay-total-amount').innerText = `Rp ${totalPrice.toLocaleString('id-ID')}`;
 
-            if (paymentMethod === 'QRIS') {
-                infoText.innerText = `Total Tagihan: Rp ${totalPrice.toLocaleString('id-ID')}. Scan QRIS di bawah ini:`;
-                qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=QRIS-MIEBANGKA-${pendingOrderData.id}-${totalPrice}`;
-                payText.innerText = "Scan menggunakan GoPay, OVO, Dana, BCA Mobile, dll.";
-            } else if (paymentMethod === 'BCA') {
-                infoText.innerText = `Total Tagihan: Rp ${totalPrice.toLocaleString('id-ID')}`;
-                qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=BCA-1234567890-AN-WARUNG`;
-                payText.innerText = "No. Rek BCA: 1234567890 (A/N Mie Bangka)";
-            } else if (paymentMethod === 'MANDIRI') {
-                infoText.innerText = `Total Tagihan: Rp ${totalPrice.toLocaleString('id-ID')}`;
-                qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=MANDIRI-0987654321-AN-WARUNG`;
-                payText.innerText = "No. Rek Mandiri: 0987654321 (A/N Mie Bangka)";
-            } else {
-                infoText.innerText = `Total Tagihan: Rp ${totalPrice.toLocaleString('id-ID')}`;
-                qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=CASH-ON-DELIVERY`;
-                payText.innerText = "Silakan bayar langsung di kasir / saat pesanan diantar.";
-            }
-
-            // Tutup modal keranjang, buka modal pembayaran
             toggleCart();
             document.getElementById('payment-modal').classList.remove('hidden');
         }
@@ -283,7 +318,10 @@
             orders.unshift(pendingOrderData);
             localStorage.setItem('warung_orders', JSON.stringify(orders));
 
-            alert(`Pesanan berhasil dibuat! ID: ${pendingOrderData.id}. Terima kasih.`);
+            // Simpan ID pesanan terakhir di browser lokal untuk pengecekan status
+            localStorage.setItem('last_order_id', pendingOrderData.id);
+
+            alert(`Pesanan berhasil dikirim! ID: ${pendingOrderData.id}. Menunggu konfirmasi & proses dari Admin.`);
             
             cart = [];
             updateCartUI();
@@ -291,9 +329,38 @@
             closePaymentModal();
             document.getElementById('buyer-name').value = '';
             document.getElementById('buyer-address').value = '';
+            checkMyOrderStatus();
         }
 
-        window.onload = initMenu;
+        function checkMyOrderStatus() {
+            const lastId = localStorage.getItem('last_order_id');
+            const box = document.getElementById('my-order-status-box');
+            if (!lastId) return;
+
+            const orders = JSON.parse(localStorage.getItem('warung_orders')) || [];
+            const myOrder = orders.find(o => o.id === lastId);
+
+            if (!myOrder) {
+                box.innerHTML = `Pesanan dengan ID ${lastId} tidak ditemukan dalam riwayat.`;
+                return;
+            }
+
+            let badgeColor = myOrder.status === 'Pending' ? 'bg-yellow-100 text-yellow-800 border-yellow-300' : (myOrder.status === 'Diproses' ? 'bg-blue-100 text-blue-800 border-blue-300' : 'bg-green-100 text-green-800 border-green-300');
+            
+            let statusDesc = myOrder.status === 'Pending' ? 'Pesanan diterima, menunggu Admin memproses.' : (myOrder.status === 'Diproses' ? 'Pesanan sedang disiapkan / dimasak oleh dapur!' : 'Pesanan telah selesai/diantar!');
+
+            box.innerHTML = `
+                <div class="flex justify-between items-center mb-2">
+                    <span class="font-bold text-amber-900">${myOrder.id}</span>
+                    <span class="px-3 py-1 rounded-full text-xs font-bold border ${badgeColor}">${myOrder.status}</span>
+                </div>
+                <p class="text-gray-600 mb-1"><strong>Pemesan:</strong> ${myOrder.name} (${myOrder.address})</p>
+                <p class="text-gray-600 mb-2"><strong>Total:</strong> Rp ${myOrder.total.toLocaleString('id-ID')} (${myOrder.payment})</p>
+                <p class="text-xs italic text-amber-800 font-medium"><i class="fa-solid fa-circle-info mr-1"></i> ${statusDesc}</p>
+            `;
+        }
+
+        window.onload = initApp;
     </script>
 </body>
 </html>
