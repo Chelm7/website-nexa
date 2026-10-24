@@ -116,6 +116,16 @@
         </div>
     </div>
 
+    <!-- Tombol Scroll Panah Transparan (Atas & Bawah) -->
+    <div class="fixed bottom-6 right-6 z-40 flex flex-col space-y-2">
+        <button onclick="scrollPage('up')" class="bg-gray-800 bg-opacity-40 hover:bg-opacity-70 text-white w-9 h-9 rounded-full flex items-center justify-center text-xs transition backdrop-blur-sm shadow" title="Scroll ke Atas">
+            <i class="fa-solid fa-chevron-up"></i>
+        </button>
+        <button onclick="scrollPage('down')" class="bg-gray-800 bg-opacity-40 hover:bg-opacity-70 text-white w-9 h-9 rounded-full flex items-center justify-center text-xs transition backdrop-blur-sm shadow" title="Scroll ke Bawah">
+            <i class="fa-solid fa-chevron-down"></i>
+        </button>
+    </div>
+
     <!-- Footer -->
     <footer class="bg-amber-900 text-amber-100 py-6 text-center mt-12">
         <p>&copy; 2026 Kota Tanjungpinang (<span id="domain-label">masak-masak.my.id</span>). All rights reserved.</p>
@@ -147,6 +157,16 @@
             slides[currentSlide].classList.remove('active');
             currentSlide = (currentSlide + 1) % slides.length;
             slides[currentSlide].classList.add('active');
+        }
+
+        // Fungsi Scroll Halaman dengan Panah Transparan (Dibatasi agar area bawah banner tetap terkendali)
+        function scrollPage(direction) {
+            const scrollAmount = 400;
+            if (direction === 'down') {
+                window.scrollBy({ top: scrollAmount, behavior: 'smooth' });
+            } else {
+                window.scrollBy({ top: -scrollAmount, behavior: 'smooth' });
+            }
         }
 
         // Inisialisasi Menu
