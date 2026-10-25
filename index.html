@@ -440,5 +440,155 @@
       </script>
     </body>
   </html>
+            document.getElementById('cart-total').innerText = 'Rp ' + total.toLocaleString('id-ID');
+        }
+
+        function changeQty(idx, change) {
+            cart[idx].qty += change;
+            if (cart[idx].qty <= 0) cart.splice(idx, 1);
+            updateCartUI();
+        }
+
+        function toggleCart() {
+            const modal = document.getElementById('cart-modal');
+            modal.classList.toggle('hidden');
+            updateCartUI();
+        }
+
+        function loadBankOptions() {
+            const methodSelect = document.getElementById('payment-method');
+            const banks = JSON.parse(localStorage.getItem('mb_banks')) || [];
+            banks.forEach(b => {
+                methodSelect.innerHTML += `<option value="${b.name} - ${b.accNumber} (a.n. ${b.holder})">${b.name} - ${b.accNumber} (a.n. ${b.holder})</option>`;
+            });
+        }
+
+        // FUNGSI CHECKOUT & SIMPAN KE SUPABASE
+        async function checkout() {
+            if (localStorage.getItem('mb_resto_status') === 'Tutup') { 
+                alert('Mohon maaf, restoran sedang tutup.'); 
+                return; 
+            }
+            if (cart.length === 0) { 
+                alert('Keranjang belanja masih kosong!'); 
+                return; 
+            }
+
+            const name = document.getElementById('buyer-name').value.trim();
+            const address = document.getElementById('buyer-address').value.trim();
+            const method = document.getElementById('payment-method').value;
+            const confirmed = document.getElementById('payment-confirmed').checked;
+
+            if (!name || !address || !method) {
+                alert('Mohon isi nama, nomor meja/alamat, dan metode pembayaran.');
+                return;
+            }
+            if (!confirmed) {
+                alert('Mohon centang kotak konfirmasi pembayaran.');
+                return;
+            }
+
+            const orderId = 'ORD-' + Math.floor(100000 + Math.random() * 900000);
+            const total = cart.reduce((sum, i) => sum + (i.price * i.qty), 0);
+            const detailText = cart.map(i => `${i.name} (${i.qty}x)`).join(', ');
+            const totalQty = cart.reduce((sum, i) => sum + i.qty, 0);
+
+            // SIMPAN KE SUPABASE (Tabel: Pesanan)
+            try {
+                const { data, error } = await _supabase
+                    .from('Pesanan')
+                    .insert([
+                        { 
+                            id: orderId,
+                            nama: name, 
+                            menu: `${address} | Item: ${detailText}`, 
+                            jumlah: totalQty, 
+                            total: total,
+                            status: 'Menunggu Verifikasi Resto' 
+                        }
+                    ]);
+
+                if (error) {
+                    console.error('Gagal simpan ke Supabase:', error);
+                    alert('Gagal terhubung ke database Supabase. Periksa kembali koneksi.');
+                    return;
+                }
+            } catch (err) {
+                console.error('Error:', err);
+            }
+
+            // Simpan juga ke localStorage sebagai cadangan riwayat pembeli
+            let orders = JSON.parse(localStorage.getItem('mb_orders')) || [];
+            const newOrder = {
+                id: orderId,
+                name: name,
+                address: address,
+                items: [...cart],
+                total: total,
+                method: method,
+                status: 'Menunggu Verifikasi Resto',
+                time: new Date().toLocaleTimeString('id-ID'),
+                date: new Date().toLocaleDateString('id-ID'),
+                timestamp: Date.now()
+            };
+            orders.unshift(newOrder);
+            localStorage.setItem('mb_orders', JSON.stringify(orders));
+
+            // Reset keranjang & tampilkan modal timer
+            cart = [];
+            updateCartUI();
+            toggleCart();
+            
+            document.getElementById('pay-order-id').innerText = orderId;
+            document.getElementById('pay-buyer-name').innerText = name;
+            document.getElementById('pay-total-items').innerText = totalQty + ' Item';
+            document.getElementById('pay-total').innerText = 'Rp ' + total.toLocaleString('id-ID');
+            document.getElementById('pay-method-container').innerText = method;
+
+            const timerModal = document.getElementById('payment-timer-modal');
+            timerModal.classList.remove('hidden');
+
+            let timeLeft = 180; // 3 menit
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                let m = Math.floor(timeLeft / 60);
+                let s = timeLeft % 60;
+                document.getElementById('countdown-timer').innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    timerModal.classList.add('hidden');
+                    alert('Waktu konfirmasi habis.');
+                }
+                timeLeft--;
+            }, 1000);
+
+            loadCustomerOrders();
+        }
+
+        function loadCustomerOrders() {
+            const list = document.getElementById('customer-orders-list');
+            const orders = JSON.parse(localStorage.getItem('mb_orders')) || [];
+            list.innerHTML = '';
+            if (orders.length === 0) {
+                list.innerHTML = `<p class="text-gray-500 text-center py-3">Belum ada riwayat pesanan.</p>`;
+                return;
+            }
+            orders.slice(0, 5).forEach(o => {
+                list.innerHTML += `
+                    <div class="p-3 bg-sky-50 rounded-xl border border-sky-100 flex justify-between items-center">
+                        <div>
+                            <div class="font-bold text-sky-900">${o.id} - ${o.name}</div>
+                            <div class="text-xs text-gray-600">Total: Rp ${o.total.toLocaleString('id-ID')} | Meja/Alamat: ${o.address}</div>
+                        </div>
+                        <span class="px-2.5 py-1 text-xs font-bold rounded-lg bg-yellow-100 text-yellow-800">${o.status}</span>
+                    </div>
+                `;
+            });
+        }
+
+        window.onload = initApp;
+    </script>
+</body>
+</html>
 
 
