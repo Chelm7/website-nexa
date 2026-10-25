@@ -109,6 +109,10 @@
                         <input type="text" id="buyer-name" class="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-sky-500 outline-none text-sm" placeholder="Nama lengkap">
                     </div>
                     <div>
+                        <label class="block text-sm font-medium text-gray-700">Nomor HP / WhatsApp</label>
+                        <input type="text" id="buyer-phone" class="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-sky-500 outline-none text-sm" placeholder="Contoh: 08123456789">
+                    </div>
+                    <div>
                         <label class="block text-sm font-medium text-gray-700">Nomor Meja / Alamat Pengiriman</label>
                         <input type="text" id="buyer-address" class="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-sky-500 outline-none text-sm" placeholder="Nomor Meja atau Alamat di Tanjungpinang">
                     </div>
@@ -186,9 +190,9 @@
         updateLiveClock();
 
         const defaultMenu = [
-            { id: 1, name: "Mie Bangka Spesial", category: "Makanan", price: 25000, desc: "Mie kenyal dengan topping cincang daging gurih dan bakso ikan.", image: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=500&q=80" },
-            { id: 2, name: "Mie Bangka Pangsit Kuah", category: "Makanan", price: 22000, desc: "Disajikan hangat dengan kaldu lezat dan pangsit lembut.", image: "https://images.unsplash.com/photo-1612929633738-8fe44f7ec841?auto=format&fit=crop&w=500&q=80" },
-            { id: 3, name: "Es Timun Serut", category: "Minuman", price: 8000, desc: "Minuman segar pereda penyejuk dahaga.", image: "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=500&q=80" }
+            { id: 1, name: "Mie Bangka Spesial (Topping B2)", category: "Makanan", price: 25000, desc: "Mie kenyal khas Bangka dengan topping cincang B2 gurih dan pangsit.", image: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=500&q=80" },
+            { id: 2, name: "Mie Bangka Pangsit Kuah", category: "Makanan", price: 22000, desc: "Disajikan hangat dengan kaldu lezat dan pangsit rebus lembut.", image: "https://images.unsplash.com/photo-1612929633738-8fe44f7ec841?auto=format&fit=crop&w=500&q=80" },
+            { id: 3, name: "Es Jeruk Kunci Bangka", category: "Minuman", price: 8000, desc: "Minuman es khas Bangka dengan jeruk kunci segar.", image: "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=500&q=80" }
         ];
 
         let cart = [];
@@ -199,7 +203,7 @@
         let orderStatusCheckInterval = null;
 
         function initApp() {
-            if (!localStorage.getItem('mb_menu')) localStorage.setItem('mb_menu', JSON.stringify(defaultMenu));
+            if (!localStorage.getItem('mb_menus')) localStorage.setItem('mb_menus', JSON.stringify(defaultMenu));
             if (!localStorage.getItem('mb_banners')) localStorage.setItem('mb_banners', JSON.stringify(["https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80", "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=1200&q=80"]));
             if (!localStorage.getItem('mb_resto_status')) localStorage.setItem('mb_resto_status', 'Buka');
             checkRestoStatus();
@@ -243,7 +247,7 @@
 
         function renderMenu() {
             const grid = document.getElementById('menu-grid');
-            const menuList = JSON.parse(localStorage.getItem('mb_menu')) || [];
+            const menuList = JSON.parse(localStorage.getItem('mb_menus')) || [];
             const filtered = currentCategory === 'all' ? menuList : menuList.filter(m => m.category === currentCategory);
             grid.innerHTML = '';
             if (filtered.length === 0) { grid.innerHTML = `<p class="col-span-full text-center text-gray-500 py-8">Belum ada menu dalam kategori ini.</p>`; return; }
@@ -253,13 +257,13 @@
                         <div>
                             <img src="${item.image || 'https://via.placeholder.com/400x300'}" class="w-full h-48 object-cover">
                             <div class="p-5">
-                                <span class="text-xs font-bold text-sky-600 bg-sky-50 px-2.5 py-1 rounded-full">${item.category}</span>
+                                <span class="text-xs font-bold text-sky-600 bg-sky-50 px-2.5 py-1 rounded-full">${item.category || 'Makanan'}</span>
                                 <h4 class="font-bold text-xl text-sky-900 mt-2 mb-1">${item.name}</h4>
                                 <p class="text-gray-600 text-sm mb-4">${item.desc}</p>
                             </div>
                         </div>
                         <div class="px-5 pb-5 flex justify-between items-center">
-                            <span class="text-lg font-bold text-sky-700">Rp ${item.price.toLocaleString('id-ID')}</span>
+                            <span class="text-lg font-bold text-sky-700">Rp ${Number(item.price).toLocaleString('id-ID')}</span>
                             <button onclick="addToCart(${item.id})" class="bg-white text-sky-600 border border-sky-600 hover:bg-sky-50 px-4 py-2 rounded-xl text-sm font-bold transition shadow">
                                 <i class="fa-solid fa-plus mr-1"></i> Pesan
                             </button>
@@ -271,7 +275,7 @@
 
         function addToCart(id) {
             if (localStorage.getItem('mb_resto_status') === 'Tutup') { alert('Mohon maaf, restoran sedang tutup. Tidak dapat menambah pesanan.'); return; }
-            const menuList = JSON.parse(localStorage.getItem('mb_menu')) || [];
+            const menuList = JSON.parse(localStorage.getItem('mb_menus')) || [];
             const product = menuList.find(p => p.id === id);
             if (!product) return;
             const existing = cart.find(i => i.id === id);
@@ -288,7 +292,7 @@
                 total += item.price * item.qty;
                 container.innerHTML += `
                     <div class="py-3 flex justify-between items-center text-sm">
-                        <div><div class="font-bold text-gray-800">${item.name}</div><div class="text-gray-500">Rp ${item.price.toLocaleString('id-ID')} x ${item.qty}</div></div>
+                        <div><div class="font-bold text-gray-800">${item.name}</div><div class="text-gray-500">Rp ${Number(item.price).toLocaleString('id-ID')} x ${item.qty}</div></div>
                         <div class="flex items-center space-x-2">
                             <button onclick="changeQty(${idx}, -1)" class="bg-gray-100 px-2.5 py-1 rounded">-</button>
                             <span class="font-bold">${item.qty}</span>
@@ -315,12 +319,37 @@
             const select = document.getElementById('payment-method');
             const banks = JSON.parse(localStorage.getItem('mb_banks')) || [];
             select.innerHTML = `<option value="">-- Pilih Pembayaran --</option><option value="Kasir">Bayar di Kasir (Tunai)</option>`;
-            banks.forEach(b => { select.innerHTML += `<option value="${b.name} - ${b.account} (a.n. ${b.holder})">${b.name} - ${b.account} (a.n. ${b.holder})</option>`; });
+            banks.forEach(b => { select.innerHTML += `<option value="${b.bank} - ${b.account} (a.n. ${b.holder})">${b.bank} - ${b.account} (a.n. ${b.holder})</option>`; });
+        }
+
+        function syncOrderToGoogleSheet(orderData) {
+            const webhookUrl = localStorage.getItem('mb_gsheet_webhook_url');
+            if(!webhookUrl) return;
+
+            const itemsFormatted = orderData.items.map(i => `${i.name} (${i.qty}x)`).join(', ');
+
+            fetch(webhookUrl, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id: orderData.id,
+                    date: orderData.date,
+                    name: orderData.name,
+                    phone: orderData.phone,
+                    address: orderData.address,
+                    items: itemsFormatted,
+                    total: orderData.total,
+                    payment: orderData.payment,
+                    status: orderData.status
+                })
+            }).catch(err => console.log('Google Sheets sync fail:', err));
         }
 
         function checkout() {
             if (localStorage.getItem('mb_resto_status') === 'Tutup') { alert('Restoran sedang tutup.'); return; }
             const name = document.getElementById('buyer-name').value.trim();
+            const phone = document.getElementById('buyer-phone').value.trim();
             const address = document.getElementById('buyer-address').value.trim();
             const payment = document.getElementById('payment-method').value;
             const confirmed = document.getElementById('payment-confirmed').checked;
@@ -337,7 +366,7 @@
                 id: 'ORD-' + Date.now().toString().slice(-6),
                 date: new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' }),
                 timestamp: Date.now(),
-                name, address, payment,
+                name, phone, address, payment,
                 items: [...cart],
                 total,
                 status: 'Menunggu Verifikasi Resto'
@@ -346,6 +375,9 @@
             let orders = JSON.parse(localStorage.getItem('mb_orders')) || [];
             orders.unshift(newOrder);
             localStorage.setItem('mb_orders', JSON.stringify(orders));
+
+            // OTOMATIS KIRIM KE GOOGLE SHEET
+            syncOrderToGoogleSheet(newOrder);
 
             activeOrderId = newOrder.id;
             document.getElementById('pay-order-id').innerText = newOrder.id;
@@ -364,6 +396,7 @@
             updateCartUI();
             toggleCart();
             document.getElementById('buyer-name').value = '';
+            document.getElementById('buyer-phone').value = '';
             document.getElementById('buyer-address').value = '';
             document.getElementById('payment-confirmed').checked = false;
             document.getElementById('payment-timer-modal').classList.remove('hidden');
@@ -421,7 +454,7 @@
             orders.slice(0, 10).forEach(o => {
                 let badgeColor = o.status === 'Diproses' ? 'bg-blue-100 text-blue-800' : (o.status === 'Selesai' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800');
                 let noteMsg = o.status === 'Selesai' ? 'Pesanan Anda telah selesai. Terima kasih!' : (o.status === 'Diproses' ? 'Pesanan sedang disiapkan di dapur.' : 'Pesanan menunggu verifikasi resto.');
-                html += `<div class="p-3 bg-sky-50 rounded-xl border border-sky-200"><div class="flex justify-between font-bold"><span>ID: ${o.id} (${o.name})</span> <span class="px-2 py-0.5 rounded-full ${badgeColor}">${o.status}</span></div><div class="text-xs text-gray-600 mt-1">Meja/Alamat: ${o.address} | Total: Rp ${o.total.toLocaleString('id-ID')}</div><div class="text-xs font-medium text-sky-800 mt-1">${noteMsg}</div></div>`;
+                html += `<div class="p-3 bg-sky-50 rounded-xl border border-sky-200"><div class="flex justify-between font-bold"><span>ID: ${o.id} (${o.name})</span> <span class="px-2 py-0.5 rounded-full ${badgeColor}">${o.status}</span></div><div class="text-xs text-gray-600 mt-1">Meja/Alamat: ${o.address} | Total: Rp ${Number(o.total).toLocaleString('id-ID')}</div><div class="text-xs font-medium text-sky-800 mt-1">${noteMsg}</div></div>`;
             });
             container.innerHTML = html;
         }
