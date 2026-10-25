@@ -15,7 +15,6 @@
         function checkAdminAuth() { 
             if (sessionStorage.getItem('mb_admin_logged') !== 'true') { 
                 document.getElementById('login-modal').classList.remove('hidden'); 
-                document.getElementById('display-phone-label').innerText = localStorage.getItem('mb_admin_phone') || "081267166886"; 
             } else { 
                 document.getElementById('login-modal').classList.add('hidden'); 
                 initAdminPanel(); 
@@ -580,7 +579,6 @@
                             <i id="eye-icon-2" class="fa-solid fa-eye"></i>
                         </button>
                     </div>
-                    <p class="text-[10px] text-gray-400 mt-1">Kontak Bantuan Admin: <span id="display-phone-label" class="font-semibold text-gray-600">081267166886</span></p>
                 </div> 
                 <button onclick="verifyAdminLogin()" class="w-full bg-sky-600 hover:bg-sky-700 text-white font-bold py-2.5 rounded-xl text-sm transition shadow-lg shadow-sky-600/30">
                     Masuk Panel
