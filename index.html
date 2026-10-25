@@ -196,8 +196,10 @@
 
         function updateLiveClock() {
             const now = new Date();
-            document.getElementById('live-time').innerText = now.toLocaleTimeString('id-ID', { timeZone: 'Asia/Jakarta' });
-            document.getElementById('live-date').innerText = now.toLocaleDateString('id-ID', { timeZone: 'Asia/Jakarta', weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' });
+            const timeEl = document.getElementById('live-time');
+            const dateEl = document.getElementById('live-date');
+            if (timeEl) timeEl.innerText = now.toLocaleTimeString('id-ID', { timeZone: 'Asia/Jakarta' });
+            if (dateEl) dateEl.innerText = now.toLocaleDateString('id-ID', { timeZone: 'Asia/Jakarta', weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' });
         }
         setInterval(updateLiveClock, 1000);
         updateLiveClock();
@@ -211,9 +213,6 @@
         let cart = [];
         let currentCategory = 'all';
         let currentSlideIndex = 0;
-        let activeOrderId = null;
-        let timerInterval = null;
-        let orderStatusCheckInterval = null;
 
         function initApp() {
             if (!localStorage.getItem('mb_menu')) localStorage.setItem('mb_menu', JSON.stringify(defaultMenu));
@@ -222,19 +221,20 @@
             checkRestoStatus();
             loadBanners();
             renderMenu();
-            loadBankOptions();
             loadCustomerOrders();
         }
 
         function checkRestoStatus() {
             const status = localStorage.getItem('mb_resto_status') || 'Buka';
             const banner = document.getElementById('resto-closed-banner');
+            if (!banner) return;
             if (status === 'Tutup') banner.classList.remove('hidden'); else banner.classList.add('hidden');
         }
 
         function loadBanners() {
             const banners = JSON.parse(localStorage.getItem('mb_banners')) || [];
             const container = document.getElementById('banner-container');
+            if (!container) return;
             container.innerHTML = '';
             banners.forEach((b, idx) => {
                 container.innerHTML += `<div class="banner-slide ${idx === 0 ? 'active' : ''} absolute inset-0 w-full h-full"><img src="${b}" class="w-full h-full object-cover"></div>`;
@@ -252,14 +252,18 @@
 
         function filterMenu(cat) {
             currentCategory = cat;
-            document.getElementById('btn-all').className = cat === 'all' ? "px-5 py-2 rounded-xl text-sm font-bold bg-sky-600 text-white shadow transition whitespace-nowrap" : "px-5 py-2 rounded-xl text-sm font-bold bg-white text-sky-600 border border-sky-300 shadow transition whitespace-nowrap";
-            document.getElementById('btn-makanan').className = cat === 'Makanan' ? "px-5 py-2 rounded-xl text-sm font-bold bg-sky-600 text-white shadow transition whitespace-nowrap" : "px-5 py-2 rounded-xl text-sm font-bold bg-white text-sky-600 border border-sky-300 shadow transition whitespace-nowrap";
-            document.getElementById('btn-minuman').className = cat === 'Minuman' ? "px-5 py-2 rounded-xl text-sm font-bold bg-sky-600 text-white shadow transition whitespace-nowrap" : "px-5 py-2 rounded-xl text-sm font-bold bg-white text-sky-600 border border-sky-300 shadow transition whitespace-nowrap";
+            const btnAll = document.getElementById('btn-all');
+            const btnMakanan = document.getElementById('btn-makanan');
+            const btnMinuman = document.getElementById('btn-minuman');
+            if (btnAll) btnAll.className = cat === 'all' ? "px-5 py-2 rounded-xl text-sm font-bold bg-sky-600 text-white shadow transition whitespace-nowrap" : "px-5 py-2 rounded-xl text-sm font-bold bg-white text-sky-600 border border-sky-300 shadow transition whitespace-nowrap";
+            if (btnMakanan) btnMakanan.className = cat === 'Makanan' ? "px-5 py-2 rounded-xl text-sm font-bold bg-sky-600 text-white shadow transition whitespace-nowrap" : "px-5 py-2 rounded-xl text-sm font-bold bg-white text-sky-600 border border-sky-300 shadow transition whitespace-nowrap";
+            if (btnMinuman) btnMinuman.className = cat === 'Minuman' ? "px-5 py-2 rounded-xl text-sm font-bold bg-sky-600 text-white shadow transition whitespace-nowrap" : "px-5 py-2 rounded-xl text-sm font-bold bg-white text-sky-600 border border-sky-300 shadow transition whitespace-nowrap";
             renderMenu();
         }
 
         function renderMenu() {
             const grid = document.getElementById('menu-grid');
+            if (!grid) return;
             const menuList = JSON.parse(localStorage.getItem('mb_menu')) || [];
             const filtered = currentCategory === 'all' ? menuList : menuList.filter(m => m.category === currentCategory);
             grid.innerHTML = '';
@@ -297,163 +301,150 @@
         }
 
         function updateCartUI() {
-            document.getElementById('cart-count').innerText = cart.reduce((sum, i) => sum + i.qty, 0);
+            const countEl = document.getElementById('cart-count');
+            if (countEl) countEl.innerText = cart.reduce((sum, i) => sum + i.qty, 0);
             const container = document.getElementById('cart-items');
+            if (!container) return;
             container.innerHTML = '';
             let total = 0;
             cart.forEach((item, idx) => {
                 total += item.price * item.qty;
                 container.innerHTML += `
                     <div class="py-3 flex justify-between items-center text-sm">
-                        <div><div class="font-bold text-gray-800">${item.name}</div><div class="text-gray-500">Rp ${item.price.toLocaleString('id-ID')} x ${item.qty}</div></div>
+                        <div>
+                            <div class="font-bold text-gray-800">${item.name}</div>
+                            <div class="text-gray-500">Rp ${item.price.toLocaleString('id-ID')} x ${item.qty}</div>
+                        </div>
                         <div class="flex items-center space-x-2">
-                            <button onclick="changeQty(${idx}, -1)" class="bg-gray-100 px-2.5 py-1 rounded">-</button>
-                            <span class="font-bold">${item.qty}</span>
-                            <button onclick="changeQty(${idx}, 1)" class="bg-gray-100 px-2.5 py-1 rounded">+</button>
+                            <button onclick="changeQty(${idx}, -1)" class="w-7 h-7 bg-gray-100 rounded-full font-bold text-gray-600 hover:bg-gray-200">-</button>
+                            <span class="font-bold w-5 text-center">${item.qty}</span>
+                            <button onclick="changeQty(${idx}, 1)" class="w-7 h-7 bg-gray-100 rounded-full font-bold text-gray-600 hover:bg-gray-200">+</button>
                         </div>
                     </div>
                 `;
             });
-            document.getElementById('cart-total').innerText = 'Rp ' + total.toLocaleString('id-ID');
+            const totalEl = document.getElementById('cart-total');
+            if (totalEl) totalEl.innerText = `Rp ${total.toLocaleString('id-ID')}`;
         }
 
-        function changeQty(idx, change) {
-            cart[idx].qty += change;
-            if (cart[idx].qty <= 0) cart.splice(idx, 1);
+        function changeQty(index, delta) {
+            cart[index].qty += delta;
+            if (cart[index].qty <= 0) {
+                cart.splice(index, 1);
+            }
             updateCartUI();
         }
 
         function toggleCart() {
             const modal = document.getElementById('cart-modal');
-            modal.classList.toggle('hidden');
+            if (modal) modal.classList.toggle('hidden');
             updateCartUI();
         }
 
-        function loadBankOptions() {
-            const methodSelect = document.getElementById('payment-method');
-            const banks = JSON.parse(localStorage.getItem('mb_banks')) || [];
-            banks.forEach(b => {
-                methodSelect.innerHTML += `<option value="${b.name} - ${b.accNumber} (a.n. ${b.holder})">${b.name} - ${b.accNumber} (a.n. ${b.holder})</option>`;
-            });
-        }
-
-        // FUNGSI CHECKOUT AMAN (TIDAK MEMBLOKIR JIKA KONEKSI SUPABASE KENDUR)
         async function checkout() {
-            if (localStorage.getItem('mb_resto_status') === 'Tutup') { 
-                alert('Mohon maaf, restoran sedang tutup.'); 
-                return; 
-            }
-            if (cart.length === 0) { 
-                alert('Keranjang belanja masih kosong!'); 
-                return; 
-            }
+            if (cart.length === 0) { alert('Keranjang masih kosong!'); return; }
+            const buyerName = document.getElementById('buyer-name').value.trim();
+            const buyerAddress = document.getElementById('buyer-address').value.trim();
+            const paymentMethod = document.getElementById('payment-method').value;
+            const paymentConfirmed = document.getElementById('payment-confirmed').checked;
 
-            const name = document.getElementById('buyer-name').value.trim();
-            const address = document.getElementById('buyer-address').value.trim();
-            const method = document.getElementById('payment-method').value;
-            const confirmed = document.getElementById('payment-confirmed').checked;
-
-            if (!name || !address || !method) {
-                alert('Mohon isi nama, nomor meja/alamat, dan metode pembayaran.');
+            if (!buyerName || !buyerAddress || !paymentMethod) {
+                alert('Mohon lengkapi Nama, Nomor Meja / Alamat, dan Metode Pembayaran.');
                 return;
             }
-            if (!confirmed) {
-                alert('Mohon centang kotak konfirmasi pembayaran.');
+            if (!paymentConfirmed) {
+                alert('Mohon centang konfirmasi pembayaran terlebih dahulu.');
                 return;
             }
 
-            const orderId = 'ORD-' + Math.floor(100000 + Math.random() * 900000);
-            const total = cart.reduce((sum, i) => sum + (i.price * i.qty), 0);
-            const detailText = cart.map(i => `${i.name} (${i.qty}x)`).join(', ');
+            const totalAmount = cart.reduce((sum, i) => sum + (i.price * i.qty), 0);
+            const menuNames = cart.map(i => `${i.name} (${i.qty}x)`).join(', ');
             const totalQty = cart.reduce((sum, i) => sum + i.qty, 0);
 
-            // SIMPAN KE SUPABASE DI BACKGROUND (Aman, tidak memunculkan error popup)
+            // Kirim ke Supabase dengan tabel 'Pesanan' (P besar)
             if (_supabase) {
                 try {
-                    await _supabase
+                    const { data, error } = await _supabase
                         .from('Pesanan')
                         .insert([
-                            { 
-                                id: orderId,
-                                nama: name, 
-                                menu: `${address} | Item: ${detailText}`, 
-                                jumlah: totalQty, 
-                                total: total,
-                                status: 'Menunggu Verifikasi Resto' 
+                            {
+                                nama: `${buyerName} (${buyerAddress})`,
+                                menu: menuNames,
+                                jumlah: Number(totalQty),
+                                total: Number(totalAmount),
+                                status: 'Pending'
                             }
                         ]);
+
+                    if (error) {
+                        console.error('Gagal simpan Supabase:', error.message);
+                        alert('Gagal mengirim pesanan ke database: ' + error.message);
+                        return;
+                    }
                 } catch (err) {
-                    console.log('Background sync ke Supabase tertunda:', err);
+                    console.error('Error exception:', err);
+                    alert('Terjadi kesalahan koneksi ke server database.');
+                    return;
                 }
+            } else {
+                alert('Koneksi Supabase belum siap.');
+                return;
             }
 
-            // Simpan ke localStorage agar langsung tampil di dashboard admin Anda
-            let orders = JSON.parse(localStorage.getItem('mb_orders')) || [];
-            const newOrder = {
-                id: orderId,
-                name: name,
-                address: address,
-                items: [...cart],
-                total: total,
-                method: method,
-                status: 'Menunggu Verifikasi Resto',
-                time: new Date().toLocaleTimeString('id-ID'),
-                date: new Date().toLocaleDateString('id-ID'),
-                timestamp: Date.now()
-            };
-            orders.unshift(newOrder);
-            localStorage.setItem('mb_orders', JSON.stringify(orders));
-
-            // Reset keranjang & tampilkan modal timer
+            alert('Pesanan berhasil dikirim dan tercatat di sistem Resto!');
             cart = [];
             updateCartUI();
             toggleCart();
-            
-            document.getElementById('pay-order-id').innerText = orderId;
-            document.getElementById('pay-buyer-name').innerText = name;
-            document.getElementById('pay-total-items').innerText = totalQty + ' Item';
-            document.getElementById('pay-total').innerText = 'Rp ' + total.toLocaleString('id-ID');
-            document.getElementById('pay-method-container').innerText = method;
-
-            const timerModal = document.getElementById('payment-timer-modal');
-            timerModal.classList.remove('hidden');
-
-            let timeLeft = 180; // 3 menit
-            clearInterval(timerInterval);
-            timerInterval = setInterval(() => {
-                let m = Math.floor(timeLeft / 60);
-                let s = timeLeft % 60;
-                document.getElementById('countdown-timer').innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-                if (timeLeft <= 0) {
-                    clearInterval(timerInterval);
-                    timerModal.classList.add('hidden');
-                    alert('Waktu konfirmasi habis.');
-                }
-                timeLeft--;
-            }, 1000);
-
             loadCustomerOrders();
         }
 
-        function loadCustomerOrders() {
-            const list = document.getElementById('customer-orders-list');
-            const orders = JSON.parse(localStorage.getItem('mb_orders')) || [];
-            list.innerHTML = '';
-            if (orders.length === 0) {
-                list.innerHTML = `<p class="text-gray-500 text-center py-3">Belum ada riwayat pesanan.</p>`;
+        async function loadCustomerOrders() {
+            const listContainer = document.getElementById('customer-orders-list');
+            if (!listContainer) return;
+            listContainer.innerHTML = '<p class="text-gray-500 text-center py-2">Memuat status pesanan...</p>';
+
+            if (!_supabase) {
+                listContainer.innerHTML = '<p class="text-red-500 text-center py-2">Koneksi database tidak tersedia.</p>';
                 return;
             }
-            orders.slice(0, 5).forEach(o => {
-                list.innerHTML += `
-                    <div class="p-3 bg-sky-50 rounded-xl border border-sky-100 flex justify-between items-center">
-                        <div>
-                            <div class="font-bold text-sky-900">${o.id} - ${o.name}</div>
-                            <div class="text-xs text-gray-600">Total: Rp ${o.total.toLocaleString('id-ID')} | Meja/Alamat: ${o.address}</div>
+
+            try {
+                const { data, error } = await _supabase
+                    .from('Pesanan')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(10);
+
+                if (error) {
+                    listContainer.innerHTML = `<p class="text-red-500 text-center py-2">Gagal memuat: ${error.message}</p>`;
+                    return;
+                }
+
+                if (!data || data.length === 0) {
+                    listContainer.innerHTML = '<p class="text-gray-500 text-center py-2">Belum ada riwayat pesanan.</p>';
+                    return;
+                }
+
+                listContainer.innerHTML = '';
+                data.forEach(order => {
+                    const dateStr = new Date(order.created_at).toLocaleTimeString('id-ID', { timeZone: 'Asia/Jakarta' });
+                    listContainer.innerHTML += `
+                        <div class="bg-sky-50 p-3 rounded-xl border border-sky-100 flex justify-between items-center">
+                            <div>
+                                <div class="font-bold text-sky-900">${order.nama}</div>
+                                <div class="text-xs text-gray-600">${order.menu} (Jumlah: ${order.jumlah})</div>
+                                <div class="text-xs font-bold text-sky-700">Rp ${Number(order.total).toLocaleString('id-ID')} - <span class="text-gray-500">${dateStr}</span></div>
+                            </div>
+                            <div>
+                                <span class="px-2.5 py-1 text-xs font-bold rounded-full bg-yellow-100 text-yellow-800">${order.status || 'Pending'}</span>
+                            </div>
                         </div>
-                        <span class="px-2.5 py-1 text-xs font-bold rounded-lg bg-yellow-100 text-yellow-800">${o.status}</span>
-                    </div>
-                `;
-            });
+                    `;
+                });
+            } catch (err) {
+                console.error('Load orders error:', err);
+                listContainer.innerHTML = '<p class="text-red-500 text-center py-2">Terjadi kesalahan saat memuat pesanan.</p>';
+            }
         }
 
         window.onload = initApp;
