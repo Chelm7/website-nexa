@@ -20,7 +20,7 @@
         <i class="fa-solid fa-triangle-exclamation mr-1"></i> Mohon Maaf, Restoran saat ini sedang TUTUP / OFFLINE. Pesanan tidak dapat diproses.
     </div>
 
-    <!-- Header / Navbar Responsif -->
+    <!-- Header / Navbar Responsif (Tanpa Tombol Admin) -->
     <header class="bg-sky-600 text-white shadow-md sticky top-0 z-40">
         <div class="container mx-auto px-4 py-3 flex flex-col sm:flex-row justify-between items-center gap-3">
             <div class="flex items-center space-x-3 w-full sm:w-auto justify-between sm:justify-start">
@@ -44,9 +44,6 @@
                     <i class="fa-solid fa-cart-shopping mr-2"></i> Keranjang
                     <span id="cart-count" class="ml-2 bg-sky-600 text-white text-xs px-2 py-0.5 rounded-full">0</span>
                 </button>
-                <a href="admin.html" class="bg-sky-800 hover:bg-sky-900 text-white px-3 py-2 rounded-xl font-bold transition text-xs flex items-center shadow border border-sky-500">
-                    <i class="fa-solid fa-lock mr-1"></i> Admin
-                </a>
             </div>
         </div>
     </header>
@@ -92,12 +89,18 @@
         </button>
     </div>
 
-    <!-- Modal Keranjang -->
+    <!-- Modal Keranjang & Pembayaran dengan Timer -->
     <div id="cart-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex justify-center items-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-5 sm:p-6 relative max-h-[90vh] overflow-y-auto">
             <button onclick="toggleCart()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-xl"><i class="fa-solid fa-xmark"></i></button>
-            <h3 class="text-xl sm:text-2xl font-bold mb-4 text-sky-900"><i class="fa-solid fa-basket-shopping mr-2"></i> Keranjang & Pembayaran</h3>
+            <h3 class="text-xl sm:text-2xl font-bold mb-2 text-sky-900"><i class="fa-solid fa-basket-shopping mr-2"></i> Keranjang & Pembayaran</h3>
             
+            <!-- Tampilan Waktu Pembayaran Berlangsung -->
+            <div id="payment-timer-box" class="bg-amber-50 border border-amber-200 text-amber-800 px-3 py-2 rounded-xl text-xs font-bold mb-3 flex justify-between items-center hidden">
+                <span><i class="fa-solid fa-clock mr-1"></i> Sisa Waktu Pembayaran:</span>
+                <span id="payment-countdown" class="text-red-600 text-sm">05:00</span>
+            </div>
+
             <div id="cart-items" class="divide-y divide-gray-200 mb-4 max-h-48 overflow-y-auto"></div>
 
             <div class="border-t pt-4 mb-4">
@@ -194,6 +197,8 @@
         let cart = [];
         let currentCategory = 'all';
         let currentSlideIndex = 0;
+        let paymentTimer = null;
+        let timeLeft = 300; // 5 menit waktu pembayaran
 
         function initApp() {
             if (!localStorage.getItem('mb_menu')) localStorage.setItem('mb_menu', JSON.stringify(defaultMenu));
@@ -331,9 +336,47 @@
 
         function toggleCart() {
             const modal = document.getElementById('cart-modal');
-            if (modal) modal.classList.toggle('hidden');
+            const isHidden = modal.classList.contains('hidden');
+            modal.classList.toggle('hidden');
             loadBankOptions();
             updateCartUI();
+
+            if (isHidden && cart.length > 0) {
+                // Mulai timer pembayaran saat keranjang dibuka
+                startPaymentTimer();
+            } else {
+                stopPaymentTimer();
+            }
+        }
+
+        function startPaymentTimer() {
+            stopPaymentTimer();
+            timeLeft = 300; // 5 menit
+            const timerBox = document.getElementById('payment-timer-box');
+            const countdownEl = document.getElementById('payment-countdown');
+            if (timerBox) timerBox.classList.remove('hidden');
+
+            paymentTimer = setInterval(() => {
+                if (timeLeft <= 0) {
+                    stopPaymentTimer();
+                    alert('Waktu pembayaran habis! Pesanan diatur ulang dari awal dan data tidak tersimpan.');
+                    cart = [];
+                    updateCartUI();
+                    if (timerBox) timerBox.classList.add('hidden');
+                    document.getElementById('cart-modal').classList.add('hidden');
+                    return;
+                }
+                let m = Math.floor(timeLeft / 60);
+                let s = timeLeft % 60;
+                if (countdownEl) countdownEl.innerText = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+                timeLeft--;
+            }, 1000);
+        }
+
+        function stopPaymentTimer() {
+            if (paymentTimer) clearInterval(paymentTimer);
+            const timerBox = document.getElementById('payment-timer-box');
+            if (timerBox) timerBox.classList.add('hidden');
         }
 
         async function checkout() {
@@ -356,6 +399,7 @@
             const menuNames = cart.map(i => `${i.name} (${i.qty}x)`).join(', ');
             const totalQty = cart.reduce((sum, i) => sum + i.qty, 0);
 
+            // Data hanya disimpan ke Supabase setelah sukses diproses & konfirmasi
             if (_supabase) {
                 try {
                     const { data, error } = await _supabase
@@ -385,7 +429,8 @@
                 return;
             }
 
-            alert('Pesanan berhasil dikirim dan tercatat di sistem Resto!');
+            stopPaymentTimer();
+            alert('Pesanan berhasil diproses dan dikirim ke admin!');
             cart = [];
             updateCartUI();
             toggleCart();
