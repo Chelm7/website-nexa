@@ -463,7 +463,7 @@
                     const target = document.getElementById('status-pesanan-section');
                     if (target) target.scrollIntoView({ behavior: 'smooth' });
                 }
-            }, 1500);
+            }, 1000);
         }
 
         function closeTimerModal() {
@@ -491,6 +491,38 @@
             });
             container.innerHTML = html;
         }
+
+        // --- SISTEM AUTO RELOAD CEPAT TANPA LAG (REALTIME SYNC) ---
+        let lastKnownOrdersHash = "";
+        let lastKnownStatus = "";
+        let lastKnownMenusHash = "";
+
+        function checkFastAutoSync() {
+            // 1. Cek perubahan status Buka/Tutup resto secara instan
+            let currentStatus = safeGet('mb_resto_status') || 'Buka';
+            if (currentStatus !== lastKnownStatus) {
+                lastKnownStatus = currentStatus;
+                checkRestoStatus();
+            }
+
+            // 2. Cek pembaruan menu (jika admin menambah/menghapus menu)
+            let currentMenus = safeGet('mb_menus') || '';
+            if (currentMenus !== lastKnownMenusHash) {
+                lastKnownMenusHash = currentMenus;
+                renderMenu();
+                loadBankOptions();
+            }
+
+            // 3. Cek pembaruan status pesanan pelanggan secara instan tanpa lag
+            let currentOrders = safeGet('mb_orders') || '';
+            if (currentOrders !== lastKnownOrdersHash) {
+                lastKnownOrdersHash = currentOrders;
+                loadCustomerOrders();
+            }
+        }
+
+        // Jalankan auto sync sangat cepat setiap 1 detik (ringan, tanpa reload halaman penuh/tanpa ngelek)
+        setInterval(checkFastAutoSync, 1000);
 
         window.onload = initApp;
     </script>
