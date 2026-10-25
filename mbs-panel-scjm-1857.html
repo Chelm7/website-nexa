@@ -107,8 +107,6 @@
             let soundEnabled = localStorage.getItem('mb_sound_enabled') !== 'false';
             if(!soundEnabled) return;
 
-            let freqType = localStorage.getItem('mb_sound_freq') || 'high'; // high atau low
-
             try {
                 if (!audioCtx) {
                     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -118,30 +116,15 @@
                 }
 
                 let now = audioCtx.currentTime;
-                
                 let osc1 = audioCtx.createOscillator();
                 let gain1 = audioCtx.createGain();
                 osc1.type = 'sine';
-                
-                let f1 = freqType === 'high' ? 1046.50 : 440.00; // C6 vs A4
-                let f2 = freqType === 'high' ? 1318.51 : 554.37; // E6 vs C#5
-
-                osc1.frequency.setValueAtTime(f1, now); 
+                osc1.frequency.setValueAtTime(880, now); 
                 gain1.gain.setValueAtTime(0.2, now);
                 osc1.connect(gain1);
                 gain1.connect(audioCtx.destination);
                 osc1.start(now);
-                osc1.stop(now + 0.2);
-
-                let osc2 = audioCtx.createOscillator();
-                let gain2 = audioCtx.createGain();
-                osc2.type = 'sine';
-                osc2.frequency.setValueAtTime(f2, now + 0.25); 
-                gain2.gain.setValueAtTime(0.2, now + 0.25);
-                osc2.connect(gain2);
-                gain2.connect(audioCtx.destination);
-                osc2.start(now + 0.25);
-                osc2.stop(now + 0.45);
+                osc1.stop(now + 0.3);
 
             } catch(e) {
                 console.log("Audio play failed:", e);
@@ -337,7 +320,6 @@
             }
         }
 
-        // ================= KELOLA MENU + KELOLA GAMBAR =================
         let menuImageBase64 = "";
 
         function previewMenuImageFile(event) {
@@ -420,7 +402,6 @@
             }
         }
 
-        // ================= KELOLA BANNER & PROMO PNG =================
         let bannerImageBase64 = "";
 
         function previewBannerImageFile(event) {
@@ -487,7 +468,6 @@
             }
         }
 
-        // ================= KELOLA BANK & PEMBAYARAN =================
         function renderBanks() {
             let banks = JSON.parse(localStorage.getItem('mb_banks') || '[]');
             let container = document.getElementById('banks-list');
@@ -519,21 +499,16 @@
             renderBanks();
         }
 
-        // ================= PENGATURAN SUARA & GOOGLE SHEET WEBHOOK =================
         function renderSettings() {
             let sName = document.getElementById('setting-resto-name');
             let sPhone = document.getElementById('setting-resto-phone');
             let sAddress = document.getElementById('setting-resto-address');
             let sSound = document.getElementById('setting-sound-enabled');
-            let sFreq = document.getElementById('setting-sound-freq');
-            let sSheet = document.getElementById('setting-sheet-url');
 
             if(sName) sName.value = localStorage.getItem('mb_setting_name') || "Mie Bangka Teladan";
             if(sPhone) sPhone.value = localStorage.getItem('mb_admin_phone') || "081267166886";
             if(sAddress) sAddress.value = localStorage.getItem('mb_setting_address') || "Jalan Batu 8 Atas, Kota Tanjungpinang";
             if(sSound) sSound.value = localStorage.getItem('mb_sound_enabled') || "true";
-            if(sFreq) sFreq.value = localStorage.getItem('mb_sound_freq') || "high";
-            if(sSheet) sSheet.value = localStorage.getItem('mb_gsheet_webhook_url') || "";
         }
 
         function saveSettings(e) {
@@ -542,8 +517,6 @@
             localStorage.setItem('mb_admin_phone', document.getElementById('setting-resto-phone').value);
             localStorage.setItem('mb_setting_address', document.getElementById('setting-resto-address').value);
             localStorage.setItem('mb_sound_enabled', document.getElementById('setting-sound-enabled').value);
-            localStorage.setItem('mb_sound_freq', document.getElementById('setting-sound-freq').value);
-            localStorage.setItem('mb_gsheet_webhook_url', document.getElementById('setting-sheet-url').value.trim());
 
             alert('Pengaturan resto & notifikasi suara berhasil disimpan!');
         }
@@ -565,12 +538,12 @@
             <div class="space-y-3"> 
                 <div> 
                     <label class="block text-xs font-bold text-gray-700 mb-1">Nama Resto (Username)</label> 
-                    <input type="text" id="admin-username" value="miebangka" class="w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-sky-500 outline-none"> 
+                    <input type="text" id="admin-username" class="w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-sky-500 outline-none"> 
                 </div> 
                 <div> 
                     <label class="block text-xs font-bold text-gray-700 mb-1">Sandi Resto (Password)</label> 
                     <div class="relative">
-                        <input type="password" id="admin-password" value="admin123" class="w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-sky-500 outline-none pr-10"> 
+                        <input type="password" id="admin-password" class="w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-sky-500 outline-none pr-10"> 
                         <button type="button" onclick="toggleVisibility('admin-password', 'eye-icon-1')" class="absolute right-3 top-2.5 text-gray-500">
                             <i id="eye-icon-1" class="fa-solid fa-eye"></i>
                         </button>
@@ -579,7 +552,7 @@
                 <div> 
                     <label class="block text-xs font-bold text-gray-700 mb-1">PIN Rahasia Resto</label> 
                     <div class="relative">
-                        <input type="password" id="admin-pin" placeholder="Masukkan 6 digit PIN" class="w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-sky-500 outline-none pr-10"> 
+                        <input type="password" id="admin-pin" class="w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-sky-500 outline-none pr-10"> 
                         <button type="button" onclick="toggleVisibility('admin-pin', 'eye-icon-2')" class="absolute right-3 top-2.5 text-gray-500">
                             <i id="eye-icon-2" class="fa-solid fa-eye"></i>
                         </button>
@@ -789,7 +762,7 @@
                 </div>
             </section>
 
-            <!-- SECTION 5: SETTINGS & SUARA NOTIFIKASI & GOOGLE SHEET -->
+            <!-- SECTION 5: SETTINGS & SUARA NOTIFIKASI -->
             <section id="section-settings" class="hidden space-y-6">
                 <div class="bg-white p-6 rounded-2xl shadow-sm">
                     <h3 class="font-bold text-lg text-gray-800 mb-4"><i class="fa-solid fa-gears text-sky-600 mr-2"></i> Pengaturan Informasi Resto & Notifikasi</h3>
@@ -810,29 +783,13 @@
                         <!-- PENGATURAN SUARA NOTIFIKASI -->
                         <div class="p-4 bg-sky-50 rounded-xl border border-sky-100 space-y-3">
                             <h4 class="font-bold text-sm text-sky-900"><i class="fa-solid fa-volume-high text-sky-600 mr-1"></i> Pengaturan Suara Notifikasi Pesanan Masuk</h4>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <div>
-                                    <label class="block text-xs font-bold text-gray-700 mb-1">Status Suara Notifikasi</label>
-                                    <select id="setting-sound-enabled" class="w-full px-3 py-2 border rounded-xl text-sm bg-white font-semibold">
-                                        <option value="true">Aktif (ON)</option>
-                                        <option value="false">Mati (OFF)</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-bold text-gray-700 mb-1">Frekuensi / Nada Suara</label>
-                                    <select id="setting-sound-freq" class="w-full px-3 py-2 border rounded-xl text-sm bg-white font-semibold">
-                                        <option value="high">Suara Tinggi (Tinggi & Nyaring)</option>
-                                        <option value="low">Suara Rendah (Bass / Rendah)</option>
-                                    </select>
-                                </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-1">Status Suara Notifikasi</label>
+                                <select id="setting-sound-enabled" class="w-full px-3 py-2 border rounded-xl text-sm bg-white font-semibold">
+                                    <option value="true">Aktif (ON)</option>
+                                    <option value="false">Mati (OFF)</option>
+                                </select>
                             </div>
-                        </div>
-
-                        <!-- PENGATURAN INTEGRASI GOOGLE SHEET AUTOMATION -->
-                        <div class="p-4 bg-emerald-50 rounded-xl border border-emerald-100 space-y-2">
-                            <h4 class="font-bold text-sm text-emerald-900"><i class="fa-solid fa-file-csv text-emerald-600 mr-1"></i> Integrasi Laporan Laporan Google Sheets</h4>
-                            <p class="text-xs text-emerald-800">Masukkan **Google Apps Script Web App URL** Anda di bawah ini agar setiap pesanan dari pelanggan tersimpan otomatis secara real-time ke Google Sheet Gmail Anda:</p>
-                            <input type="url" id="setting-sheet-url" placeholder="https://script.google.com/macros/s/.../exec" class="w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none bg-white">
                         </div>
 
                         <button type="submit" class="bg-sky-600 hover:bg-sky-700 text-white font-bold px-6 py-2.5 rounded-xl text-sm transition shadow-md shadow-sky-600/30">
