@@ -7,13 +7,15 @@
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Supabase JS SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         .banner-slide { display: none; }
         .banner-slide.active { display: block; animation: fadeIn 0.8s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0.3; } to { opacity: 1; } }
     </style>
 </head>
-<body class="bg-sky-50 text-gray-800 font-sans selection:bg-sky-500 selection:text-white">
+<body class="bg-sky-50 text-gray-800 font-sans selection:bg-sky-500 selection:text-white" onload="initApp()">
 
     <!-- Notifikasi Resto Tutup -->
     <div id="resto-closed-banner" class="bg-red-600 text-white text-center py-2 px-4 text-xs font-bold hidden sticky top-0 z-50 shadow-md">
@@ -79,7 +81,7 @@
         </div>
     </main>
 
-    <!-- Tombol Panah Scroll Otomatis (Muncul/Hilang Sendiri) -->
+    <!-- Tombol Panah Scroll Otomatis -->
     <div id="scroll-arrows" class="fixed bottom-6 right-6 z-50 flex flex-col space-y-2 transition-opacity duration-300 opacity-0 pointer-events-none">
         <button onclick="scrollToTop()" class="bg-sky-600 hover:bg-sky-700 text-white w-11 h-11 rounded-full shadow-xl flex items-center justify-center transition transform hover:scale-110" title="Gulir ke Atas">
             <i class="fa-solid fa-arrow-up text-base"></i>
@@ -134,14 +136,14 @@
         </div>
     </div>
 
-    <!-- Modal Timer Pembayaran -->
+    <!-- Modal Timer Pembayaran & Status Menunggu -->
     <div id="payment-timer-modal" class="fixed inset-0 bg-black bg-opacity-80 hidden z-50 flex justify-center items-center p-4">
         <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 text-center">
             <div class="w-14 h-14 bg-sky-100 text-sky-600 rounded-full flex items-center justify-center text-2xl mx-auto mb-3">
                 <i class="fa-solid fa-clock"></i>
             </div>
-            <h3 class="text-xl font-extrabold text-sky-900 mb-1">Selesaikan Pembayaran</h3>
-            <p class="text-xs text-gray-500 mb-3">Mohon lakukan pembayaran dalam batas waktu:</p>
+            <h3 class="text-xl font-extrabold text-sky-900 mb-1">Menunggu Konfirmasi Resto ⏳</h3>
+            <p class="text-xs text-gray-500 mb-3">Pembayaran telah berhasil! Mohon tunggu sebentar ya kak! 😊</p>
             
             <div id="countdown-timer" class="text-3xl font-black text-red-600 mb-4 tracking-widest bg-red-50 py-2 rounded-xl border border-red-200">03:00</div>
 
@@ -155,7 +157,7 @@
                     <div id="pay-method-container" class="mt-1"></div>
                 </div>
             </div>
-            <p class="text-[11px] text-gray-500">Menunggu verifikasi dan konfirmasi diproses oleh pihak resto...</p>
+            <p class="text-[11px] text-gray-500">Informasi: Layar ini akan otomatis tertutup dan memperbarui status setelah pembayaran Anda diverifikasi dan diproses oleh Resto kami. ✨</p>
         </div>
     </div>
 
@@ -163,9 +165,15 @@
         <p>&copy; 2026 Mie Bangka Teladan - Kota Tanjungpinang. All rights reserved.</p>
     </footer>
 
+    <!-- Audio Efek Suara -->
     <audio id="success-sound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
 
     <script>
+        // --- KONFIGURASI SUPABASE ---
+        const SUPABASE_URL = 'GANTI_DENGAN_SUPABASE_URL_ANDA';
+        const SUPABASE_ANON_KEY = 'GANTI_DENGAN_SUPABASE_ANON_KEY_ANDA';
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
         let scrollTimeout;
         window.addEventListener('scroll', function() {
             const scrollArrows = document.getElementById('scroll-arrows');
@@ -264,7 +272,7 @@
                             </div>
                         </div>
                         <div class="px-5 pb-5 flex justify-between items-center">
-                            <span class="text-lg font-bold text-sky-700">Rp ${item.price.toLocaleString('id-ID')}</span>
+                            <span class="text-lg font-bold text-sky-700">Rp ${Number(item.price).toLocaleString('id-ID')}</span>
                             <button onclick="addToCart(${item.id})" class="bg-white text-sky-600 border border-sky-600 hover:bg-sky-50 px-4 py-2 rounded-xl text-sm font-bold transition shadow">
                                 <i class="fa-solid fa-plus mr-1"></i> Pesan
                             </button>
@@ -282,27 +290,7 @@
             const existing = cart.find(i => i.id === id);
             if (existing) existing.qty += 1; else cart.push({ ...product, qty: 1 });
             updateCartUI();
-        }
-
-        function updateCartUI() {
-            document.getElementById('cart-count').innerText = cart.reduce((sum, i) => sum + i.qty, 0);
-            const container = document.getElementById('cart-items');
-            container.innerHTML = '';
-            let total = 0;
-            cart.forEach((item, idx) => {
-                total += item.price * item.qty;
-                container.innerHTML += `
-                    <div class="py-3 flex justify-between items-center text-sm">
-                        <div><div class="font-bold text-gray-800">${item.name}</div><div class="text-gray-500">Rp ${item.price.toLocaleString('id-ID')} x ${item.qty}</div></div>
-                        <div class="flex items-center space-x-2">
-                            <button onclick="changeQty(${idx}, -1)" class="bg-gray-100 px-2.5 py-1 rounded">-</button>
-                            <span class="font-bold">${item.qty}</span>
-                            <button onclick="changeQty(${idx}, 1)" class="bg-gray-100 px-2.5 py-1 rounded">+</button>
-                        </div>
-                    </div>
-                `;
-            });
-            document.getElementById('cart-total').innerText = `Rp ${total.toLocaleString('id-ID')}`;
+            alert(product.name + ' ditambahkan ke keranjang.');
         }
 
         function changeQty(idx, delta) {
@@ -311,144 +299,171 @@
             updateCartUI();
         }
 
+        function updateCartUI() {
+            document.getElementById('cart-count').innerText = cart.reduce((sum, i) => sum + i.qty, 0);
+            const container = document.getElementById('cart-items');
+            container.innerHTML = '';
+            let total = 0;
+            if (cart.length === 0) {
+                container.innerHTML = `<p class="text-center text-gray-400 py-4 text-xs">Keranjang masih kosong</p>`;
+                document.getElementById('cart-total').innerText = 'Rp 0';
+                return;
+            }
+            cart.forEach((item, idx) => {
+                total += item.price * item.qty;
+                container.innerHTML += `
+                    <div class="py-3 flex justify-between items-center text-sm">
+                        <div>
+                            <div class="font-bold text-gray-800">${item.name}</div>
+                            <div class="text-gray-500 text-xs">Rp ${Number(item.price).toLocaleString('id-ID')} x ${item.qty}</div>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="changeQty(${idx}, -1)" class="bg-gray-100 hover:bg-gray-200 px-2.5 py-1 rounded text-xs font-bold">-</button>
+                            <span class="font-bold text-xs">${item.qty}</span>
+                            <button onclick="changeQty(${idx}, 1)" class="bg-gray-100 hover:bg-gray-200 px-2.5 py-1 rounded text-xs font-bold">+</button>
+                        </div>
+                    </div>
+                `;
+            });
+            document.getElementById('cart-total').innerText = 'Rp ' + total.toLocaleString('id-ID');
+        }
+
         function toggleCart() {
-            if (localStorage.getItem('mb_resto_status') === 'Tutup') { alert('Mohon maaf, restoran sedang tutup / offline.'); return; }
-            document.getElementById('cart-modal').classList.toggle('hidden');
+            const modal = document.getElementById('cart-modal');
+            modal.classList.toggle('hidden');
+            updateCartUI();
         }
 
         function loadBankOptions() {
             const select = document.getElementById('payment-method');
+            select.innerHTML = `<option value="Kasir">Bayar di Kasir (Tunai)</option>`;
             const banks = JSON.parse(localStorage.getItem('mb_banks')) || [];
-            select.innerHTML = `<option value="">-- Pilih Pembayaran --</option><option value="Kasir">Bayar di Kasir (Tunai)</option>`;
-            banks.forEach(b => { select.innerHTML += `<option value="${b.name} - ${b.account} (a.n. ${b.holder})">${b.name} - ${b.account} (a.n. ${b.holder})</option>`; });
+            banks.forEach(b => {
+                select.innerHTML += `<option value="${b.name} - ${b.acc} (${b.holder})">${b.name} - ${b.acc} a.n ${b.holder}</option>`;
+            });
         }
 
-        function checkout() {
-            if (localStorage.getItem('mb_resto_status') === 'Tutup') { alert('Restoran sedang tutup.'); return; }
-            const name = document.getElementById('buyer-name').value.trim();
-            const address = document.getElementById('buyer-address').value.trim();
-            const payment = document.getElementById('payment-method').value;
-            const confirmed = document.getElementById('payment-confirmed').checked;
+        async function checkout() {
+            if (cart.length === 0) { alert('Keranjang masih kosong.'); return; }
+            let name = document.getElementById('buyer-name').value.trim();
+            let address = document.getElementById('buyer-address').value.trim();
+            let method = document.getElementById('payment-method').value;
+            let confirmed = document.getElementById('payment-confirmed').checked;
 
-            if (!name || !address) { alert('Mohon maaf, Nama dan Nomor Meja / Alamat wajib diisi.'); return; }
-            if (!payment) { alert('Mohon pilih metode pembayaran.'); return; }
-            if (!confirmed) { alert('Mohon centang kotak konfirmasi pembayaran.'); return; }
-            if (cart.length === 0) { alert('Keranjang belanja kosong.'); return; }
+            if (!name || !address) { alert('Mohon isi Nama Pelanggan dan Nomor Meja / Alamat Pengiriman.'); return; }
+            if (!method) { alert('Mohon pilih metode pembayaran.'); return; }
+            if (!confirmed) { alert('Mohon centang konfirmasi pembayaran terlebih dahulu.'); return; }
 
-            const total = cart.reduce((sum, i) => sum + (i.price * i.qty), 0);
-            const totalItemsCount = cart.reduce((sum, i) => sum + i.qty, 0);
+            let total = cart.reduce((sum, i) => sum + (i.price * i.qty), 0);
+            let totalItems = cart.reduce((sum, i) => sum + i.qty, 0);
+            let itemsSummary = cart.map(i => `${i.name} (${i.qty}x)`).join(', ');
+            let orderId = Math.floor(1000 + Math.random() * 9000);
+            let nowTime = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
 
-            const newOrder = {
-                id: 'ORD-' + Date.now().toString().slice(-6),
-                date: new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' }),
-                timestamp: Date.now(),
-                name, address, payment,
-                items: [...cart],
-                total,
-                status: 'Menunggu Verifikasi Resto'
+            let newOrder = {
+                id: orderId,
+                name: name,
+                address: address,
+                itemsSummary: itemsSummary,
+                total: total,
+                totalItems: totalItems,
+                paymentMethod: method,
+                status: 'Menunggu Verifikasi Resto',
+                time: nowTime
             };
 
-            let orders = JSON.parse(localStorage.getItem('mb_orders')) || [];
-            orders.unshift(newOrder);
-            localStorage.setItem('mb_orders', JSON.stringify(orders));
-            document.getElementById('success-sound').play().catch(e => console.log(e));
-
-            activeOrderId = newOrder.id;
-            document.getElementById('pay-order-id').innerText = newOrder.id;
-            document.getElementById('pay-buyer-name').innerText = name;
-            document.getElementById('pay-total-items').innerText = `${totalItemsCount} item`;
-            document.getElementById('pay-total').innerText = `Rp ${total.toLocaleString('id-ID')}`;
-            
-            const payMethodContainer = document.getElementById('pay-method-container');
-            if (payment === 'Kasir') {
-                payMethodContainer.innerHTML = `<span class="font-medium text-gray-800 bg-white p-2 block rounded-xl border">Bayar di Kasir (Tunai) - Silakan langsung memberitahukan ke kasir.</span>`;
-            } else {
-                payMethodContainer.innerHTML = `
-                    <div class="bg-white p-2.5 rounded-xl border space-y-1.5">
-                        <div class="font-bold text-sky-900 text-xs">${payment}</div>
-                        <div class="flex justify-between items-center pt-1 border-t">
-                            <span class="text-[11px] text-gray-600 font-medium">Salin Nomor Rekening:</span>
-                            <button onclick="copyAccountNumber('${payment}')" class="bg-sky-600 hover:bg-sky-700 text-white px-3 py-1 rounded-lg text-xs font-bold transition shadow-sm">
-                                <i class="fa-solid fa-copy mr-1"></i> Salin Nomor
-                            </button>
-                        </div>
-                    </div>
-                `;
+            // Kirim ke Supabase
+            let { error } = await _supabase.from('Pesanan').insert([newOrder]);
+            if (error) {
+                alert('Gagal mengirim pesanan ke database: ' + error.message);
+                return;
             }
+
+            // Bunyikan suara pembayaran telah berhasil saat checkout selesai dikonfirmasi
+            let sound = document.getElementById('success-sound');
+            if (sound) sound.play().catch(e => {});
 
             cart = [];
             updateCartUI();
             toggleCart();
-            document.getElementById('buyer-name').value = '';
-            document.getElementById('buyer-address').value = '';
-            document.getElementById('payment-confirmed').checked = false;
+
+            // Tampilkan modal timer pembayaran dan status menunggu
+            document.getElementById('pay-order-id').innerText = '#' + orderId;
+            document.getElementById('pay-buyer-name').innerText = name;
+            document.getElementById('pay-total-items').innerText = totalItems + ' item';
+            document.getElementById('pay-total').innerText = 'Rp ' + total.toLocaleString('id-ID');
+            document.getElementById('pay-method-container').innerText = method;
+
             document.getElementById('payment-timer-modal').classList.remove('hidden');
-            startCountdown(3 * 60);
+            startCountdown(180, orderId);
         }
 
-        function copyAccountNumber(str) {
-            let match = str.match(/-\s*([0-9]+)/);
-            let accNum = match ? match[1] : str;
-            navigator.clipboard.writeText(accNum).then(() => {
-                alert('Nomor rekening ' + accNum + ' berhasil disalin!');
-            }).catch(err => {
-                alert('Gagal menyalin nomor rekening.');
-            });
-        }
-
-        function startCountdown(duration) {
+        function startCountdown(duration, orderId) {
             let timer = duration, minutes, seconds;
+            activeOrderId = orderId;
             if (timerInterval) clearInterval(timerInterval);
-            if (orderStatusCheckInterval) clearInterval(orderStatusCheckInterval);
 
             timerInterval = setInterval(function () {
                 minutes = parseInt(timer / 60, 10);
                 seconds = parseInt(timer % 60, 10);
-                document.getElementById('countdown-timer').innerText = (minutes < 10 ? "0" + minutes : minutes) + ":" + (seconds < 10 ? "0" + seconds : seconds);
-                if (--timer < 0) { clearInterval(timerInterval); if (orderStatusCheckInterval) clearInterval(orderStatusCheckInterval); cancelExpiredOrder(); }
+
+                minutes = minutes < 10 ? "0" + minutes : minutes;
+                seconds = seconds < 10 ? "0" + seconds : seconds;
+
+                let timerDisplay = document.getElementById('countdown-timer');
+                if (timerDisplay) timerDisplay.innerText = minutes + ":" + seconds;
+
+                if (--timer < 0) {
+                    clearInterval(timerInterval);
+                    document.getElementById('payment-timer-modal').classList.add('hidden');
+                    alert('Waktu pembayaran habis.');
+                }
             }, 1000);
 
-            orderStatusCheckInterval = setInterval(function() {
-                if (!activeOrderId) return;
-                let orders = JSON.parse(localStorage.getItem('mb_orders')) || [];
-                let order = orders.find(o => o.id === activeOrderId);
-                if (order && order.status === 'Diproses') {
-                    if (timerInterval) clearInterval(timerInterval);
-                    if (orderStatusCheckInterval) clearInterval(orderStatusCheckInterval);
-                    document.getElementById('payment-timer-modal').classList.add('hidden');
-                    activeOrderId = null;
-                    loadCustomerOrders();
-                    const target = document.getElementById('status-pesanan-section');
-                    if (target) target.scrollIntoView({ behavior: 'smooth' });
+            // Cek status pesanan berkala dari Supabase (Hanya berbunyi jika admin mengubah status menjadi diproses/selesai)
+            if (orderStatusCheckInterval) clearInterval(orderStatusCheckInterval);
+            orderStatusCheckInterval = setInterval(async function() {
+                loadCustomerOrders();
+                let { data: orders, error } = await _supabase.from('Pesanan').select('*').eq('id', activeOrderId);
+                if (!error && orders && orders.length > 0) {
+                    let current = orders[0];
+                    if (current && current.status !== 'Menunggu Verifikasi Resto') {
+                        clearInterval(timerInterval);
+                        clearInterval(orderStatusCheckInterval);
+                        document.getElementById('payment-timer-modal').classList.add('hidden');
+                        let sound = document.getElementById('success-sound');
+                        if (sound) sound.play().catch(e => {});
+                        alert('Pesanan #' + activeOrderId + ' telah diproses / disetujui oleh Resto!');
+                    }
                 }
-            }, 1500);
+            }, 3000);
         }
 
-        function cancelExpiredOrder() {
-            if (!activeOrderId) return;
-            let orders = JSON.parse(localStorage.getItem('mb_orders')) || [];
-            orders = orders.filter(o => o.id !== activeOrderId);
-            localStorage.setItem('mb_orders', JSON.stringify(orders));
-            document.getElementById('payment-timer-modal').classList.add('hidden');
-            activeOrderId = null;
-            loadCustomerOrders();
-        }
+        async function loadCustomerOrders() {
+            let { data: orders, error } = await _supabase.from('Pesanan').select('*');
+            let container = document.getElementById('customer-orders-list');
+            container.innerHTML = '';
+            if (error || !orders || orders.length === 0) {
+                container.innerHTML = `<p class="text-center text-gray-400 py-3 text-xs">Belum ada riwayat pesanan</p>`;
+                return;
+            }
+            orders.slice(-5).reverse().forEach(o => {
+                let badgeClass = 'bg-yellow-100 text-yellow-800';
+                if (o.status === 'Diproses') badgeClass = 'bg-blue-100 text-blue-800';
+                else if (o.status === 'Selesai') badgeClass = 'bg-green-100 text-green-800';
 
-        function loadCustomerOrders() {
-            checkRestoStatus();
-            const container = document.getElementById('customer-orders-list');
-            const orders = JSON.parse(localStorage.getItem('mb_orders')) || [];
-            if (orders.length === 0) { container.innerHTML = `<p class="text-center text-gray-500 py-4">Belum ada riwayat pesanan.</p>`; return; }
-            let html = '';
-            orders.slice(0, 10).forEach(o => {
-                let badgeColor = o.status === 'Diproses' ? 'bg-blue-100 text-blue-800' : (o.status === 'Selesai' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800');
-                let noteMsg = o.status === 'Selesai' ? 'Pesanan Anda telah selesai. Terima kasih!' : (o.status === 'Diproses' ? 'Pesanan sedang disiapkan di dapur.' : 'Pesanan menunggu verifikasi resto.');
-                html += `<div class="p-3 bg-sky-50 rounded-xl border border-sky-200"><div class="flex justify-between font-bold"><span>ID: ${o.id} (${o.name})</span> <span class="px-2 py-0.5 rounded-full ${badgeColor}">${o.status}</span></div><div class="text-xs text-gray-600 mt-1">Meja/Alamat: ${o.address} | Total: Rp ${o.total.toLocaleString('id-ID')}</div><div class="text-xs font-medium text-sky-800 mt-1">${noteMsg}</div></div>`;
+                container.innerHTML += `
+                    <div class="p-3 bg-gray-50 rounded-xl border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                        <div>
+                            <div class="font-bold text-sky-900">#${o.id} - ${o.name}</div>
+                            <div class="text-xs text-gray-600">${o.itemsSummary}</div>
+                            <div class="text-xs font-bold text-sky-700 mt-0.5">Rp ${Number(o.total).toLocaleString('id-ID')} (${o.paymentMethod})</div>
+                        </div>
+                        <span class="px-2.5 py-1 rounded-full text-xs font-bold ${badgeClass}">${o.status}</span>
+                    </div>
+                `;
             });
-            container.innerHTML = html;
         }
-
-        window.onload = initApp;
     </script>
 </body>
 </html>
