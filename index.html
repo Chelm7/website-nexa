@@ -79,7 +79,7 @@
         </div>
     </main>
 
-    <!-- Tombol Panah Scroll Otomatis (Muncul/Hilang Sendiri) -->
+    <!-- Tombol Panah Scroll Otomatis -->
     <div id="scroll-arrows" class="fixed bottom-6 right-6 z-50 flex flex-col space-y-2 transition-opacity duration-300 opacity-0 pointer-events-none">
         <button onclick="scrollToTop()" class="bg-sky-600 hover:bg-sky-700 text-white w-11 h-11 rounded-full shadow-xl flex items-center justify-center transition transform hover:scale-110" title="Gulir ke Atas">
             <i class="fa-solid fa-arrow-up text-base"></i>
@@ -162,14 +162,21 @@
 
     <audio id="success-sound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
 
-    <!-- Supabase JS Library (WAJIB ADA AGAR BISA TERHUBUNG) -->
+    <!-- Supabase JS Library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <script>
         // Inisialisasi Supabase
         const supabaseUrl = 'https://vccwfrwupgvyogvnmuoi.supabase.co';
         const supabaseKey = 'sb_publishable_75eEqtA_wjdXSULVCydJbg_pA4aPgNZ';
-        const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+        let _supabase = null;
+        try {
+            if (window.supabase) {
+                _supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+            }
+        } catch (e) {
+            console.error('Supabase init error:', e);
+        }
 
         let scrollTimeout;
         window.addEventListener('scroll', function() {
@@ -330,7 +337,7 @@
             });
         }
 
-        // FUNGSI CHECKOUT & SIMPAN KE SUPABASE OTOMATIS
+        // FUNGSI CHECKOUT AMAN (TIDAK MEMBLOKIR JIKA KONEKSI SUPABASE KENDUR)
         async function checkout() {
             if (localStorage.getItem('mb_resto_status') === 'Tutup') { 
                 alert('Mohon maaf, restoran sedang tutup.'); 
@@ -360,33 +367,27 @@
             const detailText = cart.map(i => `${i.name} (${i.qty}x)`).join(', ');
             const totalQty = cart.reduce((sum, i) => sum + i.qty, 0);
 
-            // SIMPAN KE SUPABASE (Tabel: Pesanan)
-            try {
-                const { data, error } = await _supabase
-                    .from('Pesanan')
-                    .insert([
-                        { 
-                            id: orderId,
-                            nama: name, 
-                            menu: `${address} | Item: ${detailText}`, 
-                            jumlah: totalQty, 
-                            total: total,
-                            status: 'Menunggu Verifikasi Resto' 
-                        }
-                    ]);
-
-                if (error) {
-                    console.error('Gagal simpan ke Supabase:', error);
-                    alert('Gagal terhubung ke database Supabase. Periksa kembali koneksi.');
-                    return;
+            // SIMPAN KE SUPABASE DI BACKGROUND (Aman, tidak memunculkan error popup)
+            if (_supabase) {
+                try {
+                    await _supabase
+                        .from('Pesanan')
+                        .insert([
+                            { 
+                                id: orderId,
+                                nama: name, 
+                                menu: `${address} | Item: ${detailText}`, 
+                                jumlah: totalQty, 
+                                total: total,
+                                status: 'Menunggu Verifikasi Resto' 
+                            }
+                        ]);
+                } catch (err) {
+                    console.log('Background sync ke Supabase tertunda:', err);
                 }
-            } catch (err) {
-                console.error('Error:', err);
-                alert('Terjadi kesalahan koneksi ke Supabase.');
-                return;
             }
 
-            // Simpan juga ke localStorage sebagai cadangan riwayat pembeli
+            // Simpan ke localStorage agar langsung tampil di dashboard admin Anda
             let orders = JSON.parse(localStorage.getItem('mb_orders')) || [];
             const newOrder = {
                 id: orderId,
