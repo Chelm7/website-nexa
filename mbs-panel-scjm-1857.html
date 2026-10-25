@@ -183,7 +183,7 @@
                 return;
             }
 
-            // URUTKAN PESANAN SESUAI WAKTU BERJALAN (BARU DI ATAS / DESCENDING BERDASARKAN TIMESTAMP ID/WAKTU)
+            // Urutkan pesanan sesuai waktu berjalan (baru di atas)
             let sortedOrders = orders.slice().sort((a, b) => {
                 let timeA = Number(a.id) || 0;
                 let timeB = Number(b.id) || 0;
@@ -205,7 +205,6 @@
 
             let html = '<div class="space-y-4">';
             filteredOrders.forEach((order, idx) => {
-                // Cari index asli di array orders untuk aksi tombol
                 let originalIdx = orders.findIndex(o => o.id === order.id);
                 if(originalIdx === -1) originalIdx = idx;
 
@@ -215,11 +214,19 @@
                 if(statusBadge === 'Selesai') badgeClass = 'bg-green-100 text-green-800';
                 if(statusBadge === 'Dibatalkan') badgeClass = 'bg-red-100 text-red-800';
 
-                // EFEK LAMPU / GARIS KUNING NEON PADA PESANAN MASUK (MENUNGGU)
+                // EFEK LAMPU NEON:
+                // - Menunggu / Masuk = Lampu Biru Neon
+                // - Diproses (Tombol Proses ditekan) = Lampu Hijau Neon
+                // - Selesai / Lainnya = Padam (Normal)
                 let isPending = (statusBadge === 'Menunggu' || statusBadge === 'Pending' || statusBadge === 'Menunggu Verifikasi Resto' || !order.status);
-                let cardStyle = isPending 
-                    ? 'bg-yellow-50/80 border-2 border-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.6)]' 
-                    : 'bg-white border shadow-sm';
+                let isProcessing = (statusBadge === 'Diproses');
+
+                let cardStyle = 'bg-white border shadow-sm';
+                if (isPending) {
+                    cardStyle = 'bg-blue-50/90 border-2 border-blue-500 shadow-[0_0_20px_rgba(0,149,255,0.9)]';
+                } else if (isProcessing) {
+                    cardStyle = 'bg-emerald-50/90 border-2 border-emerald-500 shadow-[0_0_20px_rgba(0,255,127,0.9)]';
+                }
 
                 let itemsList = '';
                 if(order.items && Array.isArray(order.items)) {
@@ -236,7 +243,7 @@
                             </div>
                             <h4 class="font-bold text-gray-800">${order.name} (${order.phone || '-'})</h4>
                             <p class="text-xs text-gray-600 mb-1">${order.address}</p>
-                            <div class="bg-white/80 p-2 rounded mb-1 border border-yellow-200/50">${itemsList || '<p class="text-xs text-gray-500">Catatan: '+(order.note||'-')+'</p>'}</div>
+                            <div class="bg-white/80 p-2 rounded mb-1 border">${itemsList || '<p class="text-xs text-gray-500">Catatan: '+(order.note||'-')+'</p>'}</div>
                             <p class="text-xs font-semibold text-sky-700">Total: Rp ${Number(order.total).toLocaleString('id-ID')} (${order.payment || 'Tunai/Transfer'})</p>
                         </div>
                         <div class="flex flex-wrap gap-2">
