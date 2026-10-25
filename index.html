@@ -109,8 +109,8 @@
                         <input type="text" id="buyer-name" class="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-sky-500 outline-none text-sm" placeholder="Nama lengkap">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">Nomor HP / WhatsApp</label>
-                        <input type="text" id="buyer-phone" class="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-sky-500 outline-none text-sm" placeholder="Contoh: 08123456789">
+                        <label class="block text-sm font-medium text-gray-700">Deskripsi / Catatan Pesanan</label>
+                        <input type="text" id="buyer-desc" class="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-sky-500 outline-none text-sm" placeholder="Contoh: Jangan terlalu pedas, kuah dipisah...">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Nomor Meja / Alamat Pengiriman</label>
@@ -370,7 +370,7 @@
                     id: orderData.id,
                     date: orderData.date,
                     name: orderData.name,
-                    phone: orderData.phone,
+                    phone: orderData.desc, // Mengirim data deskripsi ke sheet
                     address: orderData.address,
                     items: itemsFormatted,
                     total: orderData.total,
@@ -383,7 +383,7 @@
         function checkout() {
             if (safeGet('mb_resto_status') === 'Tutup') { alert('Restoran sedang tutup.'); return; }
             const name = document.getElementById('buyer-name').value.trim();
-            const phone = document.getElementById('buyer-phone').value.trim();
+            const desc = document.getElementById('buyer-desc').value.trim();
             const address = document.getElementById('buyer-address').value.trim();
             const payment = document.getElementById('payment-method').value;
             const confirmed = document.getElementById('payment-confirmed').checked;
@@ -400,7 +400,7 @@
                 id: 'ORD-' + Date.now().toString().slice(-6),
                 date: new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' }),
                 timestamp: Date.now(),
-                name, phone, address, payment,
+                name, desc, address, payment,
                 items: [...cart],
                 total,
                 status: 'Menunggu Verifikasi Resto'
@@ -430,7 +430,7 @@
             updateCartUI();
             toggleCart();
             document.getElementById('buyer-name').value = '';
-            document.getElementById('buyer-phone').value = '';
+            document.getElementById('buyer-desc').value = '';
             document.getElementById('buyer-address').value = '';
             document.getElementById('payment-confirmed').checked = false;
             document.getElementById('payment-timer-modal').classList.remove('hidden');
@@ -498,14 +498,12 @@
         let lastKnownMenusHash = "";
 
         function checkFastAutoSync() {
-            // 1. Cek perubahan status Buka/Tutup resto secara instan
             let currentStatus = safeGet('mb_resto_status') || 'Buka';
             if (currentStatus !== lastKnownStatus) {
                 lastKnownStatus = currentStatus;
                 checkRestoStatus();
             }
 
-            // 2. Cek pembaruan menu (jika admin menambah/menghapus menu)
             let currentMenus = safeGet('mb_menus') || '';
             if (currentMenus !== lastKnownMenusHash) {
                 lastKnownMenusHash = currentMenus;
@@ -513,7 +511,6 @@
                 loadBankOptions();
             }
 
-            // 3. Cek pembaruan status pesanan pelanggan secara instan tanpa lag
             let currentOrders = safeGet('mb_orders') || '';
             if (currentOrders !== lastKnownOrdersHash) {
                 lastKnownOrdersHash = currentOrders;
@@ -521,7 +518,6 @@
             }
         }
 
-        // Jalankan auto sync sangat cepat setiap 1 detik (ringan, tanpa reload halaman penuh/tanpa ngelek)
         setInterval(checkFastAutoSync, 1000);
 
         window.onload = initApp;
