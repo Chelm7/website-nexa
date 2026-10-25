@@ -1,65 +1,64 @@
 <!DOCTYPE html>
 <html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel Resto - Mie Bangka Teladan</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<head> 
+    <meta charset="UTF-8"> 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+    <title>Panel Resto - Mie Bangka Teladan</title> 
+    <!-- Tailwind CSS --> 
+    <script src="https://cdn.tailwindcss.com"></script> 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"> 
     
-    <script>
-        function checkAdminAuth() {
-            if (sessionStorage.getItem('mb_admin_logged') !== 'true') {
-                document.getElementById('login-modal').classList.remove('hidden');
-                document.getElementById('display-phone-label').innerText = localStorage.getItem('mb_admin_phone') || "081267166886";
-            } else {
-                document.getElementById('login-modal').classList.add('hidden');
-                initAdminPanel();
-            }
-        }
+    <script> 
+        function checkAdminAuth() { 
+            if (sessionStorage.getItem('mb_admin_logged') !== 'true') { 
+                document.getElementById('login-modal').classList.remove('hidden'); 
+                document.getElementById('display-phone-label').innerText = localStorage.getItem('mb_admin_phone') || "081267166886"; 
+            } else { 
+                document.getElementById('login-modal').classList.add('hidden'); 
+                initAdminPanel(); 
+            } 
+        } 
 
-        function verifyAdminLogin() {
-            let usernameInput = document.getElementById('admin-username').value.trim();
-            let passwordInput = document.getElementById('admin-password').value.trim();
-            let pinInput = document.getElementById('admin-pin').value.trim();
-
-            // Kredensial Resmi Anda
-            let correctUsername = "miebangka";
-            let correctPassword = "admin123";
-            let correctPin = "886886";
-
-            if (usernameInput !== correctUsername || passwordInput !== correctPassword) {
-                alert('Nama Resto atau Sandi salah.');
-                return;
-            }
-            if (pinInput !== correctPin) {
-                alert('PIN Rahasia Resto salah.');
-                return;
-            }
-
-            sessionStorage.setItem('mb_admin_logged', 'true');
-            alert('Masuk Panel Resto Berhasil.');
-            document.getElementById('login-modal').classList.add('hidden');
-            initAdminPanel();
-        }
+        function verifyAdminLogin() { 
+            let usernameInput = document.getElementById('admin-username').value.trim(); 
+            let passwordInput = document.getElementById('admin-password').value.trim(); 
+            let pinInput = document.getElementById('admin-pin').value.trim(); 
+            
+            let correctUsername = "miebangka"; 
+            let correctPassword = "admin123"; 
+            let correctPin = "886886"; 
+            
+            if (usernameInput !== correctUsername || passwordInput !== correctPassword) { 
+                alert('Nama Resto atau Sandi salah.'); 
+                return; 
+            } 
+            if (pinInput !== correctPin) { 
+                alert('PIN Rahasia Resto salah.'); 
+                return; 
+            } 
+            
+            sessionStorage.setItem('mb_admin_logged', 'true'); 
+            alert('Masuk Panel Resto Berhasil.'); 
+            document.getElementById('login-modal').classList.add('hidden'); 
+            initAdminPanel(); 
+        } 
 
         function logoutAdmin() {
             sessionStorage.removeItem('mb_admin_logged');
             location.reload();
         }
 
-        function toggleVisibility(fieldId, iconId) {
-            const field = document.getElementById(fieldId);
-            const icon = document.getElementById(iconId);
-            if (field.type === 'password') {
-                field.type = 'text';
-                icon.className = 'fa-solid fa-eye-slash text-gray-500';
-            } else {
-                field.type = 'password';
-                icon.className = 'fa-solid fa-eye text-gray-500';
-            }
-        }
+        function toggleVisibility(fieldId, iconId) { 
+            const field = document.getElementById(fieldId); 
+            const icon = document.getElementById(iconId); 
+            if (field.type === 'password') { 
+                field.type = 'text'; 
+                icon.className = 'fa-solid fa-eye-slash text-gray-500'; 
+            } else { 
+                field.type = 'password'; 
+                icon.className = 'fa-solid fa-eye text-gray-500'; 
+            } 
+        } 
 
         function switchTab(tabName) {
             const tabs = ['orders', 'menus', 'banners', 'banks', 'settings'];
@@ -69,8 +68,10 @@
                 if(sec) sec.classList.add('hidden');
                 if(btn) btn.className = "text-sky-200 hover:text-white pb-1";
             });
-            document.getElementById(`section-${tabName}`).classList.remove('hidden');
-            document.getElementById(`tab-btn-${tabName}`).className = "font-bold border-b-2 border-white pb-1";
+            let targetSec = document.getElementById(`section-${tabName}`);
+            let targetBtn = document.getElementById(`tab-btn-${tabName}`);
+            if(targetSec) targetSec.classList.remove('hidden');
+            if(targetBtn) targetBtn.className = "font-bold border-b-2 border-white pb-1";
         }
 
         function initAdminPanel() {
@@ -78,10 +79,10 @@
             let statusSelect = document.getElementById('header-resto-status');
             if(statusSelect) statusSelect.value = status;
             
-            renderOrders();
-            renderMenus();
-            renderBanks();
-            renderSettings();
+            if(typeof renderOrders === 'function') renderOrders();
+            if(typeof renderMenus === 'function') renderMenus();
+            if(typeof renderBanks === 'function') renderBanks();
+            if(typeof renderSettings === 'function') renderSettings();
         }
 
         function changeRestoStatus(val) {
@@ -92,12 +93,13 @@
         function clearOrders() {
             if (confirm('Yakin ingin menghapus semua riwayat pesanan?')) {
                 localStorage.removeItem('mb_orders');
-                renderOrders();
+                if(typeof renderOrders === 'function') renderOrders();
             }
         }
 
         function renderOrders() {
             let ordersContainer = document.getElementById('orders-list-container');
+            if(!ordersContainer) return;
             let orders = JSON.parse(localStorage.getItem('mb_orders') || '[]');
             
             if (orders.length === 0) {
@@ -143,6 +145,7 @@
 
         function renderMenus() {
             let container = document.getElementById('menu-list-container');
+            if(!container) return;
             let menus = JSON.parse(localStorage.getItem('mb_menus') || '[]');
             if (menus.length === 0) {
                 container.innerHTML = `<div class="bg-white p-6 rounded-xl shadow text-center text-gray-500">Belum ada menu terdaftar. Tambahkan menu baru di bawah.</div>`;
@@ -194,6 +197,7 @@
         function renderBanks() {
             let banks = JSON.parse(localStorage.getItem('mb_banks') || '[]');
             let container = document.getElementById('banks-list');
+            if(!container) return;
             if(banks.length === 0) {
                 container.innerHTML = '<p class="text-sm text-gray-500">Belum ada rekening/e-wallet tersimpan.</p>';
                 return;
@@ -222,9 +226,12 @@
         }
 
         function renderSettings() {
-            document.getElementById('setting-resto-name').value = localStorage.getItem('mb_setting_name') || "Mie Bangka Teladan";
-            document.getElementById('setting-resto-phone').value = localStorage.getItem('mb_admin_phone') || "081267166886";
-            document.getElementById('setting-resto-address').value = localStorage.getItem('mb_setting_address') || "Tanjung Pinang, Riau Islands";
+            let sName = document.getElementById('setting-resto-name');
+            let sPhone = document.getElementById('setting-resto-phone');
+            let sAddress = document.getElementById('setting-resto-address');
+            if(sName) sName.value = localStorage.getItem('mb_setting_name') || "Mie Bangka Teladan";
+            if(sPhone) sPhone.value = localStorage.getItem('mb_admin_phone') || "081267166886";
+            if(sAddress) sAddress.value = localStorage.getItem('mb_setting_address') || "Tanjung Pinang, Riau Islands";
         }
 
         function saveSettings(e) {
@@ -234,160 +241,158 @@
             localStorage.setItem('mb_setting_address', document.getElementById('setting-resto-address').value);
             alert('Pengaturan resto berhasil disimpan!');
         }
-    </script>
-</head>
-<body class="bg-gray-100 text-gray-800 font-sans selection:bg-sky-500 selection:text-white" onload="checkAdminAuth()">
+    </script> 
+</head> 
+<body class="bg-gray-100 text-gray-800 font-sans selection:bg-sky-500 selection:text-white" onload="checkAdminAuth()"> 
 
-    <!-- Modal Login -->
-    <div id="login-modal" class="fixed inset-0 bg-sky-900 bg-opacity-95 hidden z-50 flex justify-center items-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 text-center">
-            <div class="w-14 h-14 bg-sky-600 text-white rounded-full flex items-center justify-center text-2xl mx-auto mb-3 shadow">
-                <i class="fa-solid fa-shield-halved"></i>
-            </div>
-            <h3 class="text-2xl font-bold text-sky-900 mb-1">Login Panel Resto</h3>
-            <p class="text-xs text-gray-500 mb-4">Pemilik Terdaftar HP: <b id="display-phone-label">081267166886</b></p>
-            <div class="space-y-3 text-left">
-                <div>
-                    <label class="block text-xs font-bold text-gray-700">Nama Resto</label>
-                    <input type="text" id="admin-username" placeholder="miebangka" class="w-full px-3 py-2 border rounded-xl mt-1 text-sm outline-none focus:ring-2 focus:ring-sky-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-700">Sandi Resto</label>
-                    <div class="relative mt-1">
-                        <input type="password" id="admin-password" placeholder="••••••••" class="w-full px-3 py-2 border rounded-xl text-sm outline-none focus:ring-2 focus:ring-sky-500 pr-10">
-                        <button type="button" onclick="toggleVisibility('admin-password', 'eye-pass')" class="absolute right-3 top-2.5 text-sm"><i id="eye-pass" class="fa-solid fa-eye text-gray-500"></i></button>
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-700">PIN Rahasia (6 Digit)</label>
-                    <div class="relative mt-1">
-                        <input type="password" id="admin-pin" placeholder="886886" maxlength="6" class="w-full px-3 py-2 border rounded-xl text-sm tracking-widest text-center font-bold outline-none focus:ring-2 focus:ring-sky-500 pr-10">
-                        <button type="button" onclick="toggleVisibility('admin-pin', 'eye-pin')" class="absolute right-3 top-2.5 text-sm"><i id="eye-pin" class="fa-solid fa-eye text-gray-500"></i></button>
-                    </div>
-                </div>
-            </div>
-            <button onclick="verifyAdminLogin()" class="w-full mt-5 bg-sky-600 hover:bg-sky-700 text-white font-bold py-2.5 rounded-xl transition shadow">Masuk ke Panel Resto</button>
-        </div>
-    </div>
+    <!-- Modal Login --> 
+    <div id="login-modal" class="fixed inset-0 bg-sky-900 bg-opacity-95 hidden z-50 flex justify-center items-center p-4"> 
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 text-center"> 
+            <div class="w-14 h-14 bg-sky-600 text-white rounded-full flex items-center justify-center text-2xl mx-auto mb-3 shadow"> 
+                <i class="fa-solid fa-shield-halved"></i> 
+            </div> 
+            <h3 class="text-2xl font-bold text-sky-900 mb-1">Login Panel Resto</h3> 
+            <p class="text-xs text-gray-500 mb-4">Pemilik Terdaftar HP: <b id="display-phone-label">081267166886</b></p> 
+            <div class="space-y-3 text-left"> 
+                <div> 
+                    <label class="block text-xs font-bold text-gray-700">Nama Resto</label> 
+                    <input type="text" id="admin-username" placeholder="miebangka" class="w-full px-3 py-2 border rounded-xl mt-1 text-sm outline-none focus:ring-2 focus:ring-sky-500"> 
+                </div> 
+                <div> 
+                    <label class="block text-xs font-bold text-gray-700">Sandi Resto</label> 
+                    <div class="relative mt-1"> 
+                        <input type="password" id="admin-password" placeholder="••••••••" class="w-full px-3 py-2 border rounded-xl text-sm outline-none focus:ring-2 focus:ring-sky-500 pr-10"> 
+                        <button type="button" onclick="toggleVisibility('admin-password', 'eye-pass')" class="absolute right-3 top-2.5 text-sm"><i id="eye-pass" class="fa-solid fa-eye text-gray-500"></i></button> 
+                    </div> 
+                </div> 
+                <div> 
+                    <label class="block text-xs font-bold text-gray-700">PIN Rahasia (6 Digit)</label> 
+                    <div class="relative mt-1"> 
+                        <input type="password" id="admin-pin" placeholder="886886" maxlength="6" class="w-full px-3 py-2 border rounded-xl text-sm tracking-widest text-center font-bold outline-none focus:ring-2 focus:ring-sky-500 pr-10"> 
+                        <button type="button" onclick="toggleVisibility('admin-pin', 'eye-pin')" class="absolute right-3 top-2.5 text-sm"><i id="eye-pin" class="fa-solid fa-eye text-gray-500"></i></button> 
+                    </div> 
+                </div> 
+            </div> 
+            <button onclick="verifyAdminLogin()" class="w-full mt-5 bg-sky-600 hover:bg-sky-700 text-white font-bold py-2.5 rounded-xl transition shadow">Masuk ke Panel Resto</button> 
+        </div> 
+    </div> 
 
-    <!-- Wrapper Admin Panel -->
-    <div class="min-h-screen flex flex-col">
-        <header class="bg-sky-900 text-white shadow-md">
-            <div class="container mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-3">
-                <div class="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
-                    <h1 class="text-base sm:text-lg font-bold text-center sm:text-left"><i class="fa-solid fa-gauge-high mr-2"></i> Panel Resto - Mie Bangka Teladan</h1>
-                    <div class="flex items-center bg-sky-800 px-3 py-1 rounded-xl border border-sky-700 text-xs font-bold">
-                        <span class="mr-2">Status Web:</span>
-                        <select id="header-resto-status" onchange="changeRestoStatus(this.value)" class="bg-white text-sky-900 px-2 py-0.5 rounded font-bold outline-none">
-                            <option value="Buka">BUKA (Aktif)</option>
-                            <option value="Tutup">TUTUP (Offline)</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="flex items-center space-x-3">
-                    <button onclick="logoutAdmin()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition">Keluar</button>
-                    <a href="index.html" target="_blank" class="bg-white text-sky-900 hover:bg-sky-50 px-3 py-1.5 rounded-lg text-xs font-bold transition shadow"><i class="fa-solid fa-globe mr-1"></i> Buka Web</a>
-                </div>
-            </div>
-        </header>
+    <!-- Wrapper Admin Panel --> 
+    <div class="min-h-screen flex flex-col"> 
+        <header class="bg-sky-900 text-white shadow-md"> 
+            <div class="container mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-3"> 
+                <div class="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4 w-full sm:w-auto"> 
+                    <h1 class="text-base sm:text-lg font-bold text-center sm:text-left"><i class="fa-solid fa-gauge-high mr-2"></i> Panel Resto - Mie Bangka Teladan</h1> 
+                    <div class="flex items-center bg-sky-800 px-3 py-1 rounded-xl border border-sky-700 text-xs font-bold"> 
+                        <span class="mr-2">Status Web:</span> 
+                        <select id="header-resto-status" onchange="changeRestoStatus(this.value)" class="bg-white text-sky-900 px-2 py-0.5 rounded font-bold outline-none"> 
+                            <option value="Buka">BUKA (Aktif)</option> 
+                            <option value="Tutup">TUTUP (Offline)</option> 
+                        </select> 
+                    </div> 
+                </div> 
+                <div class="flex items-center space-x-3"> 
+                    <button onclick="logoutAdmin()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition">Keluar</button> 
+                    <a href="index.html" target="_blank" class="bg-white text-sky-900 hover:bg-sky-50 px-3 py-1.5 rounded-lg text-xs font-bold transition shadow"><i class="fa-solid fa-globe mr-1"></i> Buka Web</a> 
+                </div> 
+            </div> 
+        </header>  
+        
+        <nav class="bg-sky-800 text-white text-sm shadow overflow-x-auto"> 
+            <div class="container mx-auto px-4 flex space-x-6 py-3 whitespace-nowrap"> 
+                <button onclick="switchTab('orders')" id="tab-btn-orders" class="font-bold border-b-2 border-white pb-1">Kelola Pesanan</button> 
+                <button onclick="switchTab('menus')" id="tab-btn-menus" class="text-sky-200 hover:text-white pb-1">Kelola Menu</button> 
+                <button onclick="switchTab('banners')" id="tab-btn-banners" class="text-sky-200 hover:text-white pb-1">Pengaturan Banner</button> 
+                <button onclick="switchTab('banks')" id="tab-btn-banks" class="text-sky-200 hover:text-white pb-1">Bank & E-Wallet</button> 
+                <button onclick="switchTab('settings')" id="tab-btn-settings" class="text-sky-200 hover:text-white pb-1">Pengaturan Resto</button> 
+            </div> 
+        </nav> 
+        
+        <main class="container mx-auto px-4 py-8 flex-grow max-w-7xl"> 
+            <!-- TAB 1: KELOLA PESANAN --> 
+            <div id="section-orders" class="space-y-6"> 
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3"> 
+                    <h3 class="text-lg sm:text-xl font-bold text-gray-800">Daftar Pesanan Masuk</h3> 
+                    <button onclick="clearOrders()" class="bg-red-100 text-red-700 hover:bg-red-200 px-3 py-1.5 rounded-lg text-xs font-bold transition">Hapus Semua Riwayat</button> 
+                </div> 
+                <div id="orders-list-container"></div> 
+            </div> 
 
-        <nav class="bg-sky-800 text-white text-sm shadow overflow-x-auto">
-            <div class="container mx-auto px-4 flex space-x-6 py-3 whitespace-nowrap">
-                <button onclick="switchTab('orders')" id="tab-btn-orders" class="font-bold border-b-2 border-white pb-1">Kelola Pesanan</button>
-                <button onclick="switchTab('menus')" id="tab-btn-menus" class="text-sky-200 hover:text-white pb-1">Kelola Menu</button>
-                <button onclick="switchTab('banners')" id="tab-btn-banners" class="text-sky-200 hover:text-white pb-1">Pengaturan Banner</button>
-                <button onclick="switchTab('banks')" id="tab-btn-banks" class="text-sky-200 hover:text-white pb-1">Bank & E-Wallet</button>
-                <button onclick="switchTab('settings')" id="tab-btn-settings" class="text-sky-200 hover:text-white pb-1">Pengaturan Resto</button>
-            </div>
-        </nav>
+            <!-- TAB 2: KELOLA MENU --> 
+            <div id="section-menus" class="space-y-6 hidden"> 
+                <h3 class="text-lg sm:text-xl font-bold text-gray-800">Kelola Menu Makanan & Minuman</h3> 
+                <div class="bg-white p-6 rounded-xl shadow"> 
+                    <h4 class="font-bold text-sm mb-4 text-sky-900">Tambah Menu Baru</h4> 
+                    <form id="form-add-menu" onsubmit="addMenu(event)" class="space-y-4"> 
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4"> 
+                            <div> 
+                                <label class="block text-xs font-bold text-gray-700 mb-1">Nama Menu</label> 
+                                <input type="text" id="menu-name" required placeholder="cth: Mie Bangka Spesial" class="w-full px-3 py-2 border rounded-xl text-sm outline-none focus:ring-2 focus:ring-sky-500"> 
+                            </div> 
+                            <div> 
+                                <label class="block text-xs font-bold text-gray-700 mb-1">Harga (Rp)</label> 
+                                <input type="number" id="menu-price" required placeholder="cth: 25000" class="w-full px-3 py-2 border rounded-xl text-sm outline-none focus:ring-2 focus:ring-sky-500"> 
+                            </div> 
+                        </div> 
+                        <div> 
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Deskripsi Menu</label> 
+                            <textarea id="menu-desc" rows="2" placeholder="cth: Mie kenyal dengan topping daging ikan/ayam lengkap..." class="w-full px-3 py-2 border rounded-xl text-sm outline-none focus:ring-2 focus:ring-sky-500"></textarea> 
+                        </div> 
+                        <button type="submit" class="bg-sky-600 hover:bg-sky-700 text-white font-bold px-4 py-2 rounded-xl text-sm transition">Simpan Menu Baru</button> 
+                    </form> 
+                </div> 
+                <div> 
+                    <h4 class="font-bold text-sm mb-4 text-gray-800">Daftar Menu Saat Ini</h4> 
+                    <div id="menu-list-container"></div> 
+                </div> 
+            </div> 
 
-        <main class="container mx-auto px-4 py-8 flex-grow max-w-7xl">
-            <!-- TAB 1: KELOLA PESANAN -->
-            <div id="section-orders" class="space-y-6">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                    <h3 class="text-lg sm:text-xl font-bold text-gray-800">Daftar Pesanan Masuk</h3>
-                    <button onclick="clearOrders()" class="bg-red-100 text-red-700 hover:bg-red-200 px-3 py-1.5 rounded-lg text-xs font-bold transition">Hapus Semua Riwayat</button>
-                </div>
-                <div id="orders-list-container">
-                    <!-- Orders Rendered Here -->
-                </div>
-            </div>
+            <!-- TAB 3: PENGATURAN BANNER --> 
+            <div id="section-banners" class="space-y-6 hidden"> 
+                <h3 class="text-lg sm:text-xl font-bold text-gray-800">Pengaturan Banner & Promosi</h3> 
+                <div class="bg-white p-6 rounded-xl shadow"> 
+                    <p class="text-sm text-gray-600">Gunakan bagian ini untuk memperbarui informasi promo atau banner utama halaman muka web.</p> 
+                </div> 
+            </div> 
 
-            <!-- TAB 2: KELOLA MENU -->
-            <div id="section-menus" class="space-y-6 hidden">
-                <h3 class="text-lg sm:text-xl font-bold text-gray-800">Kelola Menu Makanan & Minuman</h3>
-                <div class="bg-white p-6 rounded-xl shadow">
-                    <h4 class="font-bold text-sm mb-4 text-sky-900">Tambah Menu Baru</h4>
-                    <form id="form-add-menu" onsubmit="addMenu(event)" class="space-y-4">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-xs font-bold text-gray-700 mb-1">Nama Menu</label>
-                                <input type="text" id="menu-name" required placeholder="cth: Mie Bangka Spesial" class="w-full px-3 py-2 border rounded-xl text-sm outline-none focus:ring-2 focus:ring-sky-500">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-gray-700 mb-1">Harga (Rp)</label>
-                                <input type="number" id="menu-price" required placeholder="cth: 25000" class="w-full px-3 py-2 border rounded-xl text-sm outline-none focus:ring-2 focus:ring-sky-500">
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-700 mb-1">Deskripsi Menu</label>
-                            <textarea id="menu-desc" rows="2" placeholder="cth: Mie kenyal dengan topping daging ikan/ayam lengkap..." class="w-full px-3 py-2 border rounded-xl text-sm outline-none focus:ring-2 focus:ring-sky-500"></textarea>
-                        </div>
-                        <button type="submit" class="bg-sky-600 hover:bg-sky-700 text-white font-bold px-4 py-2 rounded-xl text-sm transition">Simpan Menu Baru</button>
-                    </form>
-                </div>
-                <div>
-                    <h4 class="font-bold text-sm mb-4 text-gray-800">Daftar Menu Saat Ini</h4>
-                    <div id="menu-list-container"></div>
-                </div>
-            </div>
+            <!-- TAB 4: BANK & E-WALLET --> 
+            <div id="section-banks" class="space-y-6 hidden"> 
+                <h3 class="text-lg sm:text-xl font-bold text-gray-800">Rekening Bank & E-Wallet Pembayaran</h3> 
+                <div class="bg-white p-6 rounded-xl shadow space-y-4"> 
+                    <form id="form-add-bank" onsubmit="addBank(event)" class="space-y-3"> 
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3"> 
+                            <input type="text" id="bank-name" placeholder="Nama Bank/E-Wallet (cth: BCA / DANA)" required class="px-3 py-2 border rounded-xl text-sm outline-none"> 
+                            <input type="text" id="bank-account" placeholder="Nomor Rekening / No HP" required class="px-3 py-2 border rounded-xl text-sm outline-none"> 
+                            <input type="text" id="bank-holder" placeholder="Atas Nama" required class="px-3 py-2 border rounded-xl text-sm outline-none"> 
+                        </div> 
+                        <button type="submit" class="bg-sky-600 text-white px-4 py-2 rounded-xl text-xs font-bold">Tambah Metode</button> 
+                    </form> 
+                    <div id="banks-list" class="space-y-2 mt-4"></div> 
+                </div> 
+            </div> 
 
-            <!-- TAB 3: PENGATURAN BANNER -->
-            <div id="section-banners" class="space-y-6 hidden">
-                <h3 class="text-lg sm:text-xl font-bold text-gray-800">Pengaturan Banner & Promosi</h3>
-                <div class="bg-white p-6 rounded-xl shadow">
-                    <p class="text-sm text-gray-600">Gunakan bagian ini untuk memperbarui informasi promo atau banner utama halaman muka web.</p>
-                </div>
-            </div>
-
-            <!-- TAB 4: BANK & E-WALLET -->
-            <div id="section-banks" class="space-y-6 hidden">
-                <h3 class="text-lg sm:text-xl font-bold text-gray-800">Rekening Bank & E-Wallet Pembayaran</h3>
-                <div class="bg-white p-6 rounded-xl shadow space-y-4">
-                    <form id="form-add-bank" onsubmit="addBank(event)" class="space-y-3">
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                            <input type="text" id="bank-name" placeholder="Nama Bank/E-Wallet (cth: BCA / DANA)" required class="px-3 py-2 border rounded-xl text-sm outline-none">
-                            <input type="text" id="bank-account" placeholder="Nomor Rekening / No HP" required class="px-3 py-2 border rounded-xl text-sm outline-none">
-                            <input type="text" id="bank-holder" placeholder="Atas Nama" required class="px-3 py-2 border rounded-xl text-sm outline-none">
-                        </div>
-                        <button type="submit" class="bg-sky-600 text-white px-4 py-2 rounded-xl text-xs font-bold">Tambah Metode</button>
-                    </form>
-                    <div id="banks-list" class="space-y-2 mt-4"></div>
-                </div>
-            </div>
-
-            <!-- TAB 5: PENGATURAN RESTO -->
-            <div id="section-settings" class="space-y-6 hidden">
-                <h3 class="text-lg sm:text-xl font-bold text-gray-800">Pengaturan Informasi Resto</h3>
-                <div class="bg-white p-6 rounded-xl shadow">
-                    <form onsubmit="saveSettings(event)" class="space-y-4 max-w-lg">
-                        <div>
-                            <label class="block text-xs font-bold text-gray-700 mb-1">Nama Resto</label>
-                            <input type="text" id="setting-resto-name" class="w-full px-3 py-2 border rounded-xl text-sm outline-none">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-700 mb-1">Nomor WhatsApp Admin</label>
-                            <input type="text" id="setting-resto-phone" class="w-full px-3 py-2 border rounded-xl text-sm outline-none">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-700 mb-1">Alamat Resto</label>
-                            <textarea id="setting-resto-address" rows="2" class="w-full px-3 py-2 border rounded-xl text-sm outline-none"></textarea>
-                        </div>
-                        <button type="submit" class="bg-sky-600 hover:bg-sky-700 text-white px-4 py-2 rounded-xl text-sm font-bold transition">Simpan Perubahan</button>
-                    </form>
-                </div>
-            </div>
-        </main>
-    </div>
-</body>
+            <!-- TAB 5: PENGATURAN RESTO --> 
+            <div id="section-settings" class="space-y-6 hidden"> 
+                <h3 class="text-lg sm:text-xl font-bold text-gray-800">Pengaturan Informasi Resto</h3> 
+                <div class="bg-white p-6 rounded-xl shadow"> 
+                    <form onsubmit="saveSettings(event)" class="space-y-4 max-w-lg"> 
+                        <div> 
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Nama Resto</label> 
+                            <input type="text" id="setting-resto-name" class="w-full px-3 py-2 border rounded-xl text-sm outline-none"> 
+                        </div> 
+                        <div> 
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Nomor WhatsApp Admin</label> 
+                            <input type="text" id="setting-resto-phone" class="w-full px-3 py-2 border rounded-xl text-sm outline-none"> 
+                        </div> 
+                        <div> 
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Alamat Resto</label> 
+                            <textarea id="setting-resto-address" rows="2" class="w-full px-3 py-2 border rounded-xl text-sm outline-none"></textarea> 
+                        </div> 
+                        <button type="submit" class="bg-sky-600 hover:bg-sky-700 text-white px-4 py-2 rounded-xl text-sm font-bold transition">Simpan Perubahan</button> 
+                    </form> 
+                </div> 
+            </div> 
+        </main> 
+    </div> 
+</body> 
 </html>
