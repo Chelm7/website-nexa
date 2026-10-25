@@ -80,8 +80,8 @@
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-sky-100">
                 <div class="flex justify-between items-center mb-3">
                     <h4 class="font-bold text-sky-900 text-base"><i class="fa-solid fa-receipt mr-2 text-sky-600"></i> Kelola Pesanan Masuk (Supabase)</h4>
-                    <button onclick="loadAdminOrders(true)" class="bg-sky-100 hover:bg-sky-200 text-sky-700 px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center">
-                        <i class="fa-solid fa-rotate mr-1"></i> Refresh & Bunyikan Suara
+                    <button onclick="loadAdminOrders()" class="bg-sky-100 hover:bg-sky-200 text-sky-700 px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center">
+                        <i class="fa-solid fa-rotate mr-1"></i> Refresh Pesanan
                     </button>
                 </div>
                 <div id="admin-orders-list" class="space-y-3 max-h-72 overflow-y-auto pr-1"></div>
@@ -127,9 +127,6 @@
         <div style="text-align:center; font-size:10px;">Terima Kasih Atas Kunjungan Anda!</div>
     </div>
 
-    <!-- Audio Notifikasi -->
-    <audio id="success-sound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
-
     <!-- Supabase JS Library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -149,20 +146,12 @@
             { name: "Bayar di Kasir (Tunai)", number: "Tunai", holder: "Kasir Resto" }
         ];
 
-        function playNotificationSound() {
-            const sound = document.getElementById('success-sound');
-            if (sound) {
-                sound.currentTime = 0;
-                sound.play().catch(e => console.log('Audio autoplay blocked or error:', e));
-            }
-        }
-
         function verifyAdminPin() {
             const pin = document.getElementById('admin-pin').value;
             if (pin === '1234') {
                 document.getElementById('admin-login-section').classList.add('hidden');
                 document.getElementById('admin-dashboard-section').classList.remove('hidden');
-                loadAdminOrders(false);
+                loadAdminOrders();
                 renderAdminMenu();
                 renderAdminBanks();
                 updateRestoStatusUI();
@@ -231,7 +220,7 @@
             renderAdminBanks();
         }
 
-        async function loadAdminOrders(isManualRefresh = false) {
+        async function loadAdminOrders() {
             const list = document.getElementById('admin-orders-list');
             if (!list) return;
             list.innerHTML = '<p class="text-gray-500 text-center py-2">Memuat pesanan...</p>';
@@ -251,10 +240,6 @@
                 if (!data || data.length === 0) {
                     list.innerHTML = '<p class="text-gray-500 text-center py-2">Belum ada pesanan masuk.</p>';
                     return;
-                }
-
-                if (isManualRefresh) {
-                    playNotificationSound();
                 }
 
                 list.innerHTML = '';
@@ -285,7 +270,7 @@
             if (error) {
                 alert('Gagal menghapus: ' + error.message);
             } else {
-                loadAdminOrders(false);
+                loadAdminOrders();
             }
         }
 
