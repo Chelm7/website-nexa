@@ -20,20 +20,17 @@
         <i class="fa-solid fa-triangle-exclamation mr-1"></i> Mohon Maaf, Restoran saat ini sedang TUTUP / OFFLINE. Pesanan tidak dapat diproses.
     </div>
 
-    <!-- Header / Navbar Responsif dengan Logo Brand -->
+    <!-- Header / Navbar Responsif dengan Logo Brand yang Diperbesar -->
     <header class="bg-sky-600 text-white shadow-md sticky top-0 z-40">
         <div class="container mx-auto px-4 py-3 flex flex-col sm:flex-row justify-between items-center gap-3">
             <div class="flex items-center space-x-3 w-full sm:w-auto justify-between sm:justify-start">
                 <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center overflow-hidden shadow">
-                        <img src="Merah Oranye Ilustrasi Mie Pedas Logo_20261025_150240_0000.png" alt="Logo Mie Bangka Teladan" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                        <div class="w-full h-full bg-white text-sky-600 font-bold text-xl items-center justify-center" style="display:none;">
-                            <i class="fa-solid fa-bowl-food"></i>
+                    <!-- Container Logo Diperlebar agar PNG tidak terpotong -->
+                    <div class="h-10 sm:h-12 bg-white rounded-lg flex items-center justify-center overflow-hidden shadow px-1">
+                        <img src="Merah Oranye Ilustrasi Mie Pedas Logo_20261025_150240_0000.png" alt="Logo Mie Bangka Teladan" class="h-full w-auto object-contain" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="h-full px-3 bg-white text-sky-600 font-bold text-sm items-center justify-center gap-1.5" style="display:none;">
+                            <i class="fa-solid fa-bowl-food"></i> <span>Mie Bangka Teladan</span>
                         </div>
-                    </div>
-                    <div>
-                        <h1 class="text-lg sm:text-xl font-extrabold tracking-wide">Mie Bangka Teladan</h1>
-                        <p class="text-xs text-sky-100">Kota Tanjungpinang</p>
                     </div>
                 </div>
             </div>
