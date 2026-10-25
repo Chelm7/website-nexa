@@ -8,24 +8,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- SISTEM KEAMANAN TERBARU (SHA-256) -->
     <script>
-        // Enkripsi hash SHA-256 bawaan browser untuk mengamankan sandi & PIN
-        async function sha256(message) {
-            const msgBuffer = new TextEncoder().encode(message);
-            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-            const hashArray = Array.from(new Uint8Array(hashBuffer));
-            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-        }
-
-        // Hash default untuk user "miebangka", password "admin123", dan PIN "886886"
-        const CORRECT_USER_HASH = "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918"; // miebangka
-        const CORRECT_PASS_HASH = "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9"; // admin123
-        const CORRECT_PIN_HASH  = "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3"; // 886886
-
-        async function checkAdminAuth() {
-            let sessionToken = sessionStorage.getItem('mb_secure_token');
-            if (sessionToken !== 'active_secure_session_9988') {
+        function checkAdminAuth() {
+            if (sessionStorage.getItem('mb_admin_logged') !== 'true') {
                 document.getElementById('login-modal').classList.remove('hidden');
                 document.getElementById('display-phone-label').innerText = localStorage.getItem('mb_admin_phone') || "081267166886";
             } else {
@@ -34,32 +19,33 @@
             }
         }
 
-        async function verifyAdminLogin() {
+        function verifyAdminLogin() {
             let usernameInput = document.getElementById('admin-username').value.trim();
             let passwordInput = document.getElementById('admin-password').value.trim();
             let pinInput = document.getElementById('admin-pin').value.trim();
 
-            let userHash = await sha256(usernameInput);
-            let passHash = await sha256(passwordInput);
-            let pinHash = await sha256(pinInput);
+            // Kredensial Resmi Anda
+            let correctUsername = "miebangka";
+            let correctPassword = "admin123";
+            let correctPin = "886886";
 
-            if (userHash !== CORRECT_USER_HASH || passHash !== CORRECT_PASS_HASH) {
+            if (usernameInput !== correctUsername || passwordInput !== correctPassword) {
                 alert('Nama Resto atau Sandi salah.');
                 return;
             }
-            if (pinHash !== CORRECT_PIN_HASH) {
+            if (pinInput !== correctPin) {
                 alert('PIN Rahasia Resto salah.');
                 return;
             }
 
-            sessionStorage.setItem('mb_secure_token', 'active_secure_session_9988');
+            sessionStorage.setItem('mb_admin_logged', 'true');
             alert('Masuk Panel Resto Berhasil.');
             document.getElementById('login-modal').classList.add('hidden');
             initAdminPanel();
         }
 
         function logoutAdmin() {
-            sessionStorage.removeItem('mb_secure_token');
+            sessionStorage.removeItem('mb_admin_logged');
             location.reload();
         }
 
