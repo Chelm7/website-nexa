@@ -522,5 +522,63 @@
 
         window.onload = initApp;
     </script>
+
+<!-- Tampilan Formulir Pesanan di Website Kamu -->
+<form id="formPesanan">
+  <label>Nama Pelanggan:</label><br>
+  <input type="text" id="inputNama" placeholder="Nama kamu" required><br><br>
+
+  <label>Menu yang Dipesan:</label><br>
+  <input type="text" id="inputMenu" placeholder="Contoh: Nasi Goreng" required><br><br>
+
+  <label>Jumlah Porsi:</label><br>
+  <input type="number" id="inputJumlah" placeholder="Contoh: 2" required><br><br>
+
+  <label>Total Harga (Rp):</label><br>
+  <input type="number" id="inputTotal" placeholder="Contoh: 30000" required><br><br>
+  
+  <button type="submit">Kirim Pesanan Sekarang</button>
+</form>
+
+<!-- Memanggil Library Supabase -->
+<script src="https://jsdelivr.net"></script>
+
+<script>
+  // Alamat dan Kunci aslimu sudah dimasukkan di sini
+  const URL_SUPABASE = "https://vccwfrwupgvyogvnmuoi.supabase.co";
+  const KEY_SUPABASE = "sb_publishable_75eEqtA_wjdXSULVCydJbg_pA4aPgNZ";
+  
+  const supabase = supabase.createClient(URL_SUPABASE, KEY_SUPABASE);
+
+  document.getElementById('formPesanan').addEventListener('submit', async (e) => {
+    e.preventDefault(); 
+
+    const namaPelanggan = document.getElementById('inputNama').value;
+    const menuDipesan = document.getElementById('inputMenu').value;
+    const jumlahPorsi = parseInt(document.getElementById('inputJumlah').value);
+    const totalHarga = parseInt(document.getElementById('inputTotal').value);
+
+    const { data, error } = await supabase
+      .from('pesanan')
+      .insert([
+        { 
+          nama: namaPelanggan, 
+          menu: menuDipesan, 
+          jumlah: jumlahPorsi, 
+          total: totalHarga,
+          status: "Baru"
+        }
+      ]);
+
+    if (error) {
+      alert("Gagal mengirim pesanan: " + error.message);
+    } else {
+      alert("Mantap! Pesanan berhasil dikirim. Silakan cek tabel Supabase di HP kamu!");
+      document.getElementById('formPesanan').reset();
+    }
+  });
+
+</script>
+
 </body>
 </html>
