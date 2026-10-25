@@ -90,7 +90,7 @@
             let statusSelect = document.getElementById('header-resto-status');
             if(statusSelect) statusSelect.value = status;
             
-            // Muat logo web di header atas jika ada
+            // Muat logo web di header atas admin jika ada
             let savedLogo = localStorage.getItem('mb_site_logo');
             let logoEl = document.getElementById('admin-brand-logo');
             if (logoEl && savedLogo) {
@@ -428,7 +428,6 @@
             }
         }
 
-        // Logo Web Management Functions
         let logoImageBase64 = "";
         function previewLogoFile(event) {
             const file = event.target.files[0];
@@ -454,7 +453,6 @@
             localStorage.setItem('mb_site_logo', finalLogo);
             renderSiteLogo();
 
-            // Update logo di header admin secara langsung
             let logoEl = document.getElementById('admin-brand-logo');
             if (logoEl && finalLogo) {
                 logoEl.src = finalLogo;
@@ -489,7 +487,6 @@
                 document.getElementById('logo-url-input').value = '';
                 renderSiteLogo();
 
-                // Sembunyikan logo di header admin
                 let logoEl = document.getElementById('admin-brand-logo');
                 if (logoEl) {
                     logoEl.src = '';
