@@ -13,7 +13,7 @@
         @keyframes fadeIn { from { opacity: 0.3; } to { opacity: 1; } }
     </style>
 </head>
-<body class="bg-sky-50 text-gray-800 font-sans selection:bg-sky-500 selection:text-white">
+<body class="bg-sky-50 text-gray-800 font-sans selection:bg-sky-500 selection:text-white" onload="initApp()">
 
     <!-- Notifikasi Resto Tutup -->
     <div id="resto-closed-banner" class="bg-red-600 text-white text-center py-2 px-4 text-xs font-bold hidden sticky top-0 z-50 shadow-md">
@@ -290,120 +290,124 @@
                             </div>
                             <div class="p-5">
                                 <span class="text-xs font-bold text-sky-600 bg-sky-50 px-2.5 py-1 rounded-full">${item.category || 'Makanan'}</span>
-                                <h4 class="font-bold text-xl text-sky-900 mt-2 mb-1">${item.name}</h4>
-                                <p class="text-gray-600 text-sm mb-4">${item.desc}</p>
+                                <h4 class="font-bold text-lg text-sky-900 mt-2">${item.name}</h4>
+                                <p class="text-xs text-gray-500 mt-1 line-clamp-2">${item.desc || ''}</p>
+                                <div class="font-extrabold text-sky-600 text-base mt-3">Rp ${item.price.toLocaleString('id-ID')}</div>
                             </div>
                         </div>
-                        <div class="px-5 pb-5 flex justify-between items-center">
-                            <span class="text-lg font-bold text-sky-700">Rp ${Number(item.price).toLocaleString('id-ID')}</span>
-                            <button onclick="addToCart(${item.id})" class="bg-white text-sky-600 border border-sky-600 hover:bg-sky-50 px-4 py-2 rounded-xl text-sm font-bold transition shadow">
-                                <i class="fa-solid fa-plus mr-1"></i> Pesan
+                        <div class="p-5 pt-0">
+                            <button onclick="addToCart(${item.id})" class="w-full bg-sky-600 hover:bg-sky-700 text-white py-2 rounded-xl text-xs font-bold transition flex items-center justify-center shadow">
+                                <i class="fa-solid fa-cart-plus mr-1"></i> Tambah ke Keranjang
                             </button>
                         </div>
-                    </div>
-                `;
+                    </div>`;
             });
         }
 
         function addToCart(id) {
-            if (safeGet('mb_resto_status') === 'Tutup') { alert('Mohon maaf, restoran sedang tutup. Tidak dapat menambah pesanan.'); return; }
             let menuList = [];
-            try { menuList = JSON.parse(safeGet('mb_menus')) || []; } catch(e) { menuList = defaultMenu; }
-            const product = menuList.find(p => p.id === id);
-            if (!product) return;
-            const existing = cart.find(i => i.id === id);
-            if (existing) existing.qty += 1; else cart.push({ ...product, qty: 1 });
+            try { menuList = JSON.parse(safeGet('mb_menus')) || defaultMenu; } catch(e) { menuList = defaultMenu; }
+            const item = menuList.find(m => m.id === id);
+            if(!item) return;
+
+            const existing = cart.find(c => c.id === id);
+            if(existing) {
+                existing.qty += 1;
+            } else {
+                cart.push({ id: item.id, name: item.name, price: item.price, qty: 1 });
+            }
             updateCartUI();
         }
 
         function updateCartUI() {
-            document.getElementById('cart-count').innerText = cart.reduce((sum, i) => sum + i.qty, 0);
-            const container = document.getElementById('cart-items');
-            container.innerHTML = '';
+            const countEl = document.getElementById('cart-count');
+            const totalQty = cart.reduce((sum, item) => sum + item.qty, 0);
+            countEl.innerText = totalQty;
+
+            const itemsContainer = document.getElementById('cart-items');
+            itemsContainer.innerHTML = '';
+
+            if(cart.length === 0) {
+                itemsContainer.innerHTML = `<p class="text-center text-gray-400 py-4 text-xs">Keranjang masih kosong</p>`;
+                document.getElementById('cart-total').innerText = 'Rp 0';
+                return;
+            }
+
             let total = 0;
-            cart.forEach((item, idx) => {
-                total += item.price * item.qty;
-                container.innerHTML += `
-                    <div class="py-3 flex justify-between items-center text-sm">
-                        <div><div class="font-bold text-gray-800">${item.name}</div><div class="text-gray-500">Rp ${Number(item.price).toLocaleString('id-ID')} x ${item.qty}</div></div>
-                        <div class="flex items-center space-x-2">
-                            <button onclick="changeQty(${idx}, -1)" class="bg-gray-100 px-2.5 py-1 rounded">-</button>
-                            <span class="font-bold">${item.qty}</span>
-                            <button onclick="changeQty(${idx}, 1)" class="bg-gray-100 px-2.5 py-1 rounded">+</button>
+            cart.forEach((c, idx) => {
+                total += c.price * c.qty;
+                itemsContainer.innerHTML += `
+                    py-3 flex justify-between items-center text-xs">
+                        <div>
+                            <div class="font-bold text-gray-800">${c.name}</div>
+                            <div class="text-sky-600">Rp ${c.price.toLocaleString('id-ID')} x ${c.qty}</div>
                         </div>
-                    </div>
-                `;
+                        <div class="flex items-center space-x-2">
+                            <button onclick="changeQty(${idx}, -1)" class="w-6 h-6 bg-gray-100 hover:bg-gray-200 rounded font-bold">-</button>
+                            <span>${c.qty}</span>
+                            <button onclick="changeQty(${idx}, 1)" class="w-6 h-6 bg-gray-100 hover:bg-gray-200 rounded font-bold">+</button>
+                            <button onclick="removeItem(${idx})" class="text-red-500 hover:text-red-700 ml-2"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </div>`;
             });
             document.getElementById('cart-total').innerText = `Rp ${total.toLocaleString('id-ID')}`;
         }
 
         function changeQty(idx, delta) {
             cart[idx].qty += delta;
-            if (cart[idx].qty <= 0) cart.splice(idx, 1);
+            if(cart[idx].qty <= 0) cart.splice(idx, 1);
+            updateCartUI();
+        }
+
+        function removeItem(idx) {
+            cart.splice(idx, 1);
             updateCartUI();
         }
 
         function toggleCart() {
-            if (safeGet('mb_resto_status') === 'Tutup') { alert('Mohon maaf, restoran sedang tutup / offline.'); return; }
-            document.getElementById('cart-modal').classList.toggle('hidden');
+            const modal = document.getElementById('cart-modal');
+            modal.classList.toggle('hidden');
+            updateCartUI();
         }
 
         function loadBankOptions() {
             const select = document.getElementById('payment-method');
-            let banks = [];
-            try { banks = JSON.parse(safeGet('mb_banks')) || []; } catch(e) { banks = []; }
             select.innerHTML = `<option value="">-- Pilih Pembayaran --</option><option value="Kasir">Bayar di Kasir (Tunai)</option>`;
-            banks.forEach(b => { select.innerHTML += `<option value="${b.bank} - ${b.account} (a.n. ${b.holder})">${b.bank} - ${b.account} (a.n. ${b.holder})</option>`; });
-        }
-
-        function syncOrderToGoogleSheet(orderData) {
-            const webhookUrl = safeGet('mb_gsheet_webhook_url');
-            if(!webhookUrl) return;
-
-            const itemsFormatted = orderData.items.map(i => `${i.name} (${i.qty}x)`).join(', ');
-
-            fetch(webhookUrl, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    id: orderData.id,
-                    date: orderData.date,
-                    name: orderData.name,
-                    phone: orderData.desc,
-                    address: orderData.address,
-                    items: itemsFormatted,
-                    total: orderData.total,
-                    payment: orderData.payment,
-                    status: orderData.status
-                })
-            }).catch(err => console.log('Google Sheets sync fail:', err));
         }
 
         function checkout() {
-            if (safeGet('mb_resto_status') === 'Tutup') { alert('Restoran sedang tutup.'); return; }
+            if (safeGet('mb_resto_status') === 'Tutup') {
+                alert('Mohon Maaf, Restoran saat ini sedang TUTUP. Pesanan tidak dapat diproses.');
+                return;
+            }
+            if (cart.length === 0) { alert('Keranjang belanja masih kosong!'); return; }
+            
             const name = document.getElementById('buyer-name').value.trim();
-            const desc = document.getElementById('buyer-desc').value.trim();
             const address = document.getElementById('buyer-address').value.trim();
-            const payment = document.getElementById('payment-method').value;
+            const method = document.getElementById('payment-method').value;
             const confirmed = document.getElementById('payment-confirmed').checked;
 
-            if (!name || !address) { alert('Mohon maaf, Nama dan Nomor Meja / Alamat wajib diisi.'); return; }
-            if (!payment) { alert('Mohon pilih metode pembayaran.'); return; }
-            if (!confirmed) { alert('Mohon centang kotak konfirmasi pesanan.'); return; }
-            if (cart.length === 0) { alert('Keranjang belanja kosong.'); return; }
+            if (!name) { alert('Silakan masukkan nama pelanggan!'); return; }
+            if (!address) { alert('Silakan masukkan nomor meja atau alamat pengiriman!'); return; }
+            if (!method) { alert('Silakan pilih metode pembayaran!'); return; }
+            if (!confirmed) { alert('Harap centang konfirmasi pesanan terlebih dahulu!'); return; }
 
-            const total = cart.reduce((sum, i) => sum + (i.price * i.qty), 0);
-            const totalItemsCount = cart.reduce((sum, i) => sum + i.qty, 0);
+            const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            const totalQty = cart.reduce((sum, item) => sum + item.qty, 0);
+            const orderId = 'MB-' + Math.floor(1000 + Math.random() * 9000);
+            const desc = document.getElementById('buyer-desc').value.trim();
 
             const newOrder = {
-                id: 'ORD-' + Date.now().toString().slice(-6),
-                date: new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' }),
-                timestamp: Date.now(),
-                name, desc, address, payment,
+                id: orderId,
+                name: name,
+                desc: desc,
+                address: address,
                 items: [...cart],
-                total,
-                status: 'Menunggu Verifikasi Resto'
+                total: total,
+                totalQty: totalQty,
+                method: method,
+                status: 'Pending',
+                time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
             };
 
             let orders = [];
@@ -411,174 +415,82 @@
             orders.unshift(newOrder);
             safeSet('mb_orders', JSON.stringify(orders));
 
-            syncOrderToGoogleSheet(newOrder);
-
-            activeOrderId = newOrder.id;
-            document.getElementById('pay-order-id').innerText = newOrder.id;
-            document.getElementById('pay-buyer-name').innerText = name;
-            document.getElementById('pay-total-items').innerText = `${totalItemsCount} item`;
-            document.getElementById('pay-total').innerText = `Rp ${total.toLocaleString('id-ID')}`;
-            
-            const payMethodContainer = document.getElementById('pay-method-container');
-            if (payment === 'Kasir') {
-                payMethodContainer.innerHTML = `<span class="font-medium text-gray-800 bg-white p-2 block rounded-xl border">Bayar di Kasir (Tunai) - Silakan langsung memberitahukan ke kasir.</span>`;
-            } else {
-                payMethodContainer.innerHTML = `<div class="flex justify-between items-center mt-1 bg-white p-2 rounded-xl border"><span id="pay-method-detail" class="font-medium text-gray-800">${payment}</span><button onclick="copyPaymentInfo()" class="bg-sky-600 text-white px-2.5 py-1 rounded-lg text-xs font-bold hover:bg-sky-700"><i class="fa-solid fa-copy mr-1"></i> Salin</button></div>`;
-            }
-
+            // Reset Cart
             cart = [];
             updateCartUI();
             toggleCart();
-            document.getElementById('buyer-name').value = '';
-            document.getElementById('buyer-desc').value = '';
-            document.getElementById('buyer-address').value = '';
-            document.getElementById('payment-confirmed').checked = false;
+
+            // Show Timer Modal
+            activeOrderId = orderId;
+            document.getElementById('pay-order-id').innerText = orderId;
+            document.getElementById('pay-buyer-name').innerText = name;
+            document.getElementById('pay-total-items').innerText = totalQty + ' item';
+            document.getElementById('pay-total').innerText = 'Rp ' + total.toLocaleString('id-ID');
+            document.getElementById('pay-method-container').innerHTML = `<span class="bg-sky-100 text-sky-800 px-2 py-0.5 rounded text-xs font-bold">${method}</span>`;
+
             document.getElementById('payment-timer-modal').classList.remove('hidden');
-            startCountdown(3 * 60);
+            startTimer(180); // 3 menit
+            loadCustomerOrders();
         }
 
-        function startCountdown(duration) {
+        function startTimer(duration) {
             let timer = duration, minutes, seconds;
-            if (timerInterval) clearInterval(timerInterval);
-            if (orderStatusCheckInterval) clearInterval(orderStatusCheckInterval);
-
+            clearInterval(timerInterval);
             timerInterval = setInterval(function () {
                 minutes = parseInt(timer / 60, 10);
                 seconds = parseInt(timer % 60, 10);
-                document.getElementById('countdown-timer').innerText = (minutes < 10 ? "0" + minutes : minutes) + ":" + (seconds < 10 ? "0" + seconds : seconds);
-                if (--timer < 0) { clearInterval(timerInterval); if (orderStatusCheckInterval) clearInterval(orderStatusCheckInterval); }
-            }, 1000);
+                minutes = minutes < 10 ? "0" + minutes : minutes;
+                seconds = seconds < 10 ? "0" + seconds : seconds;
 
-            orderStatusCheckInterval = setInterval(function() {
-                if (!activeOrderId) return;
-                let orders = [];
-                try { orders = JSON.parse(safeGet('mb_orders')) || []; } catch(e) { orders = []; }
-                let order = orders.find(o => o.id === activeOrderId);
-                if (order && (order.status === 'Diproses' || order.status === 'Selesai')) {
-                    if (timerInterval) clearInterval(timerInterval);
-                    if (orderStatusCheckInterval) clearInterval(orderStatusCheckInterval);
-                    document.getElementById('payment-timer-modal').classList.add('hidden');
-                    activeOrderId = null;
-                    loadCustomerOrders();
-                    const target = document.getElementById('status-pesanan-section');
-                    if (target) target.scrollIntoView({ behavior: 'smooth' });
+                const timerEl = document.getElementById('countdown-timer');
+                if(timerEl) timerEl.textContent = minutes + ":" + seconds;
+
+                if (--timer < 0) {
+                    clearInterval(timerInterval);
+                    const timerEl = document.getElementById('countdown-timer');
+                    if(timerEl) timerEl.textContent = "Waktu Habis";
                 }
             }, 1000);
         }
 
         function closeTimerModal() {
+            clearInterval(timerInterval);
             document.getElementById('payment-timer-modal').classList.add('hidden');
-            loadCustomerOrders();
-            const target = document.getElementById('status-pesanan-section');
-            if (target) target.scrollIntoView({ behavior: 'smooth' });
-        }
-
-        function copyPaymentInfo() {
-            navigator.clipboard.writeText(document.getElementById('pay-method-detail').innerText).then(() => { alert('Informasi pembayaran berhasil disalin.'); });
+            const section = document.getElementById('status-pesanan-section');
+            if(section) section.scrollIntoView({ behavior: 'smooth' });
         }
 
         function loadCustomerOrders() {
-            checkRestoStatus();
-            const container = document.getElementById('customer-orders-list');
             let orders = [];
             try { orders = JSON.parse(safeGet('mb_orders')) || []; } catch(e) { orders = []; }
-            if (orders.length === 0) { container.innerHTML = `<p class="text-center text-gray-500 py-4">Belum ada riwayat pesanan.</p>`; return; }
-            let html = '';
+            const container = document.getElementById('customer-orders-list');
+            if(!container) return;
+
+            container.innerHTML = '';
+            if(orders.length === 0) {
+                container.innerHTML = `<p class="text-gray-400 text-center py-2">Belum ada riwayat pesanan.</p>`;
+                return;
+            }
+
             orders.slice(0, 10).forEach(o => {
-                let badgeColor = o.status === 'Diproses' ? 'bg-blue-100 text-blue-800' : (o.status === 'Selesai' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800');
-                let noteMsg = o.status === 'Selesai' ? 'Pesanan Anda telah selesai. Terima kasih!' : (o.status === 'Diproses' ? 'Pesanan sedang disiapkan di dapur.' : 'Pesanan menunggu verifikasi resto.');
-                html += `<div class="p-3 bg-sky-50 rounded-xl border border-sky-200"><div class="flex justify-between font-bold"><span>ID: ${o.id} (${o.name})</span> <span class="px-2 py-0.5 rounded-full ${badgeColor}">${o.status}</span></div><div class="text-xs text-gray-600 mt-1">Meja/Alamat: ${o.address} | Total: Rp ${Number(o.total).toLocaleString('id-ID')}</div><div class="text-xs font-medium text-sky-800 mt-1">${noteMsg}</div></div>`;
+                let badgeColor = 'bg-yellow-100 text-yellow-800';
+                if(o.status === 'Diproses') badgeColor = 'bg-blue-100 text-blue-800';
+                if(o.status === 'Selesai') badgeColor = 'bg-green-100 text-green-800';
+                if(o.status === 'Dibatalkan') badgeColor = 'bg-red-100 text-red-800';
+
+                container.innerHTML += `
+                    <div class="bg-sky-50/50 p-3 rounded-xl border border-sky-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                        <div>
+                            <div class="flex items-center space-x-2">
+                                <span class="font-bold text-sky-900">${o.id}</span>
+                                <span class="text-xs px-2 py-0.5 rounded-full font-bold ${badgeColor}">${o.status}</span>
+                            </div>
+                            <div class="text-xs text-gray-600 mt-1"><b>${o.name}</b> (${o.address}) - Rp ${o.total.toLocaleString('id-ID')}</div>
+                            <div class="text-[11px] text-gray-400">${o.time} | ${o.method}</div>
+                        </div>
+                    </div>`;
             });
-            container.innerHTML = html;
         }
-
-        // --- SISTEM AUTO RELOAD CEPAT TANPA LAG (REALTIME SYNC) ---
-        let lastKnownOrdersHash = "";
-        let lastKnownStatus = "";
-        let lastKnownMenusHash = "";
-
-        function checkFastAutoSync() {
-            let currentStatus = safeGet('mb_resto_status') || 'Buka';
-            if (currentStatus !== lastKnownStatus) {
-                lastKnownStatus = currentStatus;
-                checkRestoStatus();
-            }
-
-            let currentMenus = safeGet('mb_menus') || '';
-            if (currentMenus !== lastKnownMenusHash) {
-                lastKnownMenusHash = currentMenus;
-                renderMenu();
-                loadBankOptions();
-            }
-
-            let currentOrders = safeGet('mb_orders') || '';
-            if (currentOrders !== lastKnownOrdersHash) {
-                lastKnownOrdersHash = currentOrders;
-                loadCustomerOrders();
-            }
-        }
-
-        setInterval(checkFastAutoSync, 1000);
-
-        window.onload = initApp;
     </script>
-
-<!-- Tampilan Formulir Pesanan di Website Kamu -->
-<form id="formPesanan">
-  <label>Nama Pelanggan:</label><br>
-  <input type="text" id="inputNama" placeholder="Nama kamu" required><br><br>
-
-  <label>Menu yang Dipesan:</label><br>
-  <input type="text" id="inputMenu" placeholder="Contoh: Nasi Goreng" required><br><br>
-
-  <label>Jumlah Porsi:</label><br>
-  <input type="number" id="inputJumlah" placeholder="Contoh: 2" required><br><br>
-
-  <label>Total Harga (Rp):</label><br>
-  <input type="number" id="inputTotal" placeholder="Contoh: 30000" required><br><br>
-  
-  <button type="submit">Kirim Pesanan Sekarang</button>
-</form>
-
-<!-- Memanggil Library Supabase -->
-<script src="https://jsdelivr.net"></script>
-
-<script>
-  // Alamat dan Kunci aslimu sudah dimasukkan di sini
-  const URL_SUPABASE = "https://vccwfrwupgvyogvnmuoi.supabase.co";
-  const KEY_SUPABASE = "sb_publishable_75eEqtA_wjdXSULVCydJbg_pA4aPgNZ";
-  
-  const supabase = supabase.createClient(URL_SUPABASE, KEY_SUPABASE);
-
-  document.getElementById('formPesanan').addEventListener('submit', async (e) => {
-    e.preventDefault(); 
-
-    const namaPelanggan = document.getElementById('inputNama').value;
-    const menuDipesan = document.getElementById('inputMenu').value;
-    const jumlahPorsi = parseInt(document.getElementById('inputJumlah').value);
-    const totalHarga = parseInt(document.getElementById('inputTotal').value);
-
-    const { data, error } = await supabase
-      .from('pesanan')
-      .insert([
-        { 
-          nama: namaPelanggan, 
-          menu: menuDipesan, 
-          jumlah: jumlahPorsi, 
-          total: totalHarga,
-          status: "Baru"
-        }
-      ]);
-
-    if (error) {
-      alert("Gagal mengirim pesanan: " + error.message);
-    } else {
-      alert("Mantap! Pesanan berhasil dikirim. Silakan cek tabel Supabase di HP kamu!");
-      document.getElementById('formPesanan').reset();
-    }
-  });
-
-</script>
-
 </body>
 </html>
