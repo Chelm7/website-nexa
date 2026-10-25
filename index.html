@@ -20,7 +20,7 @@
         <i class="fa-solid fa-triangle-exclamation mr-1"></i> Mohon Maaf, Restoran saat ini sedang TUTUP / OFFLINE. Pesanan tidak dapat diproses.
     </div>
 
-    <!-- Header / Navbar (Tanpa Tombol Admin) -->
+    <!-- Header / Navbar Responsif -->
     <header class="bg-sky-600 text-white shadow-md sticky top-0 z-40">
         <div class="container mx-auto px-4 py-3 flex flex-col sm:flex-row justify-between items-center gap-3">
             <div class="flex items-center space-x-3 w-full sm:w-auto justify-between sm:justify-start">
@@ -79,7 +79,7 @@
         </div>
     </main>
 
-    <!-- Tombol Panah Scroll Otomatis -->
+    <!-- Tombol Panah Scroll Otomatis (Muncul/Hilang Sendiri) -->
     <div id="scroll-arrows" class="fixed bottom-6 right-6 z-50 flex flex-col space-y-2 transition-opacity duration-300 opacity-0 pointer-events-none">
         <button onclick="scrollToTop()" class="bg-sky-600 hover:bg-sky-700 text-white w-11 h-11 rounded-full shadow-xl flex items-center justify-center transition transform hover:scale-110" title="Gulir ke Atas">
             <i class="fa-solid fa-arrow-up text-base"></i>
@@ -89,7 +89,7 @@
         </button>
     </div>
 
-    <!-- Modal Keranjang & Pembayaran -->
+    <!-- Modal Keranjang -->
     <div id="cart-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex justify-center items-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-5 sm:p-6 relative max-h-[90vh] overflow-y-auto">
             <button onclick="toggleCart()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-xl"><i class="fa-solid fa-xmark"></i></button>
@@ -116,6 +116,7 @@
                         <label class="block text-sm font-medium text-gray-700 mb-1">Pilih Metode Pembayaran</label>
                         <select id="payment-method" class="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-sky-500 outline-none font-medium text-sm">
                             <option value="">-- Pilih Pembayaran --</option>
+                            <option value="Kasir">Bayar di Kasir (Tunai)</option>
                         </select>
                     </div>
                     <div>
@@ -133,30 +134,28 @@
         </div>
     </div>
 
-    <!-- Modal Layar Tunggu Pelanggan (Hitung Mundur 3 Menit Tanpa Harga/Item/Tanggal) -->
-    <div id="waiting-modal" class="fixed inset-0 bg-black bg-opacity-70 hidden z-50 flex justify-center items-center p-4">
-        <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 sm:p-8 text-center relative">
-            <div class="w-16 h-16 bg-sky-100 text-sky-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4 animate-bounce">
-                <i class="fa-solid fa-bowl-food"></i>
+    <!-- Modal Timer Pembayaran -->
+    <div id="payment-timer-modal" class="fixed inset-0 bg-black bg-opacity-80 hidden z-50 flex justify-center items-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 text-center">
+            <div class="w-14 h-14 bg-sky-100 text-sky-600 rounded-full flex items-center justify-center text-2xl mx-auto mb-3">
+                <i class="fa-solid fa-clock"></i>
             </div>
-            <h3 class="text-2xl font-extrabold text-sky-900 mb-2">Menunggu Konfirmasi Resto ⏳</h3>
-            <p class="text-sm text-gray-600 mb-4">Pembayaran Anda sedang dicek oleh admin kami. Mohon tunggu sebentar ya kak! 😊</p>
+            <h3 class="text-xl font-extrabold text-sky-900 mb-1">Selesaikan Pembayaran</h3>
+            <p class="text-xs text-gray-500 mb-3">Mohon lakukan pembayaran dalam batas waktu:</p>
             
-            <!-- Waktu Hitung Mundur 3 Menit -->
-            <div class="bg-amber-50 border border-amber-200 text-amber-900 py-3 px-4 rounded-2xl mb-5 font-bold text-xl shadow-inner">
-                <i class="fa-solid fa-clock mr-2 text-amber-600"></i> Sisa Waktu: <span id="waiting-countdown" class="text-red-600 font-mono">03:00</span>
-            </div>
+            <div id="countdown-timer" class="text-3xl font-black text-red-600 mb-4 tracking-widest bg-red-50 py-2 rounded-xl border border-red-200">03:00</div>
 
-            <div class="bg-sky-50 p-4 rounded-2xl border border-sky-100 mb-6 text-xs text-sky-800 leading-relaxed">
-                💡 <span class="font-semibold">Informasi:</span> Layar ini akan otomatis tertutup dan memperbarui status setelah pembayaran Anda diverifikasi dan diproses oleh Resto kami. ✨
+            <div class="bg-sky-50 p-3 rounded-2xl text-left text-xs space-y-2 mb-4 border border-sky-100">
+                <div><b>ID Pesanan:</b> <span id="pay-order-id"></span></div>
+                <div><b>Nama Pemesan:</b> <span id="pay-buyer-name"></span></div>
+                <div><b>Total Item:</b> <span id="pay-total-items" class="font-bold"></span></div>
+                <div><b>Total Harga:</b> <span id="pay-total" class="text-2xl font-black text-sky-700 block mt-1"></span></div>
+                <div>
+                    <b>Metode Pembayaran:</b>
+                    <div id="pay-method-container" class="mt-1"></div>
+                </div>
             </div>
-
-            <p class="text-sm font-bold text-sky-900 mb-1">Terima Kasih Atas Kunjungan & Pesanan Anda! 🙏🍜</p>
-            <p class="text-xs text-gray-500 mb-6">Mie Bangka Teladan - Kota Tanjungpinang ⭐</p>
-            
-            <button onclick="cancelWaitingOrder()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2.5 px-6 rounded-xl text-xs transition shadow-sm">
-                <i class="fa-solid fa-rotate-left mr-1"></i> Batalkan / Ulangi Pesanan
-            </button>
+            <p class="text-[11px] text-gray-500">Menunggu verifikasi dan konfirmasi diproses oleh pihak resto...</p>
         </div>
     </div>
 
@@ -164,21 +163,9 @@
         <p>&copy; 2026 Mie Bangka Teladan - Kota Tanjungpinang. All rights reserved.</p>
     </footer>
 
-    <!-- Supabase JS Library -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <audio id="success-sound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
 
     <script>
-        const supabaseUrl = 'https://vccwfrwupgvyogvnmuoi.supabase.co';
-        const supabaseKey = 'sb_publishable_75eEqtA_wjdXSULVCydJbg_pA4aPgNZ';
-        let _supabase = null;
-        try {
-            if (window.supabase) {
-                _supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
-            }
-        } catch (e) {
-            console.error('Supabase init error:', e);
-        }
-
         let scrollTimeout;
         window.addEventListener('scroll', function() {
             const scrollArrows = document.getElementById('scroll-arrows');
@@ -197,10 +184,8 @@
 
         function updateLiveClock() {
             const now = new Date();
-            const timeEl = document.getElementById('live-time');
-            const dateEl = document.getElementById('live-date');
-            if (timeEl) timeEl.innerText = now.toLocaleTimeString('id-ID', { timeZone: 'Asia/Jakarta' });
-            if (dateEl) dateEl.innerText = now.toLocaleDateString('id-ID', { timeZone: 'Asia/Jakarta', weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' });
+            document.getElementById('live-time').innerText = now.toLocaleTimeString('id-ID', { timeZone: 'Asia/Jakarta' });
+            document.getElementById('live-date').innerText = now.toLocaleDateString('id-ID', { timeZone: 'Asia/Jakarta', weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' });
         }
         setInterval(updateLiveClock, 1000);
         updateLiveClock();
@@ -211,21 +196,15 @@
             { id: 3, name: "Es Timun Serut", category: "Minuman", price: 8000, desc: "Minuman segar pereda penyejuk dahaga.", image: "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=500&q=80" }
         ];
 
-        const defaultBanks = [
-            { name: "Bayar di Kasir (Tunai)", number: "Tunai", holder: "Kasir Resto" }
-        ];
-
         let cart = [];
         let currentCategory = 'all';
         let currentSlideIndex = 0;
-        let waitingTimer = null;
-        let waitingTimeLeft = 180; // 3 menit (180 detik)
         let activeOrderId = null;
-        let orderCheckInterval = null;
+        let timerInterval = null;
+        let orderStatusCheckInterval = null;
 
         function initApp() {
             if (!localStorage.getItem('mb_menu')) localStorage.setItem('mb_menu', JSON.stringify(defaultMenu));
-            if (!localStorage.getItem('mb_banks')) localStorage.setItem('mb_banks', JSON.stringify(defaultBanks));
             if (!localStorage.getItem('mb_banners')) localStorage.setItem('mb_banners', JSON.stringify(["https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80", "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=1200&q=80"]));
             if (!localStorage.getItem('mb_resto_status')) localStorage.setItem('mb_resto_status', 'Buka');
             checkRestoStatus();
@@ -238,14 +217,12 @@
         function checkRestoStatus() {
             const status = localStorage.getItem('mb_resto_status') || 'Buka';
             const banner = document.getElementById('resto-closed-banner');
-            if (!banner) return;
             if (status === 'Tutup') banner.classList.remove('hidden'); else banner.classList.add('hidden');
         }
 
         function loadBanners() {
             const banners = JSON.parse(localStorage.getItem('mb_banners')) || [];
             const container = document.getElementById('banner-container');
-            if (!container) return;
             container.innerHTML = '';
             banners.forEach((b, idx) => {
                 container.innerHTML += `<div class="banner-slide ${idx === 0 ? 'active' : ''} absolute inset-0 w-full h-full"><img src="${b}" class="w-full h-full object-cover"></div>`;
@@ -261,31 +238,16 @@
         }
         setInterval(() => { changeBannerSlide(1); }, 5000);
 
-        function loadBankOptions() {
-            const select = document.getElementById('payment-method');
-            if (!select) return;
-            const banks = JSON.parse(localStorage.getItem('mb_banks')) || defaultBanks;
-            select.innerHTML = '<option value="">-- Pilih Pembayaran --</option>';
-            banks.forEach(b => {
-                const label = b.name === 'Bayar di Kasir (Tunai)' ? b.name : `${b.name} - ${b.number} (a.n ${b.holder})`;
-                select.innerHTML += `<option value="${b.name}">${label}</option>`;
-            });
-        }
-
         function filterMenu(cat) {
             currentCategory = cat;
-            const btnAll = document.getElementById('btn-all');
-            const btnMakanan = document.getElementById('btn-makanan');
-            const btnMinuman = document.getElementById('btn-minuman');
-            if (btnAll) btnAll.className = cat === 'all' ? "px-5 py-2 rounded-xl text-sm font-bold bg-sky-600 text-white shadow transition whitespace-nowrap" : "px-5 py-2 rounded-xl text-sm font-bold bg-white text-sky-600 border border-sky-300 shadow transition whitespace-nowrap";
-            if (btnMakanan) btnMakanan.className = cat === 'Makanan' ? "px-5 py-2 rounded-xl text-sm font-bold bg-sky-600 text-white shadow transition whitespace-nowrap" : "px-5 py-2 rounded-xl text-sm font-bold bg-white text-sky-600 border border-sky-300 shadow transition whitespace-nowrap";
-            if (btnMinuman) btnMinuman.className = cat === 'Minuman' ? "px-5 py-2 rounded-xl text-sm font-bold bg-sky-600 text-white shadow transition whitespace-nowrap" : "px-5 py-2 rounded-xl text-sm font-bold bg-white text-sky-600 border border-sky-300 shadow transition whitespace-nowrap";
+            document.getElementById('btn-all').className = cat === 'all' ? "px-5 py-2 rounded-xl text-sm font-bold bg-sky-600 text-white shadow transition whitespace-nowrap" : "px-5 py-2 rounded-xl text-sm font-bold bg-white text-sky-600 border border-sky-300 shadow transition whitespace-nowrap";
+            document.getElementById('btn-makanan').className = cat === 'Makanan' ? "px-5 py-2 rounded-xl text-sm font-bold bg-sky-600 text-white shadow transition whitespace-nowrap" : "px-5 py-2 rounded-xl text-sm font-bold bg-white text-sky-600 border border-sky-300 shadow transition whitespace-nowrap";
+            document.getElementById('btn-minuman').className = cat === 'Minuman' ? "px-5 py-2 rounded-xl text-sm font-bold bg-sky-600 text-white shadow transition whitespace-nowrap" : "px-5 py-2 rounded-xl text-sm font-bold bg-white text-sky-600 border border-sky-300 shadow transition whitespace-nowrap";
             renderMenu();
         }
 
         function renderMenu() {
             const grid = document.getElementById('menu-grid');
-            if (!grid) return;
             const menuList = JSON.parse(localStorage.getItem('mb_menu')) || [];
             const filtered = currentCategory === 'all' ? menuList : menuList.filter(m => m.category === currentCategory);
             grid.innerHTML = '';
@@ -323,233 +285,167 @@
         }
 
         function updateCartUI() {
-            const countEl = document.getElementById('cart-count');
-            if (countEl) countEl.innerText = cart.reduce((sum, i) => sum + i.qty, 0);
+            document.getElementById('cart-count').innerText = cart.reduce((sum, i) => sum + i.qty, 0);
             const container = document.getElementById('cart-items');
-            if (!container) return;
             container.innerHTML = '';
             let total = 0;
             cart.forEach((item, idx) => {
                 total += item.price * item.qty;
                 container.innerHTML += `
                     <div class="py-3 flex justify-between items-center text-sm">
-                        <div>
-                            <div class="font-bold text-gray-800">${item.name}</div>
-                            <div class="text-gray-500">Rp ${item.price.toLocaleString('id-ID')} x ${item.qty}</div>
-                        </div>
+                        <div><div class="font-bold text-gray-800">${item.name}</div><div class="text-gray-500">Rp ${item.price.toLocaleString('id-ID')} x ${item.qty}</div></div>
                         <div class="flex items-center space-x-2">
-                            <button onclick="changeQty(${idx}, -1)" class="w-7 h-7 bg-gray-100 rounded-full font-bold text-gray-600 hover:bg-gray-200">-</button>
-                            <span class="font-bold w-5 text-center">${item.qty}</span>
-                            <button onclick="changeQty(${idx}, 1)" class="w-7 h-7 bg-gray-100 rounded-full font-bold text-gray-600 hover:bg-gray-200">+</button>
+                            <button onclick="changeQty(${idx}, -1)" class="bg-gray-100 px-2.5 py-1 rounded">-</button>
+                            <span class="font-bold">${item.qty}</span>
+                            <button onclick="changeQty(${idx}, 1)" class="bg-gray-100 px-2.5 py-1 rounded">+</button>
                         </div>
                     </div>
                 `;
             });
-            const totalEl = document.getElementById('cart-total');
-            if (totalEl) totalEl.innerText = `Rp ${total.toLocaleString('id-ID')}`;
+            document.getElementById('cart-total').innerText = `Rp ${total.toLocaleString('id-ID')}`;
         }
 
-        function changeQty(index, delta) {
-            cart[index].qty += delta;
-            if (cart[index].qty <= 0) {
-                cart.splice(index, 1);
-            }
+        function changeQty(idx, delta) {
+            cart[idx].qty += delta;
+            if (cart[idx].qty <= 0) cart.splice(idx, 1);
             updateCartUI();
         }
 
         function toggleCart() {
-            const modal = document.getElementById('cart-modal');
-            if (modal) modal.classList.toggle('hidden');
-            loadBankOptions();
-            updateCartUI();
+            if (localStorage.getItem('mb_resto_status') === 'Tutup') { alert('Mohon maaf, restoran sedang tutup / offline.'); return; }
+            document.getElementById('cart-modal').classList.toggle('hidden');
         }
 
-        async function checkout() {
-            if (cart.length === 0) { alert('Keranjang masih kosong!'); return; }
-            const buyerName = document.getElementById('buyer-name').value.trim();
-            const buyerAddress = document.getElementById('buyer-address').value.trim();
-            const paymentMethod = document.getElementById('payment-method').value;
-            const paymentConfirmed = document.getElementById('payment-confirmed').checked;
+        function loadBankOptions() {
+            const select = document.getElementById('payment-method');
+            const banks = JSON.parse(localStorage.getItem('mb_banks')) || [];
+            select.innerHTML = `<option value="">-- Pilih Pembayaran --</option><option value="Kasir">Bayar di Kasir (Tunai)</option>`;
+            banks.forEach(b => { select.innerHTML += `<option value="${b.name} - ${b.account} (a.n. ${b.holder})">${b.name} - ${b.account} (a.n. ${b.holder})</option>`; });
+        }
 
-            if (!buyerName || !buyerAddress || !paymentMethod) {
-                alert('Mohon lengkapi Nama, Nomor Meja / Alamat, dan Metode Pembayaran.');
-                return;
-            }
-            if (!paymentConfirmed) {
-                alert('Mohon centang konfirmasi pembayaran terlebih dahulu.');
-                return;
-            }
+        function checkout() {
+            if (localStorage.getItem('mb_resto_status') === 'Tutup') { alert('Restoran sedang tutup.'); return; }
+            const name = document.getElementById('buyer-name').value.trim();
+            const address = document.getElementById('buyer-address').value.trim();
+            const payment = document.getElementById('payment-method').value;
+            const confirmed = document.getElementById('payment-confirmed').checked;
 
-            const totalAmount = cart.reduce((sum, i) => sum + (i.price * i.qty), 0);
-            const menuNames = cart.map(i => `${i.name} (${i.qty}x)`).join(', ');
-            const totalQty = cart.reduce((sum, i) => sum + i.qty, 0);
+            if (!name || !address) { alert('Mohon maaf, Nama dan Nomor Meja / Alamat wajib diisi.'); return; }
+            if (!payment) { alert('Mohon pilih metode pembayaran.'); return; }
+            if (!confirmed) { alert('Mohon centang kotak konfirmasi pembayaran.'); return; }
+            if (cart.length === 0) { alert('Keranjang belanja kosong.'); return; }
 
-            // Simpan data ke Supabase setelah konfirmasi pembayaran berhasil diproses
-            if (_supabase) {
-                try {
-                    const { data, error } = await _supabase
-                        .from('Pesanan')
-                        .insert([
-                            {
-                                nama: `${buyerName} (${buyerAddress})`,
-                                menu: `${menuNames} [Bayar via: ${paymentMethod}]`,
-                                jumlah: Number(totalQty),
-                                total: Number(totalAmount),
-                                status: 'Pending'
-                            }
-                        ])
-                        .select();
+            const total = cart.reduce((sum, i) => sum + (i.price * i.qty), 0);
+            const totalItemsCount = cart.reduce((sum, i) => sum + i.qty, 0);
 
-                    if (error) {
-                        console.error('Gagal simpan Supabase:', error.message);
-                        alert('Gagal mengirim pesanan ke database: ' + error.message);
-                        return;
-                    }
+            const newOrder = {
+                id: 'ORD-' + Date.now().toString().slice(-6),
+                date: new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' }),
+                timestamp: Date.now(),
+                name, address, payment,
+                items: [...cart],
+                total,
+                status: 'Menunggu Verifikasi Resto'
+            };
 
-                    if (data && data.length > 0) {
-                        activeOrderId = data[0].id;
-                    }
-                } catch (err) {
-                    console.error('Error exception:', err);
-                    alert('Terjadi kesalahan koneksi ke server database.');
-                    return;
-                }
+            let orders = JSON.parse(localStorage.getItem('mb_orders')) || [];
+            orders.unshift(newOrder);
+            localStorage.setItem('mb_orders', JSON.stringify(orders));
+            document.getElementById('success-sound').play().catch(e => console.log(e));
+
+            activeOrderId = newOrder.id;
+            document.getElementById('pay-order-id').innerText = newOrder.id;
+            document.getElementById('pay-buyer-name').innerText = name;
+            document.getElementById('pay-total-items').innerText = `${totalItemsCount} item`;
+            document.getElementById('pay-total').innerText = `Rp ${total.toLocaleString('id-ID')}`;
+            
+            const payMethodContainer = document.getElementById('pay-method-container');
+            if (payment === 'Kasir') {
+                payMethodContainer.innerHTML = `<span class="font-medium text-gray-800 bg-white p-2 block rounded-xl border">Bayar di Kasir (Tunai) - Silakan langsung memberitahukan ke kasir.</span>`;
             } else {
-                alert('Koneksi Supabase belum siap.');
-                return;
+                payMethodContainer.innerHTML = `
+                    <div class="bg-white p-2.5 rounded-xl border space-y-1.5">
+                        <div class="font-bold text-sky-900 text-xs">${payment}</div>
+                        <div class="flex justify-between items-center pt-1 border-t">
+                            <span class="text-[11px] text-gray-600 font-medium">Salin Nomor Rekening:</span>
+                            <button onclick="copyAccountNumber('${payment}')" class="bg-sky-600 hover:bg-sky-700 text-white px-3 py-1 rounded-lg text-xs font-bold transition shadow-sm">
+                                <i class="fa-solid fa-copy mr-1"></i> Salin Nomor
+                            </button>
+                        </div>
+                    </div>
+                `;
             }
 
-            // Kosongkan keranjang & tutup modal keranjang
             cart = [];
             updateCartUI();
             toggleCart();
-
-            // Tampilkan Layar Tunggu dengan Hitung Mundur 3 Menit
-            openWaitingModal();
+            document.getElementById('buyer-name').value = '';
+            document.getElementById('buyer-address').value = '';
+            document.getElementById('payment-confirmed').checked = false;
+            document.getElementById('payment-timer-modal').classList.remove('hidden');
+            startCountdown(3 * 60);
         }
 
-        function openWaitingModal() {
-            const waitingModal = document.getElementById('waiting-modal');
-            if (waitingModal) waitingModal.classList.remove('hidden');
+        function copyAccountNumber(str) {
+            let match = str.match(/-\s*([0-9]+)/);
+            let accNum = match ? match[1] : str;
+            navigator.clipboard.writeText(accNum).then(() => {
+                alert('Nomor rekening ' + accNum + ' berhasil disalin!');
+            }).catch(err => {
+                alert('Gagal menyalin nomor rekening.');
+            });
+        }
 
-            waitingTimeLeft = 180; // 3 menit
-            updateWaitingTimerDisplay();
+        function startCountdown(duration) {
+            let timer = duration, minutes, seconds;
+            if (timerInterval) clearInterval(timerInterval);
+            if (orderStatusCheckInterval) clearInterval(orderStatusCheckInterval);
 
-            if (waitingTimer) clearInterval(waitingTimer);
-            waitingTimer = setInterval(() => {
-                waitingTimeLeft--;
-                updateWaitingTimerDisplay();
-
-                if (waitingTimeLeft <= 0) {
-                    clearInterval(waitingTimer);
-                    stopOrderCheck();
-                    closeWaitingModal();
-                    alert('⏰ Waktu pembayaran habis tanpa konfirmasi/pembayaran!\n\nSilahkan ulangi pesanan Anda kembali. 🙏');
-                }
+            timerInterval = setInterval(function () {
+                minutes = parseInt(timer / 60, 10);
+                seconds = parseInt(timer % 60, 10);
+                document.getElementById('countdown-timer').innerText = (minutes < 10 ? "0" + minutes : minutes) + ":" + (seconds < 10 ? "0" + seconds : seconds);
+                if (--timer < 0) { clearInterval(timerInterval); if (orderStatusCheckInterval) clearInterval(orderStatusCheckInterval); cancelExpiredOrder(); }
             }, 1000);
 
-            startOrderCheck();
-        }
-
-        function updateWaitingTimerDisplay() {
-            const countdownEl = document.getElementById('waiting-countdown');
-            if (!countdownEl) return;
-            let m = Math.floor(waitingTimeLeft / 60);
-            let s = waitingTimeLeft % 60;
-            countdownEl.innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-        }
-
-        function closeWaitingModal() {
-            const waitingModal = document.getElementById('waiting-modal');
-            if (waitingModal) waitingModal.classList.add('hidden');
-            if (waitingTimer) clearInterval(waitingTimer);
-            stopOrderCheck();
-        }
-
-        function cancelWaitingOrder() {
-            closeWaitingModal();
-            alert('Pesanan dibatalkan. Silahkan ulangi pesanan dari awal. 🙏✨');
-        }
-
-        function startOrderCheck() {
-            if (orderCheckInterval) clearInterval(orderCheckInterval);
-            orderCheckInterval = setInterval(async () => {
-                if (!activeOrderId || !_supabase) return;
-                try {
-                    const { data, error } = await _supabase
-                        .from('Pesanan')
-                        .select('status')
-                        .eq('id', activeOrderId)
-                        .single();
-
-                    if (data && data.status && data.status !== 'Pending') {
-                        // Jika status diubah oleh admin (misal: 'Diproses' atau diterima)
-                        clearInterval(waitingTimer);
-                        stopOrderCheck();
-                        closeWaitingModal();
-                        alert('🎉 Pembayaran telah berhasil diverifikasi dan akan diproses oleh Resto!\n\nTerima kasih banyak atas pesanan Anda 🙏✨');
-                        loadCustomerOrders();
-                    }
-                } catch (err) {
-                    console.error('Check order status error:', err);
+            orderStatusCheckInterval = setInterval(function() {
+                if (!activeOrderId) return;
+                let orders = JSON.parse(localStorage.getItem('mb_orders')) || [];
+                let order = orders.find(o => o.id === activeOrderId);
+                if (order && order.status === 'Diproses') {
+                    if (timerInterval) clearInterval(timerInterval);
+                    if (orderStatusCheckInterval) clearInterval(orderStatusCheckInterval);
+                    document.getElementById('payment-timer-modal').classList.add('hidden');
+                    activeOrderId = null;
+                    loadCustomerOrders();
+                    const target = document.getElementById('status-pesanan-section');
+                    if (target) target.scrollIntoView({ behavior: 'smooth' });
                 }
-            }, 4000);
+            }, 1500);
         }
 
-        function stopOrderCheck() {
-            if (orderCheckInterval) {
-                clearInterval(orderCheckInterval);
-                orderCheckInterval = null;
-            }
+        function cancelExpiredOrder() {
+            if (!activeOrderId) return;
+            let orders = JSON.parse(localStorage.getItem('mb_orders')) || [];
+            orders = orders.filter(o => o.id !== activeOrderId);
+            localStorage.setItem('mb_orders', JSON.stringify(orders));
+            document.getElementById('payment-timer-modal').classList.add('hidden');
+            activeOrderId = null;
+            loadCustomerOrders();
         }
 
-        async function loadCustomerOrders() {
-            const listContainer = document.getElementById('customer-orders-list');
-            if (!listContainer) return;
-            listContainer.innerHTML = '<p class="text-gray-500 text-center py-2">Memuat status pesanan...</p>';
-
-            if (!_supabase) {
-                listContainer.innerHTML = '<p class="text-red-500 text-center py-2">Koneksi database tidak tersedia.</p>';
-                return;
-            }
-
-            try {
-                const { data, error } = await _supabase
-                    .from('Pesanan')
-                    .select('*')
-                    .order('created_at', { ascending: false })
-                    .limit(10);
-
-                if (error) {
-                    listContainer.innerHTML = `<p class="text-red-500 text-center py-2">Gagal memuat: ${error.message}</p>`;
-                    return;
-                }
-
-                if (!data || data.length === 0) {
-                    listContainer.innerHTML = '<p class="text-gray-500 text-center py-2">Belum ada riwayat pesanan.</p>';
-                    return;
-                }
-
-                listContainer.innerHTML = '';
-                data.forEach(order => {
-                    const dateStr = new Date(order.created_at).toLocaleTimeString('id-ID', { timeZone: 'Asia/Jakarta' });
-                    listContainer.innerHTML += `
-                        <div class="bg-sky-50 p-3 rounded-xl border border-sky-100 flex justify-between items-center">
-                            <div>
-                                <div class="font-bold text-sky-900">${order.nama}</div>
-                                <div class="text-xs text-gray-600">${order.menu} (Jumlah: ${order.jumlah})</div>
-                                <div class="text-xs font-bold text-sky-700">Rp ${Number(order.total).toLocaleString('id-ID')} - <span class="text-gray-500">${dateStr}</span></div>
-                            </div>
-                            <div>
-                                <span class="px-2.5 py-1 text-xs font-bold rounded-full bg-yellow-100 text-yellow-800">${order.status || 'Pending'}</span>
-                            </div>
-                        </div>
-                    `;
-                });
-            } catch (err) {
-                console.error('Load orders error:', err);
-                listContainer.innerHTML = '<p class="text-red-500 text-center py-2">Terjadi kesalahan saat memuat pesanan.</p>';
-            }
+        function loadCustomerOrders() {
+            checkRestoStatus();
+            const container = document.getElementById('customer-orders-list');
+            const orders = JSON.parse(localStorage.getItem('mb_orders')) || [];
+            if (orders.length === 0) { container.innerHTML = `<p class="text-center text-gray-500 py-4">Belum ada riwayat pesanan.</p>`; return; }
+            let html = '';
+            orders.slice(0, 10).forEach(o => {
+                let badgeColor = o.status === 'Diproses' ? 'bg-blue-100 text-blue-800' : (o.status === 'Selesai' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800');
+                let noteMsg = o.status === 'Selesai' ? 'Pesanan Anda telah selesai. Terima kasih!' : (o.status === 'Diproses' ? 'Pesanan sedang disiapkan di dapur.' : 'Pesanan menunggu verifikasi resto.');
+                html += `<div class="p-3 bg-sky-50 rounded-xl border border-sky-200"><div class="flex justify-between font-bold"><span>ID: ${o.id} (${o.name})</span> <span class="px-2 py-0.5 rounded-full ${badgeColor}">${o.status}</span></div><div class="text-xs text-gray-600 mt-1">Meja/Alamat: ${o.address} | Total: Rp ${o.total.toLocaleString('id-ID')}</div><div class="text-xs font-medium text-sky-800 mt-1">${noteMsg}</div></div>`;
+            });
+            container.innerHTML = html;
         }
 
         window.onload = initApp;
