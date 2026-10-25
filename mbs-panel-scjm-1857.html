@@ -10,7 +10,7 @@
     
     <script> 
         let lastOrderCount = 0;
-        let audioCtx = null; // Handler AudioContext
+        let audioCtx = null;
 
         function checkAdminAuth() { 
             if (sessionStorage.getItem('mb_admin_logged') !== 'true') { 
@@ -40,7 +40,6 @@
                 return; 
             } 
             
-            // Inisialisasi AudioContext saat tombol login diklik (mengatasiblokir browser)
             try {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 if (audioCtx.state === 'suspended') {
@@ -93,18 +92,23 @@
             if(statusSelect) statusSelect.value = status;
             
             let orders = JSON.parse(localStorage.getItem('mb_orders') || '[]');
-            lastOrderCount = orders.length; // Set awal tanpa bunyi saat pertama load
+            lastOrderCount = orders.length; 
             
             renderOrders();
-            setInterval(checkForNewOrders, 3000); // Pantau pesanan masuk secara real-time khusus admin
+            setInterval(checkForNewOrders, 3000); 
             
             if(typeof renderMenus === 'function') renderMenus();
+            if(typeof renderBanners === 'function') renderBanners();
             if(typeof renderBanks === 'function') renderBanks();
             if(typeof renderSettings === 'function') renderSettings();
         }
 
-        // Notifikasi Suara Diperbaiki (Menggunakan AudioContext yang sudah di-resume + Beeping ganda)
         function playAdminSound() {
+            let soundEnabled = localStorage.getItem('mb_sound_enabled') !== 'false';
+            if(!soundEnabled) return;
+
+            let freqType = localStorage.getItem('mb_sound_freq') || 'high'; // high atau low
+
             try {
                 if (!audioCtx) {
                     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -113,13 +117,16 @@
                     audioCtx.resume();
                 }
 
-                // Bunyi Beep 2 kali agar lebih terdengar jelas
                 let now = audioCtx.currentTime;
                 
                 let osc1 = audioCtx.createOscillator();
                 let gain1 = audioCtx.createGain();
                 osc1.type = 'sine';
-                osc1.frequency.setValueAtTime(880, now); // Nada A5
+                
+                let f1 = freqType === 'high' ? 1046.50 : 440.00; // C6 vs A4
+                let f2 = freqType === 'high' ? 1318.51 : 554.37; // E6 vs C#5
+
+                osc1.frequency.setValueAtTime(f1, now); 
                 gain1.gain.setValueAtTime(0.2, now);
                 osc1.connect(gain1);
                 gain1.connect(audioCtx.destination);
@@ -129,7 +136,7 @@
                 let osc2 = audioCtx.createOscillator();
                 let gain2 = audioCtx.createGain();
                 osc2.type = 'sine';
-                osc2.frequency.setValueAtTime(1174.66, now + 0.25); // Nada D6
+                osc2.frequency.setValueAtTime(f2, now + 0.25); 
                 gain2.gain.setValueAtTime(0.2, now + 0.25);
                 osc2.connect(gain2);
                 gain2.connect(audioCtx.destination);
@@ -195,7 +202,7 @@
 
             let filteredOrders = orders.slice().reverse().filter(order => {
                 if (currentFilter === 'Semua') return true;
-                if (currentFilter === 'Menunggu') return (order.status === 'Menunggu' || order.status === 'Pending' || !order.status);
+                if (currentFilter === 'Menunggu') return (order.status === 'Menunggu' || order.status === 'Pending' || order.status === 'Menunggu Verifikasi Resto' || !order.status);
                 if (currentFilter === 'Diproses') return order.status === 'Diproses';
                 if (currentFilter === 'Selesai') return order.status === 'Selesai';
                 return true;
@@ -228,7 +235,7 @@
                                 <span class="text-xs text-gray-500">${order.date || 'Hari ini'}</span>
                                 <span class="${badgeClass} px-2 py-0.5 rounded text-xs font-bold">${statusBadge}</span>
                             </div>
-                            <h4 class="font-bold text-gray-800">${order.name} (${order.phone})</h4>
+                            <h4 class="font-bold text-gray-800">${order.name} (${order.phone || '-'})</h4>
                             <p class="text-xs text-gray-600 mb-1">${order.address}</p>
                             <div class="bg-gray-50 p-2 rounded mb-1">${itemsList || '<p class="text-xs text-gray-500">Catatan: '+(order.note||'-')+'</p>'}</div>
                             <p class="text-xs font-semibold text-sky-700">Total: Rp ${Number(order.total).toLocaleString('id-ID')} (${order.payment || 'Tunai/Transfer'})</p>
@@ -256,7 +263,6 @@
             }
         }
 
-        // Fitur Print Bluetooth Thermal Printer (Full Version ESC/POS All Mesin)
         async function printBluetoothOrder(index) {
             let orders = JSON.parse(localStorage.getItem('mb_orders') || '[]');
             let o = orders[index];
@@ -303,7 +309,7 @@
                 printData += "\x1B\x61\x00"; 
                 printData += `No Pesanan : #${o.id || (index+1)}\n`;
                 printData += `Tanggal    : ${o.date || 'Hari ini'}\n`;
-                printData += `Pelanggan  : ${o.name} (${o.phone})\n`;
+                printData += `Pelanggan  : ${o.name} (${o.phone || '-'})\n`;
                 printData += `Alamat     : ${o.address}\n`;
                 printData += "--------------------------------\n";
                 printData += "DETAIL PESANAN (Topping B2 Non-Halal):\n";
@@ -331,21 +337,40 @@
             }
         }
 
+        // ================= KELOLA MENU + KELOLA GAMBAR =================
+        let menuImageBase64 = "";
+
+        function previewMenuImageFile(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    menuImageBase64 = e.target.result;
+                    document.getElementById('menu-img-preview').src = menuImageBase64;
+                    document.getElementById('menu-img-preview-container').classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
         function renderMenus() {
             let container = document.getElementById('menu-list-container');
             if(!container) return;
             let menus = JSON.parse(localStorage.getItem('mb_menus') || '[]');
             if (menus.length === 0) {
-                container.innerHTML = `<div class="bg-white p-6 rounded-xl shadow text-center text-gray-500">Belum ada menu terdaftar. Tambahkan menu baru di bawah.</div>`;
+                container.innerHTML = `<div class="bg-white p-6 rounded-xl shadow text-center text-gray-500">Belum ada menu terdaftar. Tambahkan menu baru di atas.</div>`;
                 return;
             }
             let html = '<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">';
             menus.forEach((m, idx) => {
+                let imgUrl = m.image || 'https://via.placeholder.com/400x300?text=No+Image';
                 html += `
-                    <div class="bg-white p-4 rounded-xl shadow flex flex-col justify-between">
+                    <div class="bg-white p-4 rounded-xl shadow flex flex-col justify-between border">
                         <div>
-                            <h4 class="font-bold text-gray-800">${m.name}</h4>
-                            <p class="text-xs text-gray-500 mb-2">Rp ${Number(m.price).toLocaleString('id-ID')}</p>
+                            <img src="${imgUrl}" class="w-full h-32 object-cover rounded-lg mb-3 border">
+                            <span class="text-[10px] font-bold text-sky-600 bg-sky-50 px-2 py-0.5 rounded-full">${m.category || 'Makanan'}</span>
+                            <h4 class="font-bold text-gray-800 mt-1">${m.name}</h4>
+                            <p class="text-xs text-sky-700 font-bold mb-1">Rp ${Number(m.price).toLocaleString('id-ID')}</p>
                             <p class="text-xs text-gray-600">${m.desc || '-'}</p>
                         </div>
                         <div class="mt-4 flex justify-end gap-2">
@@ -363,12 +388,25 @@
             let name = document.getElementById('menu-name').value;
             let price = document.getElementById('menu-price').value;
             let desc = document.getElementById('menu-desc').value;
+            let category = document.getElementById('menu-category').value;
+            let urlInput = document.getElementById('menu-image-url').value.trim();
             
+            let finalImage = menuImageBase64 || urlInput || "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=500&q=80";
+
             let menus = JSON.parse(localStorage.getItem('mb_menus') || '[]');
-            menus.push({ name, price, desc });
+            menus.push({ 
+                id: Date.now(),
+                name, 
+                price: Number(price), 
+                desc, 
+                category,
+                image: finalImage 
+            });
             localStorage.setItem('mb_menus', JSON.stringify(menus));
             
+            menuImageBase64 = "";
             document.getElementById('form-add-menu').reset();
+            document.getElementById('menu-img-preview-container').classList.add('hidden');
             renderMenus();
             alert('Menu berhasil ditambahkan!');
         }
@@ -382,6 +420,74 @@
             }
         }
 
+        // ================= KELOLA BANNER & PROMO PNG =================
+        let bannerImageBase64 = "";
+
+        function previewBannerImageFile(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    bannerImageBase64 = e.target.result;
+                    document.getElementById('banner-img-preview').src = bannerImageBase64;
+                    document.getElementById('banner-img-preview-container').classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function renderBanners() {
+            let container = document.getElementById('banner-list-container');
+            if(!container) return;
+            let banners = JSON.parse(localStorage.getItem('mb_banners') || '[]');
+            if (banners.length === 0) {
+                container.innerHTML = `<div class="bg-white p-6 rounded-xl shadow text-center text-gray-500">Belum ada banner tersimpan. Tambahkan banner di atas.</div>`;
+                return;
+            }
+            let html = '<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">';
+            banners.forEach((b, idx) => {
+                html += `
+                    <div class="bg-white p-3 rounded-xl shadow border flex flex-col justify-between">
+                        <img src="${b}" class="w-full h-32 object-cover rounded-lg border mb-2">
+                        <button onclick="deleteBanner(${idx})" class="w-full bg-red-100 hover:bg-red-200 text-red-700 py-1.5 rounded text-xs font-bold">Hapus Banner</button>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        function addBanner(e) {
+            e.preventDefault();
+            let urlInput = document.getElementById('banner-image-url').value.trim();
+            let finalBanner = bannerImageBase64 || urlInput;
+
+            if(!finalBanner) {
+                alert('Mohon pilih file gambar PNG/JPG atau masukkan URL Gambar!');
+                return;
+            }
+
+            let banners = JSON.parse(localStorage.getItem('mb_banners') || '[]');
+            banners.push(finalBanner);
+            localStorage.setItem('mb_banners', JSON.stringify(banners));
+
+            bannerImageBase64 = "";
+            document.getElementById('form-add-banner').reset();
+            document.getElementById('banner-img-preview-container').classList.add('hidden');
+            renderBanners();
+            alert('Banner promo berhasil ditambahkan!');
+        }
+
+        function deleteBanner(idx) {
+            if(confirm('Hapus banner ini dari slider website?')) {
+                let banners = JSON.parse(localStorage.getItem('mb_banners') || '[]');
+                banners.splice(idx, 1);
+                localStorage.setItem('mb_banners', JSON.stringify(banners));
+                renderBanners();
+            }
+        }
+
+        // ================= KELOLA BANK & PEMBAYARAN =================
         function renderBanks() {
             let banks = JSON.parse(localStorage.getItem('mb_banks') || '[]');
             let container = document.getElementById('banks-list');
@@ -413,13 +519,21 @@
             renderBanks();
         }
 
+        // ================= PENGATURAN SUARA & GOOGLE SHEET WEBHOOK =================
         function renderSettings() {
             let sName = document.getElementById('setting-resto-name');
             let sPhone = document.getElementById('setting-resto-phone');
             let sAddress = document.getElementById('setting-resto-address');
+            let sSound = document.getElementById('setting-sound-enabled');
+            let sFreq = document.getElementById('setting-sound-freq');
+            let sSheet = document.getElementById('setting-sheet-url');
+
             if(sName) sName.value = localStorage.getItem('mb_setting_name') || "Mie Bangka Teladan";
             if(sPhone) sPhone.value = localStorage.getItem('mb_admin_phone') || "081267166886";
             if(sAddress) sAddress.value = localStorage.getItem('mb_setting_address') || "Jalan Batu 8 Atas, Kota Tanjungpinang";
+            if(sSound) sSound.value = localStorage.getItem('mb_sound_enabled') || "true";
+            if(sFreq) sFreq.value = localStorage.getItem('mb_sound_freq') || "high";
+            if(sSheet) sSheet.value = localStorage.getItem('mb_gsheet_webhook_url') || "";
         }
 
         function saveSettings(e) {
@@ -427,7 +541,11 @@
             localStorage.setItem('mb_setting_name', document.getElementById('setting-resto-name').value);
             localStorage.setItem('mb_admin_phone', document.getElementById('setting-resto-phone').value);
             localStorage.setItem('mb_setting_address', document.getElementById('setting-resto-address').value);
-            alert('Pengaturan resto berhasil disimpan!');
+            localStorage.setItem('mb_sound_enabled', document.getElementById('setting-sound-enabled').value);
+            localStorage.setItem('mb_sound_freq', document.getElementById('setting-sound-freq').value);
+            localStorage.setItem('mb_gsheet_webhook_url', document.getElementById('setting-sheet-url').value.trim());
+
+            alert('Pengaturan resto & notifikasi suara berhasil disimpan!');
         }
     </script> 
 </head> 
@@ -547,7 +665,7 @@
             <section id="section-menus" class="hidden space-y-6">
                 <div class="bg-white p-6 rounded-2xl shadow-sm">
                     <h3 class="font-bold text-lg text-gray-800 mb-4 flex items-center gap-2">
-                        <i class="fa-solid fa-plus-circle text-sky-600"></i> Tambah Menu Baru
+                        <i class="fa-solid fa-plus-circle text-sky-600"></i> Tambah Menu Baru & Gambar
                     </h3>
                     <form id="form-add-menu" onsubmit="addMenu(event)" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div>
@@ -555,16 +673,43 @@
                             <input type="text" id="menu-name" required placeholder="Contoh: Mie Bangka Spesial B2" class="w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-sky-500 outline-none">
                         </div>
                         <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Kategori Menu</label>
+                            <select id="menu-category" class="w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-sky-500 outline-none">
+                                <option value="Makanan">Makanan</option>
+                                <option value="Minuman">Minuman</option>
+                            </select>
+                        </div>
+                        <div>
                             <label class="block text-xs font-bold text-gray-700 mb-1">Harga (Rp)</label>
                             <input type="number" id="menu-price" required placeholder="Contoh: 25000" class="w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-sky-500 outline-none">
                         </div>
-                        <div>
+                        <div class="sm:col-span-3">
                             <label class="block text-xs font-bold text-gray-700 mb-1">Deskripsi / Topping</label>
                             <input type="text" id="menu-desc" placeholder="Contoh: Topping B2 cincang, pangsit rebus" class="w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-sky-500 outline-none">
                         </div>
+
+                        <!-- INPUT GAMBAR MENU -->
+                        <div class="sm:col-span-3 border-t pt-3 mt-1">
+                            <label class="block text-xs font-bold text-gray-700 mb-1"><i class="fa-solid fa-image text-sky-600 mr-1"></i> Upload Gambar Menu (Upload File / Pakai Link URL)</label>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <span class="text-[11px] text-gray-500 block mb-1">Pilih File Foto dari HP / Komputer:</span>
+                                    <input type="file" accept="image/*" onchange="previewMenuImageFile(event)" class="w-full text-xs text-gray-500 file:mr-2 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100">
+                                </div>
+                                <div>
+                                    <span class="text-[11px] text-gray-500 block mb-1">Atau Tempel Link URL Gambar Online:</span>
+                                    <input type="url" id="menu-image-url" placeholder="https://..." class="w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-sky-500 outline-none">
+                                </div>
+                            </div>
+                            <div id="menu-img-preview-container" class="mt-3 hidden">
+                                <span class="text-xs font-bold text-gray-600 block mb-1">Pratinjau Gambar:</span>
+                                <img id="menu-img-preview" src="" class="w-32 h-32 object-cover rounded-xl border shadow-sm">
+                            </div>
+                        </div>
+
                         <div class="sm:col-span-3 flex justify-end">
-                            <button type="submit" class="bg-sky-600 hover:bg-sky-700 text-white font-bold px-5 py-2 rounded-xl text-sm transition shadow-md shadow-sky-600/30">
-                                Simpan Menu
+                            <button type="submit" class="bg-sky-600 hover:bg-sky-700 text-white font-bold px-5 py-2.5 rounded-xl text-sm transition shadow-md shadow-sky-600/30">
+                                Simpan Menu & Gambar
                             </button>
                         </div>
                     </form>
@@ -578,13 +723,35 @@
                 </div>
             </section>
 
-            <!-- SECTION 3: BANNERS -->
+            <!-- SECTION 3: BANNERS PNG & PROMO -->
             <section id="section-banners" class="hidden space-y-6">
                 <div class="bg-white p-6 rounded-2xl shadow-sm space-y-4">
-                    <h3 class="font-bold text-lg text-gray-800"><i class="fa-solid fa-image text-sky-600 mr-2"></i> Pengaturan Banner & Promo Website</h3>
-                    <p class="text-xs text-gray-500">Kelola gambar utama atau pengumuman promosi yang tampil di halaman depan pelanggan.</p>
-                    <div class="p-4 bg-sky-50 rounded-xl border border-sky-100 text-xs text-sky-800">
-                        Fitur banner aktif dan terhubung otomatis dengan tata letak utama restoran Anda di masakmasak.my.id.
+                    <h3 class="font-bold text-lg text-gray-800"><i class="fa-solid fa-image text-sky-600 mr-2"></i> Pengaturan Banner & Promo Website (PNG / JPG)</h3>
+                    <p class="text-xs text-gray-500">Kelola gambar utama atau pengumuman promosi yang tampil di slider halaman depan pelanggan.</p>
+                    
+                    <form id="form-add-banner" onsubmit="addBanner(event)" class="space-y-4 border p-4 rounded-xl bg-gray-50">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">1. Upload Gambar Banner (PNG / JPG) dari Perangkat</label>
+                            <input type="file" accept="image/png, image/jpeg, image/jpg" onchange="previewBannerImageFile(event)" class="w-full text-xs text-gray-500 file:mr-2 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">2. Atau Masukkan Link URL Banner Online</label>
+                            <input type="url" id="banner-image-url" placeholder="https://..." class="w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-sky-500 outline-none">
+                        </div>
+                        <div id="banner-img-preview-container" class="hidden">
+                            <span class="text-xs font-bold text-gray-600 block mb-1">Pratinjau Banner:</span>
+                            <img id="banner-img-preview" src="" class="w-full h-40 object-cover rounded-xl border">
+                        </div>
+                        <button type="submit" class="bg-sky-600 hover:bg-sky-700 text-white font-bold px-5 py-2 rounded-xl text-sm transition shadow-md shadow-sky-600/30">
+                            Tambah Banner Baru
+                        </button>
+                    </form>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl shadow-sm space-y-4">
+                    <h3 class="font-bold text-lg text-gray-800">Daftar Banner Aktif</h3>
+                    <div id="banner-list-container">
+                        <!-- Banners rendered here -->
                     </div>
                 </div>
             </section>
@@ -622,10 +789,10 @@
                 </div>
             </section>
 
-            <!-- SECTION 5: SETTINGS -->
+            <!-- SECTION 5: SETTINGS & SUARA NOTIFIKASI & GOOGLE SHEET -->
             <section id="section-settings" class="hidden space-y-6">
                 <div class="bg-white p-6 rounded-2xl shadow-sm">
-                    <h3 class="font-bold text-lg text-gray-800 mb-4"><i class="fa-solid fa-gears text-sky-600 mr-2"></i> Pengaturan Informasi Resto</h3>
+                    <h3 class="font-bold text-lg text-gray-800 mb-4"><i class="fa-solid fa-gears text-sky-600 mr-2"></i> Pengaturan Informasi Resto & Notifikasi</h3>
                     <form onsubmit="saveSettings(event)" class="space-y-4 max-w-xl">
                         <div>
                             <label class="block text-xs font-bold text-gray-700 mb-1">Nama Resto</label>
@@ -639,8 +806,37 @@
                             <label class="block text-xs font-bold text-gray-700 mb-1">Alamat Lengkap</label>
                             <textarea id="setting-resto-address" rows="2" class="w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-sky-500 outline-none"></textarea>
                         </div>
+
+                        <!-- PENGATURAN SUARA NOTIFIKASI -->
+                        <div class="p-4 bg-sky-50 rounded-xl border border-sky-100 space-y-3">
+                            <h4 class="font-bold text-sm text-sky-900"><i class="fa-solid fa-volume-high text-sky-600 mr-1"></i> Pengaturan Suara Notifikasi Pesanan Masuk</h4>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-700 mb-1">Status Suara Notifikasi</label>
+                                    <select id="setting-sound-enabled" class="w-full px-3 py-2 border rounded-xl text-sm bg-white font-semibold">
+                                        <option value="true">Aktif (ON)</option>
+                                        <option value="false">Mati (OFF)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-700 mb-1">Frekuensi / Nada Suara</label>
+                                    <select id="setting-sound-freq" class="w-full px-3 py-2 border rounded-xl text-sm bg-white font-semibold">
+                                        <option value="high">Suara Tinggi (Tinggi & Nyaring)</option>
+                                        <option value="low">Suara Rendah (Bass / Rendah)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- PENGATURAN INTEGRASI GOOGLE SHEET AUTOMATION -->
+                        <div class="p-4 bg-emerald-50 rounded-xl border border-emerald-100 space-y-2">
+                            <h4 class="font-bold text-sm text-emerald-900"><i class="fa-solid fa-file-csv text-emerald-600 mr-1"></i> Integrasi Laporan Laporan Google Sheets</h4>
+                            <p class="text-xs text-emerald-800">Masukkan **Google Apps Script Web App URL** Anda di bawah ini agar setiap pesanan dari pelanggan tersimpan otomatis secara real-time ke Google Sheet Gmail Anda:</p>
+                            <input type="url" id="setting-sheet-url" placeholder="https://script.google.com/macros/s/.../exec" class="w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none bg-white">
+                        </div>
+
                         <button type="submit" class="bg-sky-600 hover:bg-sky-700 text-white font-bold px-6 py-2.5 rounded-xl text-sm transition shadow-md shadow-sky-600/30">
-                            Simpan Pengaturan
+                            Simpan Semua Pengaturan
                         </button>
                     </form>
                 </div>
