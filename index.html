@@ -429,7 +429,16 @@
             container.innerHTML = html;
         }
 
-        window.onload = initApp;
-    </script>
-</body>
-</html>
+                window.onload = initApp;
+      </script>
+
+      <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+      <script>
+        const supabaseUrl = 'https://vccwfrwupgvyogvnmuoi.supabase.co';
+        const supabaseKey = 'sb_publishable_75eEqtA_wjdXSULVCydJbg_pA4aPgNZ';
+        const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+      </script>
+    </body>
+  </html>
+
+
