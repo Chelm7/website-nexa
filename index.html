@@ -11,6 +11,13 @@
         .banner-slide { display: none; }
         .banner-slide.active { display: block; animation: fadeIn 0.8s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0.3; } to { opacity: 1; } }
+        
+        /* Styling khusus untuk cetak struk thermal */
+        @media print {
+            body * { visibility: hidden; }
+            #thermal-receipt, #thermal-receipt * { visibility: visible; }
+            #thermal-receipt { position: absolute; left: 0; top: 0; width: 58mm; font-family: monospace; font-size: 12px; padding: 5px; }
+        }
     </style>
 </head>
 <body class="bg-sky-50 text-gray-800 font-sans selection:bg-sky-500 selection:text-white">
@@ -43,6 +50,9 @@
                 <button onclick="toggleCart()" class="bg-white text-sky-600 hover:bg-sky-50 px-4 py-2 rounded-xl font-bold transition flex items-center shadow">
                     <i class="fa-solid fa-cart-shopping mr-2"></i> Keranjang
                     <span id="cart-count" class="ml-2 bg-sky-600 text-white text-xs px-2 py-0.5 rounded-full">0</span>
+                </button>
+                <button onclick="toggleAdminModal()" class="bg-sky-800 hover:bg-sky-900 text-white px-3 py-2 rounded-xl font-bold transition text-xs flex items-center shadow border border-sky-500">
+                    <i class="fa-solid fa-lock mr-1"></i> Admin
                 </button>
             </div>
         </div>
@@ -134,33 +144,106 @@
         </div>
     </div>
 
-    <!-- Modal Timer Pembayaran -->
-    <div id="payment-timer-modal" class="fixed inset-0 bg-black bg-opacity-80 hidden z-50 flex justify-center items-center p-4">
-        <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 text-center">
-            <div class="w-14 h-14 bg-sky-100 text-sky-600 rounded-full flex items-center justify-center text-2xl mx-auto mb-3">
-                <i class="fa-solid fa-clock"></i>
-            </div>
-            <h3 class="text-xl font-extrabold text-sky-900 mb-1">Selesaikan Pembayaran</h3>
-            <p class="text-xs text-gray-500 mb-3">Mohon lakukan pembayaran dalam batas waktu:</p>
+    <!-- Modal Admin Dashboard -->
+    <div id="admin-modal" class="fixed inset-0 bg-black bg-opacity-70 hidden z-50 flex justify-center items-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-4xl w-full p-6 relative max-h-[90vh] overflow-y-auto">
+            <button onclick="toggleAdminModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-xl"><i class="fa-solid fa-xmark"></i></button>
             
-            <div id="countdown-timer" class="text-3xl font-black text-red-600 mb-4 tracking-widest bg-red-50 py-2 rounded-xl border border-red-200">03:00</div>
-
-            <div class="bg-sky-50 p-3 rounded-2xl text-left text-xs space-y-2 mb-4 border border-sky-100">
-                <div><b>ID Pesanan:</b> <span id="pay-order-id"></span></div>
-                <div><b>Nama Pemesan:</b> <span id="pay-buyer-name"></span></div>
-                <div><b>Total Item:</b> <span id="pay-total-items" class="font-bold"></span></div>
-                <div><b>Total Harga:</b> <span id="pay-total" class="text-2xl font-black text-sky-700 block mt-1"></span></div>
-                <div><b>Metode Pembayaran:</b><div id="pay-method-container" class="mt-1"></div></div>
+            <div id="admin-login-section">
+                <h3 class="text-xl font-bold text-sky-900 mb-3"><i class="fa-solid fa-lock mr-2"></i> Login Admin Resto</h3>
+                <p class="text-xs text-gray-500 mb-4">Masukkan PIN admin untuk mengelola menu, status resto, rekening bank, dan pesanan masuk.</p>
+                <input type="password" id="admin-pin" class="w-full sm:w-64 px-3 py-2 border rounded-xl mb-3 outline-none text-sm" placeholder="Masukkan PIN Admin (default: 1234)">
+                <div>
+                    <button onclick="verifyAdminPin()" class="bg-sky-600 hover:bg-sky-700 text-white font-bold px-5 py-2 rounded-xl text-sm shadow">Masuk Admin</button>
+                </div>
             </div>
-            <p class="text-[11px] text-gray-500">Menunggu verifikasi dan konfirmasi diproses oleh pihak resto...</p>
+
+            <div id="admin-dashboard-section" class="hidden">
+                <div class="flex justify-between items-center mb-6 border-b pb-3">
+                    <h3 class="text-2xl font-extrabold text-sky-900"><i class="fa-solid fa-gauge-high mr-2"></i> Dashboard Admin Resto</h3>
+                    <button onclick="logoutAdmin()" class="bg-red-100 text-red-700 hover:bg-red-200 px-3 py-1.5 rounded-xl text-xs font-bold">Keluar Admin</button>
+                </div>
+
+                <!-- Kontrol Status Resto -->
+                <div class="bg-sky-50 p-4 rounded-2xl mb-6 border border-sky-100 flex flex-col sm:flex-row justify-between items-center gap-3">
+                    <div>
+                        <h4 class="font-bold text-sky-900 text-sm">Status Operasional Restoran</h4>
+                        <p class="text-xs text-gray-600">Ubah status Buka atau Tutup untuk pelanggan.</p>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button onclick="setRestoStatus('Buka')" id="status-buka-btn" class="px-4 py-2 rounded-xl text-xs font-bold transition">BUKA</button>
+                        <button onclick="setRestoStatus('Tutup')" id="status-tutup-btn" class="px-4 py-2 rounded-xl text-xs font-bold transition">TUTUP</button>
+                    </div>
+                </div>
+
+                <!-- Kelola Rekening Bank -->
+                <div class="bg-sky-50 p-4 rounded-2xl mb-6 border border-sky-100">
+                    <h4 class="font-bold text-sky-900 text-sm mb-2"><i class="fa-solid fa-credit-card mr-2"></i> Pengaturan Rekening / Bank Pembayaran</h4>
+                    <form onsubmit="addBankOption(event)" class="space-y-3 mb-3">
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                            <input type="text" id="bank-name" placeholder="Nama Bank / E-Wallet (cth: BCA)" class="px-3 py-2 border rounded-xl text-sm outline-none bg-white" required>
+                            <input type="text" id="bank-number" placeholder="Nomor Rekening" class="px-3 py-2 border rounded-xl text-sm outline-none bg-white" required>
+                            <input type="text" id="bank-holder" placeholder="Atas Nama" class="px-3 py-2 border rounded-xl text-sm outline-none bg-white" required>
+                        </div>
+                        <button type="submit" class="bg-sky-600 hover:bg-sky-700 text-white font-bold px-4 py-2 rounded-xl text-xs shadow">Tambah Rekening</button>
+                    </form>
+                    <div id="admin-bank-list" class="space-y-2 max-h-40 overflow-y-auto"></div>
+                </div>
+
+                <!-- Daftar Pesanan Masuk (Supabase) -->
+                <div class="mb-8">
+                    <div class="flex justify-between items-center mb-3">
+                        <h4 class="font-bold text-sky-900 text-base"><i class="fa-solid fa-receipt mr-2"></i> Kelola Pesanan Masuk (Supabase)</h4>
+                        <button onclick="loadAdminOrders()" class="bg-sky-100 text-sky-700 hover:bg-sky-200 px-3 py-1 rounded-lg text-xs font-bold">Refresh Pesanan</button>
+                    </div>
+                    <div id="admin-orders-list" class="space-y-3 max-h-60 overflow-y-auto pr-1"></div>
+                </div>
+
+                <!-- Kelola Menu -->
+                <div>
+                    <h4 class="font-bold text-sky-900 text-base mb-3"><i class="fa-solid fa-utensils mr-2"></i> Tambah / Kelola Menu</h4>
+                    <form onsubmit="addNewMenu(event)" class="bg-gray-50 p-4 rounded-2xl border space-y-3 mb-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <input type="text" id="new-menu-name" placeholder="Nama Menu" class="px-3 py-2 border rounded-xl text-sm outline-none bg-white" required>
+                            <select id="new-menu-cat" class="px-3 py-2 border rounded-xl text-sm outline-none bg-white">
+                                <option value="Makanan">Makanan</option>
+                                <option value="Minuman">Minuman</option>
+                            </select>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <input type="number" id="new-menu-price" placeholder="Harga (Rp)" class="px-3 py-2 border rounded-xl text-sm outline-none bg-white" required>
+                            <input type="text" id="new-menu-img" placeholder="URL Gambar Menu" class="px-3 py-2 border rounded-xl text-sm outline-none bg-white">
+                        </div>
+                        <textarea id="new-menu-desc" placeholder="Deskripsi singkat menu..." class="w-full px-3 py-2 border rounded-xl text-sm outline-none bg-white" rows="2"></textarea>
+                        <button type="submit" class="bg-sky-600 hover:bg-sky-700 text-white font-bold px-4 py-2 rounded-xl text-xs shadow">Tambah Menu Baru</button>
+                    </form>
+                    <div id="admin-menu-list" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+                </div>
+            </div>
         </div>
+    </div>
+
+    <!-- Hidden Thermal Receipt Template for Printing -->
+    <div id="thermal-receipt" class="hidden">
+        <div style="text-align:center; font-weight:bold;">MIE BANGKA TELADAN</div>
+        <div style="text-align:center; font-size:10px;">Jalan Batu 8 Atas, Kota Tanjungpinang</div>
+        <div style="text-align:center;">--------------------------------</div>
+        <div>ID: <span id="receipt-id"></span></div>
+        <div>Waktu: <span id="receipt-time"></span></div>
+        <div>Pemesan: <span id="receipt-name"></span></div>
+        <div style="text-align:center;">--------------------------------</div>
+        <div id="receipt-items"></div>
+        <div style="text-align:center;">--------------------------------</div>
+        <div style="font-weight:bold; text-align:right;">TOTAL: Rp <span id="receipt-total"></span></div>
+        <div style="text-align:center;">--------------------------------</div>
+        <div style="text-align:center; font-size:10px;">Terima Kasih Atas Kunjungan Anda!</div>
     </div>
 
     <footer class="bg-sky-900 text-sky-100 py-6 text-center mt-12 text-sm px-4">
         <p>&copy; 2026 Mie Bangka Teladan - Kota Tanjungpinang. All rights reserved.</p>
     </footer>
 
-    <audio id="success-sound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="audio"></audio>
+    <audio id="success-sound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
 
     <!-- Supabase JS Library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -210,17 +293,23 @@
             { id: 3, name: "Es Timun Serut", category: "Minuman", price: 8000, desc: "Minuman segar pereda penyejuk dahaga.", image: "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=500&q=80" }
         ];
 
+        const defaultBanks = [
+            { name: "Bayar di Kasir (Tunai)", number: "Tunai", holder: "Kasir Resto" }
+        ];
+
         let cart = [];
         let currentCategory = 'all';
         let currentSlideIndex = 0;
 
         function initApp() {
             if (!localStorage.getItem('mb_menu')) localStorage.setItem('mb_menu', JSON.stringify(defaultMenu));
+            if (!localStorage.getItem('mb_banks')) localStorage.setItem('mb_banks', JSON.stringify(defaultBanks));
             if (!localStorage.getItem('mb_banners')) localStorage.setItem('mb_banners', JSON.stringify(["https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80", "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=1200&q=80"]));
             if (!localStorage.getItem('mb_resto_status')) localStorage.setItem('mb_resto_status', 'Buka');
             checkRestoStatus();
             loadBanners();
             renderMenu();
+            loadBankOptions();
             loadCustomerOrders();
         }
 
@@ -249,6 +338,17 @@
             slides[currentSlideIndex].classList.add('active');
         }
         setInterval(() => { changeBannerSlide(1); }, 5000);
+
+        function loadBankOptions() {
+            const select = document.getElementById('payment-method');
+            if (!select) return;
+            const banks = JSON.parse(localStorage.getItem('mb_banks')) || defaultBanks;
+            select.innerHTML = '<option value="">-- Pilih Pembayaran --</option>';
+            banks.forEach(b => {
+                const label = b.name === 'Bayar di Kasir (Tunai)' ? b.name : `${b.name} - ${b.number} (a.n ${b.holder})`;
+                select.innerHTML += `<option value="${b.name}">${label}</option>`;
+            });
+        }
 
         function filterMenu(cat) {
             currentCategory = cat;
@@ -338,6 +438,7 @@
         function toggleCart() {
             const modal = document.getElementById('cart-modal');
             if (modal) modal.classList.toggle('hidden');
+            loadBankOptions();
             updateCartUI();
         }
 
@@ -369,7 +470,7 @@
                         .insert([
                             {
                                 nama: `${buyerName} (${buyerAddress})`,
-                                menu: menuNames,
+                                menu: `${menuNames} [Bayar via: ${paymentMethod}]`,
                                 jumlah: Number(totalQty),
                                 total: Number(totalAmount),
                                 status: 'Pending'
@@ -445,6 +546,205 @@
                 console.error('Load orders error:', err);
                 listContainer.innerHTML = '<p class="text-red-500 text-center py-2">Terjadi kesalahan saat memuat pesanan.</p>';
             }
+        }
+
+        // --- ADMIN PANEL FUNCTIONS ---
+        function toggleAdminModal() {
+            const modal = document.getElementById('admin-modal');
+            if (modal) modal.classList.toggle('hidden');
+        }
+
+        function verifyAdminPin() {
+            const pin = document.getElementById('admin-pin').value;
+            if (pin === '1234') {
+                document.getElementById('admin-login-section').classList.add('hidden');
+                document.getElementById('admin-dashboard-section').classList.remove('hidden');
+                loadAdminOrders();
+                renderAdminMenu();
+                renderAdminBanks();
+                updateRestoStatusUI();
+            } else {
+                alert('PIN Admin salah! (Gunakan 1234)');
+            }
+        }
+
+        function logoutAdmin() {
+            document.getElementById('admin-dashboard-section').classList.add('hidden');
+            document.getElementById('admin-login-section').classList.remove('hidden');
+            document.getElementById('admin-pin').value = '';
+        }
+
+        function setRestoStatus(status) {
+            localStorage.setItem('mb_resto_status', status);
+            checkRestoStatus();
+            updateRestoStatusUI();
+            alert('Status restoran diubah menjadi: ' + status);
+        }
+
+        function updateRestoStatusUI() {
+            const status = localStorage.getItem('mb_resto_status') || 'Buka';
+            const bukaBtn = document.getElementById('status-buka-btn');
+            const tutupBtn = document.getElementById('status-tutup-btn');
+            if (!bukaBtn || !tutupBtn) return;
+            if (status === 'Buka') {
+                bukaBtn.className = "px-4 py-2 rounded-xl text-xs font-bold bg-green-600 text-white shadow";
+                tutupBtn.className = "px-4 py-2 rounded-xl text-xs font-bold bg-gray-200 text-gray-700";
+            } else {
+                bukaBtn.className = "px-4 py-2 rounded-xl text-xs font-bold bg-gray-200 text-gray-700";
+                tutupBtn.className = "px-4 py-2 rounded-xl text-xs font-bold bg-red-600 text-white shadow";
+            }
+        }
+
+        function addBankOption(e) {
+            e.preventDefault();
+            const name = document.getElementById('bank-name').value.trim();
+            const number = document.getElementById('bank-number').value.trim();
+            const holder = document.getElementById('bank-holder').value.trim();
+
+            let banks = JSON.parse(localStorage.getItem('mb_banks')) || defaultBanks;
+            banks.push({ name, number, holder });
+            localStorage.setItem('mb_banks', JSON.stringify(banks));
+
+            alert('Rekening bank berhasil ditambahkan!');
+            e.target.reset();
+            renderAdminBanks();
+            loadBankOptions();
+        }
+
+        function renderAdminBanks() {
+            const list = document.getElementById('admin-bank-list');
+            if (!list) return;
+            const banks = JSON.parse(localStorage.getItem('mb_banks')) || defaultBanks;
+            list.innerHTML = '';
+            banks.forEach((b, idx) => {
+                list.innerHTML += `
+                    <div class="bg-white p-2.5 rounded-xl border flex justify-between items-center text-xs">
+                        <div>
+                            <span class="font-bold text-sky-900">${b.name}</span> - ${b.number} (a.n ${b.holder})
+                        </div>
+                        ${b.name !== 'Bayar di Kasir (Tunai)' ? `<button onclick="deleteBank(${idx})" class="text-red-600 hover:text-red-800 font-bold px-2 py-1">Hapus</button>` : '<span class="text-gray-400 italic">Default</span>'}
+                    </div>
+                `;
+            });
+        }
+
+        function deleteBank(idx) {
+            if (!confirm('Hapus rekening bank ini?')) return;
+            let banks = JSON.parse(localStorage.getItem('mb_banks')) || defaultBanks;
+            banks.splice(idx, 1);
+            localStorage.setItem('mb_banks', JSON.stringify(banks));
+            renderAdminBanks();
+            loadBankOptions();
+        }
+
+        async function loadAdminOrders() {
+            const list = document.getElementById('admin-orders-list');
+            if (!list) return;
+            list.innerHTML = '<p class="text-gray-500 text-center py-2">Memuat pesanan...</p>';
+            if (!_supabase) return;
+
+            try {
+                const { data, error } = await _supabase
+                    .from('Pesanan')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (error) {
+                    list.innerHTML = `<p class="text-red-500 text-center py-2">Error: ${error.message}</p>`;
+                    return;
+                }
+
+                if (!data || data.length === 0) {
+                    list.innerHTML = '<p class="text-gray-500 text-center py-2">Belum ada pesanan masuk.</p>';
+                    return;
+                }
+
+                list.innerHTML = '';
+                data.forEach(order => {
+                    list.innerHTML += `
+                        <div class="bg-gray-50 p-3 rounded-xl border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                            <div>
+                                <div class="font-bold text-sky-900">#${order.id} - ${order.nama}</div>
+                                <div class="text-xs text-gray-600">${order.menu} (Jumlah: ${order.jumlah})</div>
+                                <div class="text-xs font-bold text-sky-700">Total: Rp ${Number(order.total).toLocaleString('id-ID')} | Status: <span class="text-yellow-600">${order.status || 'Pending'}</span></div>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button onclick="printReceipt(${order.id}, '${order.nama}', '${order.menu}', ${order.total}, '${order.created_at}')" class="bg-sky-600 hover:bg-sky-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow"><i class="fa-solid fa-print mr-1"></i> Cetak Struk</button>
+                                <button onclick="deleteOrder(${order.id})" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow">Hapus</button>
+                            </div>
+                        </div>
+                    `;
+                });
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function deleteOrder(id) {
+            if (!confirm('Hapus pesanan ini dari database?')) return;
+            if (!_supabase) return;
+            const { error } = await _supabase.from('Pesanan').delete().eq('id', id);
+            if (error) {
+                alert('Gagal menghapus: ' + error.message);
+            } else {
+                loadAdminOrders();
+                loadCustomerOrders();
+            }
+        }
+
+        function printReceipt(id, name, menu, total, createdAt) {
+            document.getElementById('receipt-id').innerText = id;
+            document.getElementById('receipt-time').innerText = new Date(createdAt).toLocaleString('id-ID');
+            document.getElementById('receipt-name').innerText = name;
+            document.getElementById('receipt-items').innerText = menu;
+            document.getElementById('receipt-total').innerText = Number(total).toLocaleString('id-ID');
+            window.print();
+        }
+
+        function addNewMenu(e) {
+            e.preventDefault();
+            const name = document.getElementById('new-menu-name').value;
+            const category = document.getElementById('new-menu-cat').value;
+            const price = Number(document.getElementById('new-menu-price').value);
+            const image = document.getElementById('new-menu-img').value || 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=500&q=80';
+            const desc = document.getElementById('new-menu-desc').value;
+
+            const menuList = JSON.parse(localStorage.getItem('mb_menu')) || [];
+            const newId = menuList.length > 0 ? Math.max(...menuList.map(m => m.id)) + 1 : 1;
+            menuList.push({ id: newId, name, category, price, image, desc });
+            localStorage.setItem('mb_menu', JSON.stringify(menuList));
+
+            alert('Menu baru berhasil ditambahkan!');
+            e.target.reset();
+            renderMenu();
+            renderAdminMenu();
+        }
+
+        function renderAdminMenu() {
+            const list = document.getElementById('admin-menu-list');
+            if (!list) return;
+            const menuList = JSON.parse(localStorage.getItem('mb_menu')) || [];
+            list.innerHTML = '';
+            menuList.forEach(item => {
+                list.innerHTML += `
+                    <div class="bg-white p-3 rounded-xl border flex justify-between items-center text-xs">
+                        <div>
+                            <div class="font-bold text-sky-900">${item.name} (${item.category})</div>
+                            <div class="text-sky-600">Rp ${item.price.toLocaleString('id-ID')}</div>
+                        </div>
+                        <button onclick="deleteMenu(${item.id})" class="bg-red-100 text-red-600 hover:bg-red-200 px-2.5 py-1 rounded-lg font-bold">Hapus</button>
+                    </div>
+                `;
+            });
+        }
+
+        function deleteMenu(id) {
+            if (!confirm('Hapus menu ini?')) return;
+            let menuList = JSON.parse(localStorage.getItem('mb_menu')) || [];
+            menuList = menuList.filter(m => m.id !== id);
+            localStorage.setItem('mb_menu', JSON.stringify(menuList));
+            renderMenu();
+            renderAdminMenu();
         }
 
         window.onload = initApp;
