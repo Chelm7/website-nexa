@@ -356,7 +356,7 @@
                 adminWa = '62' + adminWa.slice(1);
             }
 
-            let waMessage = `Halo Admin Mie Bangka Teladan,%0A%0ASaya ingin memesan:%0A${orderItemsDesc}%0A%0A*Total:* Rp ${total.toLocaleString('id-ID')}%0A%0A*Nama:* ${name}%0A*No HP:* ${phone}%0A*Alamat:* ${address}`;
+            let waMessage = `Halo Resto Mie Bangka Teladan,%0A%0ASaya ingin memesan:%0A${orderItemsDesc}%0A%0A*Total:* Rp ${total.toLocaleString('id-ID')}%0A%0A*Nama:* ${name}%0A*Diskripsi:* ${}%0A*Alamat:* ${address}`;
 
             alert('Pesanan berhasil dibuat!');
             window.open(`https://wa.me/${adminWa}?text=${waMessage}`, '_blank');
