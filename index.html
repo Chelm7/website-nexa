@@ -93,7 +93,7 @@
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-600 mb-1">Deskripsi / Catatan Pesanan</label>
-                        <textarea id="order-description" rows="2" placeholder="Contoh: Minta kuah dipisah, tidak pakai tauge, pedas sedang..." class="w-full px-3 py-2 border rounded-xl text-xs focus:ring-2 focus:ring-sky-500 outline-none"></textarea>
+                        <textarea id="order-description" rows="2" placeholder="Contoh: Minta kuah dipisah, tidak pakai tauge..." class="w-full px-3 py-2 border rounded-xl text-xs focus:ring-2 focus:ring-sky-500 outline-none"></textarea>
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-600 mb-1">Metode Pembayaran</label>
@@ -127,7 +127,6 @@
         let currentCategory = 'Semua';
         let currentSearchQuery = '';
 
-        // Default Menu Fallback Jika Belum Ada di Admin
         const defaultMenus = [
             { id: 1, name: "Mie Bangka Spesial B2", price: 25000, category: "Makanan", desc: "Topping B2 cincang, pangsit rebus, tauge", image: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=500&q=80" },
             { id: 2, name: "Mie Bangka Lebar B2", price: 28000, category: "Makanan", desc: "Mie lebar kenyal khas dengan topping B2 spesial", image: "https://images.unsplash.com/photo-1612929633738-8fe46f7ec841?auto=format&fit=crop&w=500&q=80" },
