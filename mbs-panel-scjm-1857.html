@@ -90,6 +90,14 @@
             let statusSelect = document.getElementById('header-resto-status');
             if(statusSelect) statusSelect.value = status;
             
+            // Muat logo web di header atas jika ada
+            let savedLogo = localStorage.getItem('mb_site_logo');
+            let logoEl = document.getElementById('admin-brand-logo');
+            if (logoEl && savedLogo) {
+                logoEl.src = savedLogo;
+                logoEl.classList.remove('hidden');
+            }
+
             let orders = JSON.parse(localStorage.getItem('mb_orders') || '[]');
             lastOrderCount = orders.length; 
             
@@ -445,6 +453,14 @@
             }
             localStorage.setItem('mb_site_logo', finalLogo);
             renderSiteLogo();
+
+            // Update logo di header admin secara langsung
+            let logoEl = document.getElementById('admin-brand-logo');
+            if (logoEl && finalLogo) {
+                logoEl.src = finalLogo;
+                logoEl.classList.remove('hidden');
+            }
+
             alert('Logo web berhasil disimpan!');
         }
 
@@ -472,6 +488,14 @@
                 document.getElementById('logo-preview-container').classList.add('hidden');
                 document.getElementById('logo-url-input').value = '';
                 renderSiteLogo();
+
+                // Sembunyikan logo di header admin
+                let logoEl = document.getElementById('admin-brand-logo');
+                if (logoEl) {
+                    logoEl.src = '';
+                    logoEl.classList.add('hidden');
+                }
+
                 alert('Logo web dihapus.');
             }
         }
@@ -629,9 +653,12 @@
     <!-- Main Navigation / Header -->
     <header class="bg-sky-900 text-white shadow">
         <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
-            <div>
-                <h1 class="text-lg font-bold">Mie Bangka Teladan</h1>
-                <p class="text-xs text-sky-200">Panel Manajemen Resto (Jalan Batu 8 Atas, Tanjungpinang)</p>
+            <div class="flex items-center gap-3">
+                <img id="admin-brand-logo" src="" class="w-10 h-10 object-contain rounded-full bg-white p-0.5 hidden shadow border" alt="Logo">
+                <div>
+                    <h1 class="text-lg font-bold">Mie Bangka Teladan</h1>
+                    <p class="text-xs text-sky-200">Panel Manajemen Resto (Jalan Batu 8 Atas, Tanjungpinang)</p>
+                </div>
             </div>
             <div class="flex items-center gap-4">
                 <div class="flex items-center gap-2">
