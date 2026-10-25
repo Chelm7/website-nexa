@@ -10,6 +10,7 @@
     
     <script> 
         let lastOrderCount = 0;
+        let audioCtx = null; // Handler AudioContext
 
         function checkAdminAuth() { 
             if (sessionStorage.getItem('mb_admin_logged') !== 'true') { 
@@ -39,6 +40,16 @@
                 return; 
             } 
             
+            // Inisialisasi AudioContext saat tombol login diklik (mengatasiblokir browser)
+            try {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+            } catch(e) {
+                console.log("AudioContext init error:", e);
+            }
+
             sessionStorage.setItem('mb_admin_logged', 'true'); 
             alert('Masuk Panel Resto Berhasil.'); 
             document.getElementById('login-modal').classList.add('hidden'); 
@@ -81,6 +92,9 @@
             let statusSelect = document.getElementById('header-resto-status');
             if(statusSelect) statusSelect.value = status;
             
+            let orders = JSON.parse(localStorage.getItem('mb_orders') || '[]');
+            lastOrderCount = orders.length; // Set awal tanpa bunyi saat pertama load
+            
             renderOrders();
             setInterval(checkForNewOrders, 3000); // Pantau pesanan masuk secara real-time khusus admin
             
@@ -89,21 +103,41 @@
             if(typeof renderSettings === 'function') renderSettings();
         }
 
-        // Notifikasi Suara Khusus Admin (Web Audio API Beep)
+        // Notifikasi Suara Diperbaiki (Menggunakan AudioContext yang sudah di-resume + Beeping ganda)
         function playAdminSound() {
             try {
-                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(880, audioCtx.currentTime); // Nada dering
-                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.start();
-                osc.stop(audioCtx.currentTime + 0.5);
+                if (!audioCtx) {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+
+                // Bunyi Beep 2 kali agar lebih terdengar jelas
+                let now = audioCtx.currentTime;
+                
+                let osc1 = audioCtx.createOscillator();
+                let gain1 = audioCtx.createGain();
+                osc1.type = 'sine';
+                osc1.frequency.setValueAtTime(880, now); // Nada A5
+                gain1.gain.setValueAtTime(0.2, now);
+                osc1.connect(gain1);
+                gain1.connect(audioCtx.destination);
+                osc1.start(now);
+                osc1.stop(now + 0.2);
+
+                let osc2 = audioCtx.createOscillator();
+                let gain2 = audioCtx.createGain();
+                osc2.type = 'sine';
+                osc2.frequency.setValueAtTime(1174.66, now + 0.25); // Nada D6
+                gain2.gain.setValueAtTime(0.2, now + 0.25);
+                osc2.connect(gain2);
+                gain2.connect(audioCtx.destination);
+                osc2.start(now + 0.25);
+                osc2.stop(now + 0.45);
+
             } catch(e) {
-                console.log("Audio not supported");
+                console.log("Audio play failed:", e);
             }
         }
 
@@ -249,25 +283,24 @@
                         if (char.properties.write || char.properties.writeWithoutResponse) {
                             characteristic = char;
                             break;
+                        }
                     }
+                    if (characteristic) break;
                 }
-                if (characteristic) break;
-            }
 
                 if (!characteristic) {
                     alert('Tidak dapat menemukan jalur cetak pada printer Bluetooth ini.');
                     return;
                 }
 
-                // Format ESC/POS Struk
                 let encoder = new TextEncoder();
-                let printData = "\x1B\x40"; // Initialize printer
-                printData += "\x1B\x61\x01"; // Center alignment
+                let printData = "\x1B\x40"; 
+                printData += "\x1B\x61\x01"; 
                 printData += "MIE BANGKA TELADAN\n";
                 printData += "Jalan Batu 8 Atas, Kota Tanjungpinang\n";
                 printData += "WA: 081267166886 / 082384039200\n";
                 printData += "--------------------------------\n";
-                printData += "\x1B\x61\x00"; // Left alignment
+                printData += "\x1B\x61\x00"; 
                 printData += `No Pesanan : #${o.id || (index+1)}\n`;
                 printData += `Tanggal    : ${o.date || 'Hari ini'}\n`;
                 printData += `Pelanggan  : ${o.name} (${o.phone})\n`;
@@ -287,7 +320,7 @@
                 printData += `TOTAL: Rp ${Number(o.total).toLocaleString('id-ID')}\n`;
                 printData += `Pembayaran: ${o.payment || 'Tunai'}\n`;
                 printData += "--------------------------------\n";
-                printData += "\x1B\x61\x01"; // Center alignment
+                printData += "\x1B\x61\x01"; 
                 printData += "Terima Kasih Atas Kunjungan Anda\n\n\n";
 
                 await characteristic.writeValue(encoder.encode(printData));
@@ -401,165 +434,225 @@
 <body class="bg-gray-100 text-gray-800 font-sans selection:bg-sky-500 selection:text-white" onload="checkAdminAuth()"> 
 
     <!-- Modal Login --> 
-    <div id="login-modal" class="fixed inset-0 bg-sky-900 bg-opacity-95 hidden z-50 flex justify-center items-center p-4"> 
-        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 text-center"> 
-            <div class="w-14 h-14 bg-sky-600 text-white rounded-full flex items-center justify-center text-2xl mx-auto mb-3 shadow"> 
-                <i class="fa-solid fa-shield-halved"></i> 
+    <div id="login-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"> 
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-4"> 
+            <div class="text-center"> 
+                <div class="w-16 h-16 bg-sky-100 text-sky-600 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl font-bold">
+                    <i class="fa-solid fa-utensils"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900">Masuk Panel Resto</h3> 
+                <p class="text-xs text-gray-500 mt-1">Mie Bangka Teladan - Kota Tanjungpinang</p> 
             </div> 
-            <h3 class="text-2xl font-bold text-sky-900 mb-1">Login Panel Resto</h3> 
-            <p class="text-xs text-gray-500 mb-4">Pemilik Terdaftar HP: <b id="display-phone-label">081267166886</b></p> 
-            <div class="space-y-3 text-left"> 
+            
+            <div class="space-y-3"> 
                 <div> 
-                    <label class="block text-xs font-bold text-gray-700">Nama Resto</label> 
-                    <input type="text" id="admin-username" placeholder="miebangka" class="w-full px-3 py-2 border rounded-xl mt-1 text-sm outline-none focus:ring-2 focus:ring-sky-500"> 
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Nama Resto (Username)</label> 
+                    <input type="text" id="admin-username" value="miebangka" class="w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-sky-500 outline-none"> 
                 </div> 
                 <div> 
-                    <label class="block text-xs font-bold text-gray-700">Sandi Resto</label> 
-                    <div class="relative mt-1"> 
-                        <input type="password" id="admin-password" placeholder="••••••••" class="w-full px-3 py-2 border rounded-xl text-sm outline-none focus:ring-2 focus:ring-sky-500 pr-10"> 
-                        <button type="button" onclick="toggleVisibility('admin-password', 'eye-pass')" class="absolute right-3 top-2.5 text-sm"><i id="eye-pass" class="fa-solid fa-eye text-gray-500"></i></button> 
-                    </div> 
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Sandi Resto (Password)</label> 
+                    <div class="relative">
+                        <input type="password" id="admin-password" value="admin123" class="w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-sky-500 outline-none pr-10"> 
+                        <button type="button" onclick="toggleVisibility('admin-password', 'eye-icon-1')" class="absolute right-3 top-2.5 text-gray-500">
+                            <i id="eye-icon-1" class="fa-solid fa-eye"></i>
+                        </button>
+                    </div>
                 </div> 
                 <div> 
-                    <label class="block text-xs font-bold text-gray-700">PIN Rahasia (6 Digit)</label> 
-                    <div class="relative mt-1"> 
-                        <input type="password" id="admin-pin" placeholder="886886" maxlength="6" class="w-full px-3 py-2 border rounded-xl text-sm tracking-widest text-center font-bold outline-none focus:ring-2 focus:ring-sky-500 pr-10"> 
-                        <button type="button" onclick="toggleVisibility('admin-pin', 'eye-pin')" class="absolute right-3 top-2.5 text-sm"><i id="eye-pin" class="fa-solid fa-eye text-gray-500"></i></button> 
-                    </div> 
+                    <label class="block text-xs font-bold text-gray-700 mb-1">PIN Rahasia Resto</label> 
+                    <div class="relative">
+                        <input type="password" id="admin-pin" placeholder="Masukkan 6 digit PIN" class="w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-sky-500 outline-none pr-10"> 
+                        <button type="button" onclick="toggleVisibility('admin-pin', 'eye-icon-2')" class="absolute right-3 top-2.5 text-gray-500">
+                            <i id="eye-icon-2" class="fa-solid fa-eye"></i>
+                        </button>
+                    </div>
+                    <p class="text-[10px] text-gray-400 mt-1">Kontak Bantuan Admin: <span id="display-phone-label" class="font-semibold text-gray-600">081267166886</span></p>
                 </div> 
+                <button onclick="verifyAdminLogin()" class="w-full bg-sky-600 hover:bg-sky-700 text-white font-bold py-2.5 rounded-xl text-sm transition shadow-lg shadow-sky-600/30">
+                    Masuk Panel
+                </button> 
             </div> 
-            <button onclick="verifyAdminLogin()" class="w-full mt-5 bg-sky-600 hover:bg-sky-700 text-white font-bold py-2.5 rounded-xl transition shadow">Masuk ke Panel Resto</button> 
         </div> 
     </div> 
 
-    <!-- Wrapper Admin Panel --> 
-    <div class="min-h-screen flex flex-col"> 
-        <header class="bg-sky-900 text-white shadow-md"> 
-            <div class="container mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-3"> 
-                <div class="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4 w-full sm:w-auto"> 
-                    <h1 class="text-base sm:text-lg font-bold text-center sm:text-left"><i class="fa-solid fa-gauge-high mr-2"></i> Panel Resto - Mie Bangka Teladan</h1> 
-                    <div class="flex items-center bg-sky-800 px-3 py-1 rounded-xl border border-sky-700 text-xs font-bold"> 
-                        <span class="mr-2">Status Web:</span> 
-                        <select id="header-resto-status" onchange="changeRestoStatus(this.value)" class="bg-white text-sky-900 px-2 py-0.5 rounded font-bold outline-none"> 
-                            <option value="Buka">BUKA (Aktif)</option> 
-                            <option value="Tutup">TUTUP (Offline)</option> 
-                        </select> 
-                    </div> 
-                </div> 
-                <div class="flex items-center space-x-3"> 
-                    <button onclick="logoutAdmin()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition">Keluar</button> 
-                    <a href="index.html" target="_blank" class="bg-white text-sky-900 hover:bg-sky-50 px-3 py-1.5 rounded-lg text-xs font-bold transition shadow"><i class="fa-solid fa-globe mr-1"></i> Buka Web</a> 
-                </div> 
-            </div> 
-        </header>  
-        
-        <nav class="bg-sky-800 text-white text-sm shadow overflow-x-auto"> 
-            <div class="container mx-auto px-4 flex space-x-6 py-3 whitespace-nowrap"> 
-                <button onclick="switchTab('orders')" id="tab-btn-orders" class="font-bold border-b-2 border-white pb-1">Kelola Pesanan</button> 
-                <button onclick="switchTab('menus')" id="tab-btn-menus" class="text-sky-200 hover:text-white pb-1">Kelola Menu</button> 
-                <button onclick="switchTab('banners')" id="tab-btn-banners" class="text-sky-200 hover:text-white pb-1">Pengaturan Banner</button> 
-                <button onclick="switchTab('banks')" id="tab-btn-banks" class="text-sky-200 hover:text-white pb-1">Bank & E-Wallet</button> 
-                <button onclick="switchTab('settings')" id="tab-btn-settings" class="text-sky-200 hover:text-white pb-1">Pengaturan Resto</button> 
-            </div> 
-        </nav> 
-        
-        <main class="container mx-auto px-4 py-8 flex-grow max-w-7xl"> 
-            <!-- TAB 1: KELOLA PESANAN --> 
-            <div id="section-orders" class="space-y-6"> 
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3"> 
-                    <h3 class="text-lg sm:text-xl font-bold text-gray-800">Daftar Pesanan Masuk & Pantauan Waktu</h3> 
-                    <button onclick="clearOrders()" class="bg-red-100 text-red-700 hover:bg-red-200 px-3 py-1.5 rounded-lg text-xs font-bold transition">Hapus Semua Riwayat</button> 
-                </div> 
-
-                <!-- Filter Status Pesanan -->
-                <div class="bg-white p-4 rounded-xl shadow space-y-3">
-                    <div class="flex flex-wrap items-center gap-2 text-xs sm:text-sm">
-                        <span class="font-bold text-gray-700">Filter Status:</span>
-                        <button onclick="filterOrders('Semua')" class="bg-sky-600 text-white px-3 py-1.5 rounded-full font-bold shadow-sm">Semua Pesanan</button>
-                        <button onclick="filterOrders('Menunggu')" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-full font-bold">Menunggu Verifikasi Resto</button>
-                        <button onclick="filterOrders('Diproses')" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-full font-bold">Diproses</button>
-                        <button onclick="filterOrders('Selesai')" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-full font-bold">Selesai</button>
+    <!-- Main Admin Wrapper -->
+    <div class="min-h-screen flex flex-col">
+        <!-- Header -->
+        <header class="bg-sky-700 text-white shadow-md sticky top-0 z-40">
+            <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col sm:flex-row justify-between items-center gap-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-white text-sky-700 rounded-xl flex items-center justify-center font-bold text-lg shadow">
+                        <i class="fa-solid fa-bowl-food"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-base leading-tight">Panel Resto - Mie Bangka Teladan</h1>
+                        <p class="text-xs text-sky-200">Jalan Batu 8 Atas, Kota Tanjungpinang</p>
                     </div>
                 </div>
 
-                <div id="orders-list-container"></div> 
-            </div> 
+                <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
+                    <div class="flex items-center gap-1.5 bg-sky-800 px-3 py-1.5 rounded-xl text-xs">
+                        <span class="text-sky-200 font-medium">Status:</span>
+                        <select id="header-resto-status" onchange="changeRestoStatus(this.value)" class="bg-sky-900 text-white font-bold px-2 py-0.5 rounded outline-none border border-sky-600 cursor-pointer">
+                            <option value="Buka">Buka</option>
+                            <option value="Tutup">Tutup</option>
+                        </select>
+                    </div>
+                    <a href="index.html" target="_blank" class="bg-sky-600 hover:bg-sky-800 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1">
+                        <i class="fa-solid fa-globe"></i> Website
+                    </a>
+                    <button onclick="logoutAdmin()" class="bg-red-500 hover:bg-red-600 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1">
+                        <i class="fa-solid fa-right-from-bracket"></i> Keluar
+                    </button>
+                </div>
+            </div>
 
-            <!-- TAB 2: KELOLA MENU --> 
-            <div id="section-menus" class="space-y-6 hidden"> 
-                <h3 class="text-lg sm:text-xl font-bold text-gray-800">Kelola Menu Makanan & Minuman</h3> 
-                <div class="bg-white p-6 rounded-xl shadow"> 
-                    <h4 class="font-bold text-sm mb-4 text-sky-900">Tambah Menu Baru</h4> 
-                    <form id="form-add-menu" onsubmit="addMenu(event)" class="space-y-4"> 
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4"> 
-                            <div> 
-                                <label class="block text-xs font-bold text-gray-700 mb-1">Nama Menu</label> 
-                                <input type="text" id="menu-name" required placeholder="cth: Mie Bangka Spesial" class="w-full px-3 py-2 border rounded-xl text-sm outline-none focus:ring-2 focus:ring-sky-500"> 
-                            </div> 
-                            <div> 
-                                <label class="block text-xs font-bold text-gray-700 mb-1">Harga (Rp)</label> 
-                                <input type="number" id="menu-price" required placeholder="cth: 25000" class="w-full px-3 py-2 border rounded-xl text-sm outline-none focus:ring-2 focus:ring-sky-500"> 
-                            </div> 
-                        </div> 
-                        <div> 
-                            <label class="block text-xs font-bold text-gray-700 mb-1">Deskripsi Menu</label> 
-                            <textarea id="menu-desc" rows="2" placeholder="cth: Mie kenyal dengan topping daging ikan/ayam lengkap..." class="w-full px-3 py-2 border rounded-xl text-sm outline-none focus:ring-2 focus:ring-sky-500"></textarea> 
-                        </div> 
-                        <button type="submit" class="bg-sky-600 hover:bg-sky-700 text-white font-bold px-4 py-2 rounded-xl text-sm transition">Simpan Menu Baru</button> 
-                    </form> 
-                </div> 
-                <div> 
-                    <h4 class="font-bold text-sm mb-4 text-gray-800">Daftar Menu Saat Ini</h4> 
-                    <div id="menu-list-container"></div> 
-                </div> 
-            </div> 
+            <!-- Navigation Tabs -->
+            <div class="bg-sky-800 border-t border-sky-600">
+                <div class="max-w-7xl mx-auto px-4 flex overflow-x-auto space-x-6 text-sm py-2.5">
+                    <button id="tab-btn-orders" onclick="switchTab('orders')" class="font-bold border-b-2 border-white pb-1 whitespace-nowrap"><i class="fa-solid fa-receipt mr-1"></i> Pesanan Masuk</button>
+                    <button id="tab-btn-menus" onclick="switchTab('menus')" class="text-sky-200 hover:text-white pb-1 whitespace-nowrap"><i class="fa-solid fa-utensils mr-1"></i> Kelola Menu</button>
+                    <button id="tab-btn-banners" onclick="switchTab('banners')" class="text-sky-200 hover:text-white pb-1 whitespace-nowrap"><i class="fa-solid fa-image mr-1"></i> Banner & Promo</button>
+                    <button id="tab-btn-banks" onclick="switchTab('banks')" class="text-sky-200 hover:text-white pb-1 whitespace-nowrap"><i class="fa-solid fa-wallet mr-1"></i> Rekening / Pembayaran</button>
+                    <button id="tab-btn-settings" onclick="switchTab('settings')" class="text-sky-200 hover:text-white pb-1 whitespace-nowrap"><i class="fa-solid fa-gears mr-1"></i> Pengaturan Resto</button>
+                </div>
+            </div>
+        </header>
 
-            <!-- TAB 3: PENGATURAN BANNER --> 
-            <div id="section-banners" class="space-y-6 hidden"> 
-                <h3 class="text-lg sm:text-xl font-bold text-gray-800">Pengaturan Banner & Promosi</h3> 
-                <div class="bg-white p-6 rounded-xl shadow"> 
-                    <p class="text-sm text-gray-600">Gunakan bagian ini untuk memperbarui informasi promo atau banner utama halaman muka web.</p> 
-                </div> 
-            </div> 
+        <!-- Content Body -->
+        <main class="max-w-7xl mx-auto px-4 py-6 flex-grow w-full space-y-6">
+            
+            <!-- SECTION 1: ORDERS -->
+            <section id="section-orders" class="space-y-4">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white p-4 rounded-2xl shadow-sm">
+                    <div class="flex flex-wrap gap-2 text-xs">
+                        <button onclick="filterOrders('Semua')" class="px-3 py-1.5 rounded-lg font-bold bg-sky-100 text-sky-800 hover:bg-sky-200 transition">Semua</button>
+                        <button onclick="filterOrders('Menunggu')" class="px-3 py-1.5 rounded-lg font-bold bg-yellow-100 text-yellow-800 hover:bg-yellow-200 transition">Menunggu</button>
+                        <button onclick="filterOrders('Diproses')" class="px-3 py-1.5 rounded-lg font-bold bg-blue-100 text-blue-800 hover:bg-blue-200 transition">Diproses</button>
+                        <button onclick="filterOrders('Selesai')" class="px-3 py-1.5 rounded-lg font-bold bg-green-100 text-green-800 hover:bg-green-200 transition">Selesai</button>
+                    </div>
+                    <div class="flex gap-2 w-full sm:w-auto">
+                        <button onclick="clearOrders()" class="bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded-lg font-bold text-xs border border-red-200 transition w-full sm:w-auto">
+                            <i class="fa-solid fa-trash mr-1"></i> Bersihkan Riwayat
+                        </button>
+                    </div>
+                </div>
 
-            <!-- TAB 4: BANK & E-WALLET --> 
-            <div id="section-banks" class="space-y-6 hidden"> 
-                <h3 class="text-lg sm:text-xl font-bold text-gray-800">Rekening Bank & E-Wallet Pembayaran</h3> 
-                <div class="bg-white p-6 rounded-xl shadow space-y-4"> 
-                    <form id="form-add-bank" onsubmit="addBank(event)" class="space-y-3"> 
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3"> 
-                            <input type="text" id="bank-name" placeholder="Nama Bank/E-Wallet (cth: BCA / DANA)" required class="px-3 py-2 border rounded-xl text-sm outline-none"> 
-                            <input type="text" id="bank-account" placeholder="Nomor Rekening / No HP" required class="px-3 py-2 border rounded-xl text-sm outline-none"> 
-                            <input type="text" id="bank-holder" placeholder="Atas Nama" required class="px-3 py-2 border rounded-xl text-sm outline-none"> 
-                        </div> 
-                        <button type="submit" class="bg-sky-600 text-white px-4 py-2 rounded-xl text-xs font-bold">Tambah Metode</button> 
-                    </form> 
-                    <div id="banks-list" class="space-y-2 mt-4"></div> 
-                </div> 
-            </div> 
+                <div id="orders-list-container">
+                    <!-- Orders will be rendered here dynamically -->
+                </div>
+            </section>
 
-            <!-- TAB 5: PENGATURAN RESTO --> 
-            <div id="section-settings" class="space-y-6 hidden"> 
-                <h3 class="text-lg sm:text-xl font-bold text-gray-800">Pengaturan Informasi Resto</h3> 
-                <div class="bg-white p-6 rounded-xl shadow"> 
-                    <form onsubmit="saveSettings(event)" class="space-y-4 max-w-lg"> 
-                        <div> 
-                            <label class="block text-xs font-bold text-gray-700 mb-1">Nama Resto</label> 
-                            <input type="text" id="setting-resto-name" class="w-full px-3 py-2 border rounded-xl text-sm outline-none"> 
-                        </div> 
-                        <div> 
-                            <label class="block text-xs font-bold text-gray-700 mb-1">Nomor WhatsApp Admin</label> 
-                            <input type="text" id="setting-resto-phone" class="w-full px-3 py-2 border rounded-xl text-sm outline-none"> 
-                        </div> 
-                        <div> 
-                            <label class="block text-xs font-bold text-gray-700 mb-1">Alamat Resto</label> 
-                            <textarea id="setting-resto-address" rows="2" class="w-full px-3 py-2 border rounded-xl text-sm outline-none"></textarea> 
-                        </div> 
-                        <button type="submit" class="bg-sky-600 hover:bg-sky-700 text-white px-4 py-2 rounded-xl text-sm font-bold transition">Simpan Perubahan</button> 
-                    </form> 
-                </div> 
-            </div> 
-        </main> 
-    </div> 
-</body> 
+            <!-- SECTION 2: MENUS -->
+            <section id="section-menus" class="hidden space-y-6">
+                <div class="bg-white p-6 rounded-2xl shadow-sm">
+                    <h3 class="font-bold text-lg text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-plus-circle text-sky-600"></i> Tambah Menu Baru
+                    </h3>
+                    <form id="form-add-menu" onsubmit="addMenu(event)" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Nama Menu</label>
+                            <input type="text" id="menu-name" required placeholder="Contoh: Mie Bangka Spesial B2" class="w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-sky-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Harga (Rp)</label>
+                            <input type="number" id="menu-price" required placeholder="Contoh: 25000" class="w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-sky-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Deskripsi / Topping</label>
+                            <input type="text" id="menu-desc" placeholder="Contoh: Topping B2 cincang, pangsit rebus" class="w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-sky-500 outline-none">
+                        </div>
+                        <div class="sm:col-span-3 flex justify-end">
+                            <button type="submit" class="bg-sky-600 hover:bg-sky-700 text-white font-bold px-5 py-2 rounded-xl text-sm transition shadow-md shadow-sky-600/30">
+                                Simpan Menu
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl shadow-sm space-y-4">
+                    <h3 class="font-bold text-lg text-gray-800">Daftar Menu Resto</h3>
+                    <div id="menu-list-container">
+                        <!-- Menus rendered here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 3: BANNERS -->
+            <section id="section-banners" class="hidden space-y-6">
+                <div class="bg-white p-6 rounded-2xl shadow-sm space-y-4">
+                    <h3 class="font-bold text-lg text-gray-800"><i class="fa-solid fa-image text-sky-600 mr-2"></i> Pengaturan Banner & Promo Website</h3>
+                    <p class="text-xs text-gray-500">Kelola gambar utama atau pengumuman promosi yang tampil di halaman depan pelanggan.</p>
+                    <div class="p-4 bg-sky-50 rounded-xl border border-sky-100 text-xs text-sky-800">
+                        Fitur banner aktif dan terhubung otomatis dengan tata letak utama restoran Anda di masakmasak.my.id.
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 4: BANKS / PAYMENT -->
+            <section id="section-banks" class="hidden space-y-6">
+                <div class="bg-white p-6 rounded-2xl shadow-sm">
+                    <h3 class="font-bold text-lg text-gray-800 mb-4"><i class="fa-solid fa-wallet text-sky-600 mr-2"></i> Tambah Metode Pembayaran / Rekening</h3>
+                    <form id="form-add-bank" onsubmit="addBank(event)" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Nama Bank / E-Wallet</label>
+                            <input type="text" id="bank-name" required placeholder="BCA / DANA / OVO" class="w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-sky-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Nomor Rekening</label>
+                            <input type="text" id="bank-account" required placeholder="Nomor rekening / HP" class="w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-sky-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Atas Nama (a.n)</label>
+                            <input type="text" id="bank-holder" required placeholder="Nama pemilik rekening" class="w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-sky-500 outline-none">
+                        </div>
+                        <div class="sm:col-span-3 flex justify-end">
+                            <button type="submit" class="bg-sky-600 hover:bg-sky-700 text-white font-bold px-5 py-2 rounded-xl text-sm transition">
+                                Tambah Rekening
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl shadow-sm space-y-3">
+                    <h3 class="font-bold text-base text-gray-800">Daftar Rekening Tersimpan</h3>
+                    <div id="banks-list" class="space-y-2">
+                        <!-- Banks rendered here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 5: SETTINGS -->
+            <section id="section-settings" class="hidden space-y-6">
+                <div class="bg-white p-6 rounded-2xl shadow-sm">
+                    <h3 class="font-bold text-lg text-gray-800 mb-4"><i class="fa-solid fa-gears text-sky-600 mr-2"></i> Pengaturan Informasi Resto</h3>
+                    <form onsubmit="saveSettings(event)" class="space-y-4 max-w-xl">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Nama Resto</label>
+                            <input type="text" id="setting-resto-name" class="w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-sky-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Nomor WhatsApp Admin</label>
+                            <input type="text" id="setting-resto-phone" class="w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-sky-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Alamat Lengkap</label>
+                            <textarea id="setting-resto-address" rows="2" class="w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-sky-500 outline-none"></textarea>
+                        </div>
+                        <button type="submit" class="bg-sky-600 hover:bg-sky-700 text-white font-bold px-6 py-2.5 rounded-xl text-sm transition shadow-md shadow-sky-600/30">
+                            Simpan Pengaturan
+                        </button>
+                    </form>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- Footer -->
+        <footer class="bg-white border-t py-4 text-center text-xs text-gray-500 mt-auto">
+            <p>&copy; 2026 Mie Bangka Teladan - Kota Tanjungpinang. All rights reserved.</p>
+        </footer>
+    </div>
+
+</body>
 </html>
