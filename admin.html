@@ -7,14 +7,7 @@
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Supabase JS SDK -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        // --- KONFIGURASI SUPABASE ---
-        const SUPABASE_URL = 'GANTI_DENGAN_SUPABASE_URL_ANDA';
-        const SUPABASE_ANON_KEY = 'GANTI_DENGAN_SUPABASE_ANON_KEY_ANDA';
-        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
         function checkAdminAuth() {
             if (sessionStorage.getItem('mb_admin_logged') !== 'true') {
                 document.getElementById('login-modal').classList.remove('hidden');
@@ -43,345 +36,11 @@
             initAdminPanel();
         }
 
-        function logoutAdmin() {
-            sessionStorage.removeItem('mb_admin_logged');
-            location.reload();
-        }
-
         function toggleVisibility(fieldId, iconId) {
             const field = document.getElementById(fieldId);
             const icon = document.getElementById(iconId);
             if (field.type === 'password') { field.type = 'text'; icon.className = 'fa-solid fa-eye-slash text-gray-500'; }
             else { field.type = 'password'; icon.className = 'fa-solid fa-eye text-gray-500'; }
-        }
-
-        function switchTab(tabName) {
-            const tabs = ['orders', 'menus', 'banners', 'banks', 'settings'];
-            tabs.forEach(t => {
-                document.getElementById('section-' + t).classList.add('hidden');
-                document.getElementById('tab-btn-' + t).className = 'text-sky-200 hover:text-white pb-1';
-            });
-            document.getElementById('section-' + tabName).classList.remove('hidden');
-            document.getElementById('tab-btn-' + tabName).className = 'font-bold border-b-2 border-white pb-1';
-        }
-
-        function initAdminPanel() {
-            let status = localStorage.getItem('mb_resto_status') || 'Buka';
-            document.getElementById('header-resto-status').value = status;
-            document.getElementById('setting-resto-status').value = status;
-
-            document.getElementById('setting-admin-user').value = localStorage.getItem('mb_admin_user') || 'miebangka';
-            document.getElementById('setting-admin-pass').value = localStorage.getItem('mb_admin_pass') || 'admin123';
-            document.getElementById('setting-admin-pin').value = localStorage.getItem('mb_admin_pin') || '886886';
-
-            loadOrders();
-            loadMenus();
-            loadBanners();
-            loadBanks();
-        }
-
-        function changeRestoStatus(val) {
-            localStorage.setItem('mb_resto_status', val);
-            document.getElementById('header-resto-status').value = val;
-            document.getElementById('setting-resto-status').value = val;
-            alert('Status resto diubah menjadi: ' + val);
-        }
-
-        // --- ORDERS MANAGEMENT (SUPABASE) ---
-        let currentOrderFilter = 'Semua';
-        function setOrderFilter(filter) {
-            currentOrderFilter = filter;
-            ['Semua', 'Menunggu', 'Diproses', 'Selesai'].forEach(f => {
-                let btn = document.getElementById('filter-btn-' + f);
-                if (btn) {
-                    if (f === filter || (filter.startsWith('Menunggu') && f === 'Menunggu')) {
-                        btn.className = 'px-3 py-1.5 rounded-xl text-xs font-bold bg-sky-600 text-white shadow';
-                    } else {
-                        btn.className = 'px-3 py-1.5 rounded-xl text-xs font-bold bg-white text-sky-700 border hover:bg-sky-50';
-                    }
-                }
-            });
-            loadOrders();
-        }
-
-        async function loadOrders() {
-            let tbody = document.getElementById('orders-table-body');
-            tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-gray-400 text-xs">Memuat data pesanan...</td></tr>`;
-
-            let { data: orders, error } = await _supabase.from('Pesanan').select('*');
-            if (error) {
-                console.error('Gagal memuat pesanan:', error);
-                tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-red-500 text-xs">Gagal memuat data dari database.</td></tr>`;
-                return;
-            }
-
-            tbody.innerHTML = '';
-            if (!orders || orders.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-gray-400 text-xs">Belum ada pesanan</td></tr>`;
-                return;
-            }
-
-            let filtered = orders.filter(o => {
-                if (currentOrderFilter === 'Semua') return true;
-                return o.status === currentOrderFilter;
-            });
-
-            if (filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-gray-400 text-xs">Belum ada pesanan dengan filter ini</td></tr>`;
-                return;
-            }
-
-            filtered.reverse().forEach(o => {
-                let tr = document.createElement('tr');
-                tr.className = 'hover:bg-gray-50';
-                
-                let badgeColor = 'bg-yellow-100 text-yellow-800';
-                if (o.status === 'Diproses') badgeColor = 'bg-blue-100 text-blue-800';
-                else if (o.status === 'Selesai') badgeColor = 'bg-green-100 text-green-800';
-
-                tr.innerHTML = `
-                    <td class="p-4 align-top">
-                        <div class="font-bold text-sky-900">#${o.id}</div>
-                        <div class="text-xs text-gray-500">${o.time || '-'}</div>
-                    </td>
-                    <td class="p-4 align-top">
-                        <div class="font-bold">${o.name || '-'}</div>
-                        <div class="text-xs text-gray-600">${o.phone || '-'}</div>
-                        <div class="text-xs text-gray-500 mt-1 max-w-xs">${o.address || '-'}</div>
-                    </td>
-                    <td class="p-4 align-top text-xs text-gray-700">
-                        <div>${o.itemsSummary || '-'}</div>
-                        ${o.notes ? `<div class="italic text-gray-500 mt-1">Catatan: ${o.notes}</div>` : ''}
-                    </td>
-                    <td class="p-4 align-top">
-                        <div class="font-bold text-sky-900">Rp ${Number(o.total || 0).toLocaleString('id-ID')}</div>
-                        <div class="text-xs text-gray-500 uppercase">${o.paymentMethod || 'Tunai'}</div>
-                    </td>
-                    <td class="p-4 align-top">
-                        <span class="px-2.5 py-1 rounded-full text-xs font-bold ${badgeColor}">${o.status}</span>
-                    </td>
-                    <td class="p-4 align-top text-center space-y-1">
-                        <button onclick="updateOrderStatus('${o.id}', 'Diproses')" class="w-full bg-sky-600 hover:bg-sky-700 text-white px-3 py-1 rounded text-xs font-bold transition">Proses</button>
-                        <button onclick="updateOrderStatus('${o.id}', 'Selesai')" class="w-full bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs font-bold transition">Selesai</button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        async function updateOrderStatus(id, newStatus) {
-            let { error } = await _supabase.from('Pesanan').update({ status: newStatus }).eq('id', id);
-            if (error) {
-                alert('Gagal memperbarui status pesanan: ' + error.message);
-                return;
-            }
-            loadOrders();
-        }
-
-        async function clearOrders() {
-            if (confirm('Yakin ingin menghapus semua riwayat pesanan di database?')) {
-                let { error } = await _supabase.from('Pesanan').delete().neq('id', 0);
-                if (error) {
-                    alert('Gagal menghapus pesanan: ' + error.message);
-                    return;
-                }
-                loadOrders();
-            }
-        }
-
-        // --- MENU MANAGEMENT ---
-        function loadMenus() {
-            let menus = JSON.parse(localStorage.getItem('mb_menus') || '[]');
-            let tbody = document.getElementById('admin-menu-list');
-            tbody.innerHTML = '';
-            if (menus.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-gray-400 text-xs">Belum ada menu</td></tr>`;
-                return;
-            }
-            menus.forEach((m, idx) => {
-                let tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td class="p-4"><img src="${m.image}" class="w-12 h-12 object-cover rounded-xl" onerror="this.src='https://via.placeholder.com/150'"></td>
-                    <td class="p-4">
-                        <div class="font-bold text-sky-900">${m.name}</div>
-                        <div class="text-xs text-gray-500">${m.category} • Rp ${Number(m.price).toLocaleString('id-ID')}</div>
-                    </td>
-                    <td class="p-4 font-bold text-sky-900">Rp ${Number(m.price).toLocaleString('id-ID')}</td>
-                    <td class="p-4 text-center space-x-2">
-                        <button onclick="editMenu(${idx})" class="text-sky-600 hover:text-sky-800 text-xs font-bold"><i class="fa-solid fa-pen"></i></button>
-                        <button onclick="deleteMenu(${idx})" class="text-red-600 hover:text-red-800 text-xs font-bold"><i class="fa-solid fa-trash"></i></button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        function saveMenu(e) {
-            e.preventDefault();
-            let id = document.getElementById('menu-id').value;
-            let name = document.getElementById('menu-name').value.trim();
-            let category = document.getElementById('menu-category').value;
-            let price = document.getElementById('menu-price').value;
-            let image = document.getElementById('menu-image').value.trim();
-            let desc = document.getElementById('menu-desc').value.trim();
-
-            let menus = JSON.parse(localStorage.getItem('mb_menus') || '[]');
-            if (id !== "") {
-                menus[id] = { name, category, price, image, desc };
-            } else {
-                menus.push({ name, category, price, image, desc });
-            }
-            localStorage.setItem('mb_menus', JSON.stringify(menus));
-            resetMenuForm();
-            loadMenus();
-            alert('Menu berhasil disimpan.');
-        }
-
-        function editMenu(idx) {
-            let menus = JSON.parse(localStorage.getItem('mb_menus') || '[]');
-            let m = menus[idx];
-            document.getElementById('menu-id').value = idx;
-            document.getElementById('menu-name').value = m.name;
-            document.getElementById('menu-category').value = m.category;
-            document.getElementById('menu-price').value = m.price;
-            document.getElementById('menu-image').value = m.image;
-            document.getElementById('menu-desc').value = m.desc;
-            document.getElementById('menu-form-title').innerText = 'Edit Menu';
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        function deleteMenu(idx) {
-            if (confirm('Hapus menu ini?')) {
-                let menus = JSON.parse(localStorage.getItem('mb_menus') || '[]');
-                menus.splice(idx, 1);
-                localStorage.setItem('mb_menus', JSON.stringify(menus));
-                loadMenus();
-            }
-        }
-
-        function resetMenuForm() {
-            document.getElementById('menu-form').reset();
-            document.getElementById('menu-id').value = '';
-            document.getElementById('menu-form-title').innerText = 'Tambah Menu Baru';
-        }
-
-        // --- BANNER MANAGEMENT ---
-        function loadBanners() {
-            let banners = JSON.parse(localStorage.getItem('mb_banners') || '[]');
-            let container = document.getElementById('banner-list-admin');
-            container.innerHTML = '';
-            if (banners.length === 0) {
-                container.innerHTML = `<p class="text-xs text-gray-400">Belum ada banner aktif</p>`;
-                return;
-            }
-            banners.forEach((b, idx) => {
-                let div = document.createElement('div');
-                div.className = 'relative border rounded-2xl overflow-hidden shadow-sm bg-gray-50';
-                div.innerHTML = `
-                    <img src="${b}" class="w-full h-32 object-cover">
-                    <div class="p-3 flex justify-between items-center bg-white">
-                        <span class="text-xs font-bold text-gray-600">Banner #${idx+1}</span>
-                        <button onclick="deleteBanner(${idx})" class="text-red-600 hover:text-red-800 text-xs font-bold"><i class="fa-solid fa-trash mr-1"></i> Hapus</button>
-                    </div>
-                `;
-                container.appendChild(div);
-            });
-        }
-
-        function uploadBannerFile() {
-            let fileInput = document.getElementById('banner-file-input');
-            if (fileInput.files && fileInput.files[0]) {
-                let reader = new FileReader();
-                reader.onload = function(e) {
-                    let banners = JSON.parse(localStorage.getItem('mb_banners') || '[]');
-                    banners.push(e.target.result);
-                    localStorage.setItem('mb_banners', JSON.stringify(banners));
-                    fileInput.value = '';
-                    loadBanners();
-                    alert('Banner berhasil diupload.');
-                }
-                reader.readAsDataURL(fileInput.files[0]);
-            } else {
-                alert('Pilih file gambar terlebih dahulu.');
-            }
-        }
-
-        function deleteBanner(idx) {
-            if (confirm('Hapus banner ini?')) {
-                let banners = JSON.parse(localStorage.getItem('mb_banners') || '[]');
-                banners.splice(idx, 1);
-                localStorage.setItem('mb_banners', JSON.stringify(banners));
-                loadBanners();
-            }
-        }
-
-        // --- BANK MANAGEMENT ---
-        function loadBanks() {
-            let banks = JSON.parse(localStorage.getItem('mb_banks') || '[]');
-            let tbody = document.getElementById('admin-bank-list');
-            tbody.innerHTML = '';
-            if (banks.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-gray-400 text-xs">Belum ada akun bank/e-wallet</td></tr>`;
-                return;
-            }
-            banks.forEach((b, idx) => {
-                let tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td class="p-4 font-bold text-sky-900">${b.name}</td>
-                    <td class="p-4 font-mono">${b.acc}</td>
-                    <td class="p-4">${b.holder}</td>
-                    <td class="p-4 text-center">
-                        <button onclick="deleteBank(${idx})" class="text-red-600 hover:text-red-800 text-xs font-bold"><i class="fa-solid fa-trash"></i></button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        function saveBank(e) {
-            e.preventDefault();
-            let name = document.getElementById('bank-name').value.trim();
-            let acc = document.getElementById('bank-acc').value.trim();
-            let holder = document.getElementById('bank-holder').value.trim();
-
-            let banks = JSON.parse(localStorage.getItem('mb_banks') || '[]');
-            banks.push({ name, acc, holder });
-            localStorage.setItem('mb_banks', JSON.stringify(banks));
-            document.getElementById('bank-name').value = '';
-            document.getElementById('bank-acc').value = '';
-            document.getElementById('bank-holder').value = '';
-            loadBanks();
-            alert('Akun bank/e-wallet berhasil ditambahkan.');
-        }
-
-        function deleteBank(idx) {
-            if (confirm('Hapus akun bank ini?')) {
-                let banks = JSON.parse(localStorage.getItem('mb_banks') || '[]');
-                banks.splice(idx, 1);
-                localStorage.setItem('mb_banks', JSON.stringify(banks));
-                loadBanks();
-            }
-        }
-
-        // --- SETTINGS ---
-        function saveAdminSettings() {
-            let status = document.getElementById('setting-resto-status').value;
-            let user = document.getElementById('setting-admin-user').value.trim();
-            let pass = document.getElementById('setting-admin-pass').value.trim();
-            let pin = document.getElementById('setting-admin-pin').value.trim();
-
-            if (!user || !pass || !pin || pin.length !== 6) {
-                alert('Mohon isi Nama Resto, Sandi, dan PIN 6 digit dengan benar.');
-                return;
-            }
-
-            localStorage.setItem('mb_resto_status', status);
-            localStorage.setItem('mb_admin_user', user);
-            localStorage.setItem('mb_admin_pass', pass);
-            localStorage.setItem('mb_admin_pin', pin);
-
-            document.getElementById('header-resto-status').value = status;
-            alert('Pengaturan resto berhasil disimpan.');
         }
     </script>
 </head>
@@ -616,16 +275,471 @@
                     <div>
                         <label class="block font-medium text-gray-700">Ganti PIN Rahasia (6 Digit)</label>
                         <div class="relative mt-1">
-                            <input type="password" id="setting-admin-pin" maxlength="6" class="w-full px-3 py-2 border rounded-xl text-sm tracking-widest text-center font-bold outline-none pr-10">
+                            <input type="password" id="setting-admin-pin" maxlength="6" class="w-full px-3 py-2 border rounded-xl text-sm outline-none pr-10">
                             <button type="button" onclick="toggleVisibility('setting-admin-pin', 'eye-set-pin')" class="absolute right-3 top-2.5 text-sm"><i id="eye-set-pin" class="fa-solid fa-eye text-gray-500"></i></button>
                         </div>
                     </div>
-                    <button onclick="saveAdminSettings()" class="w-full bg-sky-600 hover:bg-sky-700 text-white font-bold py-2.5 rounded-xl transition shadow">Simpan Pengaturan Resto</button>
+                    <div>
+                        <label class="block font-medium text-gray-700">Ganti Nomor HP Pemilik</label>
+                        <input type="text" id="setting-admin-phone" class="w-full px-3 py-2 border rounded-xl mt-1">
+                    </div>
+                    <button onclick="saveAdminCredentials()" class="bg-white text-sky-600 border border-sky-600 hover:bg-sky-50 font-bold px-4 py-2 rounded-xl shadow">Simpan Pengaturan Resto</button>
                 </div>
             </div>
 
         </main>
     </div>
 
+    <!-- Tombol Panah Scroll Otomatis (Muncul/Hilang Sendiri) -->
+    <div id="scroll-arrows" class="fixed bottom-6 right-6 z-50 flex flex-col space-y-2 transition-opacity duration-300 opacity-0 pointer-events-none">
+        <button onclick="scrollToTop()" class="bg-sky-600 hover:bg-sky-700 text-white w-11 h-11 rounded-full shadow-xl flex items-center justify-center transition transform hover:scale-110" title="Gulir ke Atas">
+            <i class="fa-solid fa-arrow-up text-base"></i>
+        </button>
+        <button onclick="scrollToBottom()" class="bg-sky-600 hover:bg-sky-700 text-white w-11 h-11 rounded-full shadow-xl flex items-center justify-center transition transform hover:scale-110" title="Gulir ke Bawah">
+            <i class="fa-solid fa-arrow-down text-base"></i>
+        </button>
+    </div>
+
+    <!-- Modal Edit Pesanan -->
+    <div id="edit-order-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex justify-center items-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+            <h3 class="text-xl font-bold mb-4 text-sky-900"><i class="fa-solid fa-pen-to-square mr-2"></i> Edit Detail Pesanan</h3>
+            <input type="hidden" id="edit-order-index">
+            <div class="space-y-3 text-sm mb-4">
+                <div>
+                    <label class="block font-medium text-gray-700">Nama Pelanggan</label>
+                    <input type="text" id="edit-buyer-name" class="w-full px-3 py-2 border rounded-xl">
+                </div>
+                <div>
+                    <label class="block font-medium text-gray-700">Nomor Meja / Alamat</label>
+                    <input type="text" id="edit-buyer-address" class="w-full px-3 py-2 border rounded-xl">
+                </div>
+                <div>
+                    <label class="block font-medium text-gray-700">Total Harga (Rp)</label>
+                    <input type="number" id="edit-order-total" class="w-full px-3 py-2 border rounded-xl">
+                </div>
+                <div>
+                    <label class="block font-medium text-gray-700">Status Pesanan</label>
+                    <select id="edit-order-status" class="w-full px-3 py-2 border rounded-xl">
+                        <option value="Menunggu Verifikasi Resto">Menunggu Verifikasi Resto</option>
+                        <option value="Diproses">Diproses</option>
+                        <option value="Selesai">Selesai</option>
+                    </select>
+                </div>
+            </div>
+            <div class="flex space-x-2">
+                <button onclick="saveEditedOrder()" class="flex-1 bg-sky-600 text-white font-bold py-2 rounded-xl shadow">Simpan Perubahan</button>
+                <button onclick="closeEditModal()" class="bg-gray-200 px-4 py-2 rounded-xl font-bold">Batal</button>
+            </div>
+        </div>
+    </div>
+
+    <audio id="admin-alert-sound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
+
+    <script>
+        let scrollTimeout;
+        window.addEventListener('scroll', function() {
+            const scrollArrows = document.getElementById('scroll-arrows');
+            if (!scrollArrows) return;
+            scrollArrows.classList.remove('opacity-0', 'pointer-events-none');
+            scrollArrows.classList.add('opacity-100', 'pointer-events-auto');
+            clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(function() {
+                scrollArrows.classList.remove('opacity-100', 'pointer-events-auto');
+                scrollArrows.classList.add('opacity-0', 'pointer-events-none');
+            }, 1500);
+        });
+
+        function scrollToTop() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
+        function scrollToBottom() { window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' }); }
+
+        let currentOrderFilter = 'Semua';
+
+        function checkAdminAuth() {
+            if (sessionStorage.getItem('mb_admin_logged') !== 'true') {
+                document.getElementById('login-modal').classList.remove('hidden');
+                document.getElementById('display-phone-label').innerText = localStorage.getItem('mb_admin_phone') || "081267166886";
+            } else {
+                document.getElementById('login-modal').classList.add('hidden');
+                initAdminPanel();
+            }
+        }
+
+        function verifyAdminLogin() {
+            let usernameInput = document.getElementById('admin-username').value.trim();
+            let passwordInput = document.getElementById('admin-password').value.trim();
+            let pinInput = document.getElementById('admin-pin').value.trim();
+
+            let correctUsername = localStorage.getItem('mb_admin_user') || "miebangka";
+            let correctPassword = localStorage.getItem('mb_admin_pass') || "admin123";
+            let correctPin = localStorage.getItem('mb_admin_pin') || "886886";
+
+            if (usernameInput !== correctUsername || passwordInput !== correctPassword) { alert('Nama Resto atau Sandi salah.'); return; }
+            if (pinInput !== correctPin) { alert('PIN Rahasia Resto salah.'); return; }
+
+            sessionStorage.setItem('mb_admin_logged', 'true');
+            alert('Masuk Panel Resto Berhasil.');
+            document.getElementById('login-modal').classList.add('hidden');
+            initAdminPanel();
+        }
+
+        function toggleVisibility(fieldId, iconId) {
+            const field = document.getElementById(fieldId);
+            const icon = document.getElementById(iconId);
+            if (field.type === 'password') { field.type = 'text'; icon.className = 'fa-solid fa-eye-slash text-gray-500'; }
+            else { field.type = 'password'; icon.className = 'fa-solid fa-eye text-gray-500'; }
+        }
+
+        function initAdminPanel() {
+            loadAdminOrders();
+            loadAdminMenus();
+            loadAdminBanners();
+            loadAdminBanks();
+
+            const currentRestoStatus = localStorage.getItem('mb_resto_status') || 'Buka';
+            document.getElementById('header-resto-status').value = currentRestoStatus;
+            document.getElementById('setting-resto-status').value = currentRestoStatus;
+
+            document.getElementById('setting-admin-user').value = localStorage.getItem('mb_admin_user') || "miebangka";
+            document.getElementById('setting-admin-pass').value = localStorage.getItem('mb_admin_pass') || "admin123";
+            document.getElementById('setting-admin-pin').value = localStorage.getItem('mb_admin_pin') || "886886";
+            document.getElementById('setting-admin-phone').value = localStorage.getItem('mb_admin_phone') || "081267166886";
+
+            setInterval(checkNewOrdersAlert, 3000);
+            setInterval(updateAdminOrderTimers, 1000);
+        }
+
+        function changeRestoStatus(val) {
+            localStorage.setItem('mb_resto_status', val);
+            document.getElementById('header-resto-status').value = val;
+            document.getElementById('setting-resto-status').value = val;
+            alert('Status operasional restoran berhasil diubah menjadi: ' + val);
+        }
+
+        function logoutAdmin() {
+            sessionStorage.removeItem('mb_admin_logged');
+            window.location.reload();
+        }
+
+        function switchTab(tab) {
+            ['orders', 'menus', 'banners', 'banks', 'settings'].forEach(t => {
+                document.getElementById(`section-${t}`).classList.add('hidden');
+                document.getElementById(`tab-btn-${t}`).className = "text-sky-200 hover:text-white pb-1 whitespace-nowrap";
+            });
+            document.getElementById(`section-${tab}`).classList.remove('hidden');
+            document.getElementById(`tab-btn-${tab}`).className = "font-bold border-b-2 border-white pb-1 whitespace-nowrap";
+        }
+
+        function setOrderFilter(status) {
+            currentOrderFilter = status;
+            ['Semua', 'Menunggu Verifikasi Resto', 'Diproses', 'Selesai'].forEach(s => {
+                let btnId = s === 'Semua' ? 'filter-btn-Semua' : (s.includes('Menunggu') ? 'filter-btn-Menunggu' : (s === 'Diproses' ? 'filter-btn-Diproses' : 'filter-btn-Selesai'));
+                let btn = document.getElementById(btnId);
+                if (btn) btn.className = s === status ? "px-3 py-1.5 rounded-xl text-xs font-bold bg-sky-600 text-white shadow" : "px-3 py-1.5 rounded-xl text-xs font-bold bg-white text-sky-700 border hover:bg-sky-50";
+            });
+            loadAdminOrders();
+        }
+
+        let lastOrderCount = 0;
+        function loadAdminOrders() {
+            const allOrders = JSON.parse(localStorage.getItem('mb_orders')) || [];
+            lastOrderCount = allOrders.length;
+            const tbody = document.getElementById('orders-table-body');
+            tbody.innerHTML = '';
+            let filteredOrders = currentOrderFilter === 'Semua' ? allOrders : allOrders.filter(o => o.status === currentOrderFilter);
+
+            if (filteredOrders.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-gray-500">Tidak ada pesanan dengan status ini.</td></tr>`;
+                return;
+            }
+
+            filteredOrders.forEach((o) => {
+                let realIndex = allOrders.findIndex(item => item.id === o.id);
+                let itemsStr = o.items.map(i => `<div class="font-medium text-gray-800"><i class="fa-solid fa-circle-dot text-[8px] mr-1 text-sky-600"></i>${i.name} <span class="text-sky-700 font-bold">(${i.qty}x)</span></div>`).join('');
+                let isFinished = o.status === 'Selesai';
+                let badge = o.status === 'Diproses' ? 'bg-blue-100 text-blue-800' : (isFinished ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800');
+
+                let elapsedSec = Math.floor((Date.now() - (o.timestamp || Date.now())) / 1000);
+                let remainingSec = 180 - elapsedSec;
+                let timerText = '-';
+                if (o.status === 'Menunggu Verifikasi Resto') {
+                    if (remainingSec > 0) {
+                        let m = Math.floor(remainingSec / 60);
+                        let s = remainingSec % 60;
+                        timerText = `<span class="text-red-600 font-bold"><i class="fa-solid fa-clock mr-1"></i>${m < 10 ? '0'+m : m}:${s < 10 ? '0'+s : s}</span>`;
+                    } else { timerText = `<span class="text-gray-400 font-bold">Waktu Habis</span>`; }
+                } else { timerText = `<span class="text-green-600 font-bold">Lunas / Diproses</span>`; }
+
+                let actionButtonsHtml = '';
+                let orderNotice = '';
+                if (o.status === 'Menunggu Verifikasi Resto') {
+                    orderNotice = `<span class="text-[11px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 block mb-1"><i class="fa-solid fa-bell mr-1"></i> Orderan Masuk Baru</span>`;
+                    actionButtonsHtml = `<button onclick="updateOrderStatus(${realIndex}, 'Diproses')" class="bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1 rounded text-xs font-bold shadow">Proses</button><button onclick="updateOrderStatus(${realIndex}, 'Selesai')" class="bg-green-600 hover:bg-green-700 text-white px-2.5 py-1 rounded text-xs font-bold shadow">Selesai</button>`;
+                } else if (o.status === 'Diproses') {
+                    orderNotice = `<span class="text-[11px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200 block mb-1">Sedang Disiapkan</span>`;
+                    actionButtonsHtml = `<button onclick="updateOrderStatus(${realIndex}, 'Selesai')" class="bg-green-600 hover:bg-green-700 text-white px-2.5 py-1 rounded text-xs font-bold shadow">Selesai</button>`;
+                } else {
+                    orderNotice = `<span class="text-[11px] font-bold text-green-700 bg-green-50 px-2 py-0.5 rounded border border-green-200 block mb-1">Pesanan Selesai</span>`;
+                    actionButtonsHtml = `<span class="text-green-700 font-bold text-xs bg-green-50 px-2 py-1 rounded border border-green-200">Selesai</span>`;
+                }
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-gray-50">
+                        <td class="p-4 font-medium">${o.id}<br><small class="text-gray-400">${o.date}</small></td>
+                        <td class="p-4 font-semibold">${o.name}<br><small class="text-gray-500 font-normal"><i class="fa-solid fa-location-dot mr-1"></i>${o.address}</small></td>
+                        <td class="p-4"><div class="text-xs font-bold text-gray-700 mb-1">Keterangan Pesanan:</div>${itemsStr}</td>
+                        <td class="p-4 font-bold text-sky-700">Rp ${o.total.toLocaleString('id-ID')}<br><small class="text-gray-500 font-normal">Bayar: ${o.payment}</small></td>
+                        <td class="p-4"><span class="px-3 py-1 rounded-full text-xs font-bold ${badge}">${o.status}</span><div class="mt-1 text-xs">${timerText}</div></td>
+                        <td class="p-4 text-center space-y-1">
+                            ${orderNotice}
+                            <div class="flex justify-center items-center space-x-1 flex-wrap gap-1">${actionButtonsHtml}</div>
+                            <div class="flex justify-center items-center space-x-1 flex-wrap gap-1 mt-1">
+                                <button onclick="openEditModal(${realIndex})" class="bg-blue-50 text-blue-600 border border-blue-200 px-2 py-1 rounded text-xs font-bold hover:bg-blue-100"><i class="fa-solid fa-pen mr-1"></i>Edit</button>
+                                <button onclick="printReceipt(${realIndex})" class="bg-white text-sky-600 border border-sky-600 hover:bg-sky-50 px-2 py-1 rounded text-xs font-bold transition shadow"><i class="fa-solid fa-print mr-1"></i>Cetak</button>
+                                <button onclick="rejectOrder(${realIndex})" class="bg-red-50 text-red-600 border border-red-200 px-2 py-1 rounded text-xs font-bold hover:bg-red-100">Tolak</button>
+                                <button onclick="deleteOrder(${realIndex})" class="bg-red-50 text-red-600 border border-red-200 px-2 py-1 rounded text-xs font-bold hover:bg-red-100"><i class="fa-solid fa-trash mr-1"></i>Hapus</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function updateAdminOrderTimers() { const orders = JSON.parse(localStorage.getItem('mb_orders')) || []; if (orders.length > 0) loadAdminOrders(); }
+        function checkNewOrdersAlert() {
+            const orders = JSON.parse(localStorage.getItem('mb_orders')) || [];
+            if (orders.length > lastOrderCount) { lastOrderCount = orders.length; playLoudAlert(); loadAdminOrders(); }
+        }
+
+        function playLoudAlert() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(880, audioCtx.currentTime);
+                gainNode.gain.setValueAtTime(1, audioCtx.currentTime);
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                oscillator.start();
+                setTimeout(() => { oscillator.stop(); }, 500);
+            } catch(e) {}
+            document.getElementById('admin-alert-sound').play().catch(e => {});
+        }
+
+        function updateOrderStatus(index, status) {
+            let orders = JSON.parse(localStorage.getItem('mb_orders')) || [];
+            orders[index].status = status;
+            localStorage.setItem('mb_orders', JSON.stringify(orders));
+            loadAdminOrders();
+        }
+
+        function rejectOrder(index) {
+            if (confirm('Tolak dan batalkan pesanan ini?')) {
+                let orders = JSON.parse(localStorage.getItem('mb_orders')) || [];
+                orders.splice(index, 1);
+                localStorage.setItem('mb_orders', JSON.stringify(orders));
+                loadAdminOrders();
+            }
+        }
+
+        function openEditModal(index) {
+            let orders = JSON.parse(localStorage.getItem('mb_orders')) || [];
+            let o = orders[index];
+            if (!o) return;
+            document.getElementById('edit-order-index').value = index;
+            document.getElementById('edit-buyer-name').value = o.name;
+            document.getElementById('edit-buyer-address').value = o.address;
+            document.getElementById('edit-order-total').value = o.total;
+            document.getElementById('edit-order-status').value = o.status;
+            document.getElementById('edit-order-modal').classList.remove('hidden');
+        }
+
+        function closeEditModal() { document.getElementById('edit-order-modal').classList.add('hidden'); }
+
+        function saveEditedOrder() {
+            let index = document.getElementById('edit-order-index').value;
+            let orders = JSON.parse(localStorage.getItem('mb_orders')) || [];
+            if (orders[index]) {
+                orders[index].name = document.getElementById('edit-buyer-name').value.trim();
+                orders[index].address = document.getElementById('edit-buyer-address').value.trim();
+                orders[index].total = Number(document.getElementById('edit-order-total').value);
+                orders[index].status = document.getElementById('edit-order-status').value;
+                localStorage.setItem('mb_orders', JSON.stringify(orders));
+                closeEditModal();
+                loadAdminOrders();
+                alert('Pesanan berhasil diperbarui.');
+            }
+        }
+
+        function deleteOrder(index) {
+            if (confirm('Hapus pesanan ini dari riwayat?')) {
+                let orders = JSON.parse(localStorage.getItem('mb_orders')) || [];
+                orders.splice(index, 1);
+                localStorage.setItem('mb_orders', JSON.stringify(orders));
+                loadAdminOrders();
+            }
+        }
+
+        function clearOrders() {
+            if (confirm('Hapus semua riwayat pesanan?')) { localStorage.removeItem('mb_orders'); loadAdminOrders(); }
+        }
+
+        function printReceipt(index) {
+            const orders = JSON.parse(localStorage.getItem('mb_orders')) || [];
+            const o = orders[index];
+            if (!o) return;
+            let printWindow = window.open('', '_blank', 'width=400,height=600');
+            let itemsHtml = o.items.map(i => `<tr><td>${i.name} x${i.qty}</td><td style="text-align:right;">Rp ${(i.price * i.qty).toLocaleString('id-ID')}</td></tr>`).join('');
+            printWindow.document.write(`<html><head><title>Struk - ${o.id}</title><style>body{font-family:monospace;width:300px;padding:10px;font-size:12px;}.center{text-align:center;}table{width:100%;border-collapse:collapse;margin-top:10px;}td{padding:3px 0;}.line{border-bottom:1px dashed #000;margin:8px 0;}</style></head><body onload="window.print(); window.close();"><div class="center"><b>MIE BANGKA TELADAN</b><br>Kota Tanjungpinang<br>Waktu: ${new Date().toLocaleString('id-ID')}</div><div class="line"></div><div>ID: ${o.id}</div><div>Pelanggan: ${o.name} (${o.address})</div><div>Pembayaran: ${o.payment}</div><div class="line"></div><table>${itemsHtml}</table><div class="line"></div><table><tr><td><b>Total:</b></td><td style="text-align:right;"><b>Rp ${o.total.toLocaleString('id-ID')}</b></td></tr></table><div class="line"></div><div class="center">Terima Kasih!</div></body></html>`);
+            printWindow.document.close();
+        }
+
+        function loadAdminMenus() {
+            const menu = JSON.parse(localStorage.getItem('mb_menu')) || [];
+            const tbody = document.getElementById('admin-menu-list');
+            tbody.innerHTML = '';
+            menu.forEach(m => {
+                tbody.innerHTML += `
+                    <tr class="hover:bg-gray-50">
+                        <td class="p-4"><img src="${m.image}" class="w-12 h-12 object-cover rounded-lg"></td>
+                        <td class="p-4"><div class="font-bold">${m.name}</div><span class="text-xs text-sky-600 bg-sky-50 px-2 py-0.5 rounded">${m.category}</span></td>
+                        <td class="p-4 font-bold text-sky-700">Rp ${m.price.toLocaleString('id-ID')}</td>
+                        <td class="p-4 text-center space-x-2">
+                            <button onclick="editMenu(${m.id})" class="text-blue-600"><i class="fa-solid fa-pen"></i></button>
+                            <button onclick="deleteMenu(${m.id})" class="text-red-500"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function saveMenu(e) {
+            e.preventDefault();
+            const id = document.getElementById('menu-id').value;
+            const name = document.getElementById('menu-name').value;
+            const category = document.getElementById('menu-category').value;
+            const price = Number(document.getElementById('menu-price').value);
+            const image = document.getElementById('menu-image').value;
+            const desc = document.getElementById('menu-desc').value;
+
+            let menu = JSON.parse(localStorage.getItem('mb_menu')) || [];
+            if (id) {
+                let idx = menu.findIndex(m => m.id == id);
+                if (idx !== -1) menu[idx] = { id: Number(id), name, category, price, image, desc };
+            } else {
+                const newId = menu.length > 0 ? Math.max(...menu.map(m => m.id)) + 1 : 1;
+                menu.push({ id: newId, name, category, price, image, desc });
+            }
+            localStorage.setItem('mb_menu', JSON.stringify(menu));
+            resetMenuForm();
+            loadAdminMenus();
+            alert('Menu berhasil disimpan.');
+        }
+
+        function editMenu(id) {
+            let menu = JSON.parse(localStorage.getItem('mb_menu')) || [];
+            let item = menu.find(m => m.id === id);
+            if (!item) return;
+            document.getElementById('menu-id').value = item.id;
+            document.getElementById('menu-name').value = item.name;
+            document.getElementById('menu-category').value = item.category;
+            document.getElementById('menu-price').value = item.price;
+            document.getElementById('menu-image').value = item.image;
+            document.getElementById('menu-desc').value = item.desc;
+            document.getElementById('menu-form-title').innerText = "Edit Menu";
+        }
+
+        function deleteMenu(id) {
+            if (confirm('Hapus menu ini?')) {
+                let menu = JSON.parse(localStorage.getItem('mb_menu')) || [];
+                menu = menu.filter(m => m.id !== id);
+                localStorage.setItem('mb_menu', JSON.stringify(menu));
+                loadAdminMenus();
+            }
+        }
+
+        function resetMenuForm() {
+            document.getElementById('menu-form').reset();
+            document.getElementById('menu-id').value = '';
+            document.getElementById('menu-form-title').innerText = "Tambah Menu Baru";
+        }
+
+        function loadAdminBanners() {
+            const banners = JSON.parse(localStorage.getItem('mb_banners')) || [];
+            const container = document.getElementById('banner-list-admin');
+            container.innerHTML = '';
+            banners.forEach((b, idx) => {
+                container.innerHTML += `<div class="relative rounded-xl overflow-hidden border shadow-sm"><img src="${b}" class="w-full h-32 object-cover"><button onclick="deleteBanner(${idx})" class="absolute top-2 right-2 bg-red-600 text-white w-7 h-7 rounded-full flex items-center justify-center text-xs"><i class="fa-solid fa-trash"></i></button></div>`;
+            });
+        }
+
+        function uploadBannerFile() {
+            const fileInput = document.getElementById('banner-file-input');
+            if (fileInput.files && fileInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    let banners = JSON.parse(localStorage.getItem('mb_banners')) || [];
+                    banners.push(e.target.result);
+                    localStorage.setItem('mb_banners', JSON.stringify(banners));
+                    fileInput.value = '';
+                    loadAdminBanners();
+                    alert('Banner berhasil diunggah.');
+                }
+                reader.readAsDataURL(fileInput.files[0]);
+            } else { alert('Pilih file gambar terlebih dahulu.'); }
+        }
+
+        function deleteBanner(idx) {
+            let banners = JSON.parse(localStorage.getItem('mb_banners')) || [];
+            banners.splice(idx, 1);
+            localStorage.setItem('mb_banners', JSON.stringify(banners));
+            loadAdminBanners();
+        }
+
+        function loadAdminBanks() {
+            const banks = JSON.parse(localStorage.getItem('mb_banks')) || [];
+            const tbody = document.getElementById('admin-bank-list');
+            tbody.innerHTML = '';
+            banks.forEach((b, idx) => {
+                tbody.innerHTML += `<tr><td class="p-4 font-bold">${b.name}</td><td class="p-4">${b.account}</td><td class="p-4">${b.holder}</td><td class="p-4 text-center"><button onclick="deleteBank(${idx})" class="text-red-500"><i class="fa-solid fa-trash"></i></button></td></tr>`;
+            });
+        }
+
+        function saveBank(e) {
+            e.preventDefault();
+            const name = document.getElementById('bank-name').value;
+            const account = document.getElementById('bank-acc').value;
+            const holder = document.getElementById('bank-holder').value;
+            let banksList = JSON.parse(localStorage.getItem('mb_banks')) || [];
+            banksList.push({ name, account, holder });
+            localStorage.setItem('mb_banks', JSON.stringify(banksList));
+            e.target.reset();
+            loadAdminBanks();
+            alert('Akun bank berhasil ditambahkan.');
+        }
+
+        function deleteBank(idx) {
+            let banks = JSON.parse(localStorage.getItem('mb_banks')) || [];
+            banks.splice(idx, 1);
+            localStorage.setItem('mb_banks', JSON.stringify(banks));
+            loadAdminBanks();
+        }
+
+        function saveAdminCredentials() {
+            let statusVal = document.getElementById('setting-resto-status').value;
+            localStorage.setItem('mb_resto_status', statusVal);
+            let newUser = document.getElementById('setting-admin-user').value.trim();
+            let newPass = document.getElementById('setting-admin-pass').value.trim();
+            let newPin = document.getElementById('setting-admin-pin').value.trim();
+            let newPhone = document.getElementById('setting-admin-phone').value.trim();
+            if (newUser) localStorage.setItem('mb_admin_user', newUser);
+            if (newPass) localStorage.setItem('mb_admin_pass', newPass);
+            if (newPin) localStorage.setItem('mb_admin_pin', newPin);
+            if (newPhone) localStorage.setItem('mb_admin_phone', newPhone);
+            document.getElementById('header-resto-status').value = statusVal;
+            alert('Pengaturan resto berhasil disimpan.');
+        }
+    </script>
 </body>
 </html>
