@@ -119,11 +119,11 @@
                 let gain1 = audioCtx.createGain();
                 osc1.type = 'sine';
                 osc1.frequency.setValueAtTime(880, now); 
-                gain1.gain.setValueAtTime(0.2, now);
+                gain1.gain.setValueAtTime(0.3, now);
                 osc1.connect(gain1);
                 gain1.connect(audioCtx.destination);
                 osc1.start(now);
-                osc1.stop(now + 0.3);
+                osc1.stop(now + 0.4);
             } catch(e) {
                 console.log("Audio play failed:", e);
             }
@@ -151,7 +151,7 @@
                     let elapsed = now - o.createdAt;
                     if (elapsed > 3 * 60 * 1000) {
                         updated = true;
-                        return false; // Hapus otomatis karena waktu habis tanpa diproses
+                        return false; 
                     }
                 }
                 return true;
@@ -248,7 +248,6 @@
                     cardStyle = 'bg-sky-50/50 border-2 border-sky-300';
                 }
 
-                // Sisa waktu hitung mundur 3 menit jika masih menunggu
                 let timeRemainingStr = '';
                 if (isPending && order.createdAt) {
                     let elapsed = now - order.createdAt;
@@ -285,7 +284,6 @@
                             <button onclick="updateOrderStatus(${originalIdx}, 'Diproses')" class="bg-sky-600 hover:bg-sky-700 text-white text-xs px-3 py-1.5 rounded-lg font-bold shadow">Proses</button>
                             <button onclick="updateOrderStatus(${originalIdx}, 'Selesai')" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-3 py-1.5 rounded-lg font-bold shadow">Selesai</button>
                             
-                            <!-- Tombol Putih Huruf Biru sesuai permintaan -->
                             <button onclick="editOrderModal(${originalIdx})" class="bg-white text-sky-700 border border-sky-400 hover:bg-sky-50 text-xs px-3 py-1.5 rounded-lg font-bold shadow"><i class="fa-solid fa-pen mr-1"></i> Edit</button>
                             <button onclick="printBluetoothOrder(${originalIdx})" class="bg-white text-sky-700 border border-sky-400 hover:bg-sky-50 text-xs px-3 py-1.5 rounded-lg font-bold shadow"><i class="fa-solid fa-print mr-1"></i> Cetak</button>
                             
@@ -456,9 +454,8 @@
             let price = document.getElementById('menu-price').value;
             let desc = document.getElementById('menu-desc').value;
             let category = document.getElementById('menu-category').value;
-            let urlInput = document.getElementById('menu-image-url').value.trim();
-            
-            let finalImage = menuImageBase64 || urlInput || "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=500&q=80";
+
+            let finalImage = menuImageBase64 || "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=500&q=80";
 
             let menus = JSON.parse(localStorage.getItem('mb_menus') || '[]');
             menus.push({ 
@@ -488,6 +485,22 @@
             }
         }
 
+        let bannerImageBase64 = "";
+        function previewBannerImageFile(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    bannerImageBase64 = e.target.result;
+                    let prev = document.getElementById('banner-img-preview');
+                    if(prev) prev.src = bannerImageBase64;
+                    let cont = document.getElementById('banner-img-preview-container');
+                    if(cont) cont.classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
         function renderBanners() {
             let container = document.getElementById('banner-list-container');
             if(!container) return;
@@ -502,9 +515,11 @@
                 let bImg = typeof b === 'object' ? b.image : b;
                 html += `
                     <div class="bg-white p-3 rounded-lg border flex justify-between items-center text-xs">
-                        <div>
-                            <span class="font-bold text-sky-700">${bTitle}</span>
-                            <p class="text-gray-500 truncate max-w-xs">${bImg}</p>
+                        <div class="flex items-center gap-3">
+                            <img src="${bImg}" class="w-12 h-10 object-cover rounded border">
+                            <div>
+                                <span class="font-bold text-sky-700">${bTitle}</span>
+                            </div>
                         </div>
                         <button onclick="deleteBanner(${idx})" class="bg-red-100 text-red-700 px-2 py-1 rounded font-bold">Hapus</button>
                     </div>
@@ -517,13 +532,19 @@
         function addBanner(e) {
             e.preventDefault();
             let title = document.getElementById('banner-title').value;
-            let image = document.getElementById('banner-image').value;
+            if (!bannerImageBase64) {
+                alert('Silakan pilih file gambar banner terlebih dahulu.');
+                return;
+            }
             let banners = JSON.parse(localStorage.getItem('mb_banners') || '[]');
-            banners.push({ title, image });
+            banners.push({ title, image: bannerImageBase64 });
             localStorage.setItem('mb_banners', JSON.stringify(banners));
             document.getElementById('form-add-banner').reset();
+            bannerImageBase64 = "";
+            let cont = document.getElementById('banner-img-preview-container');
+            if(cont) cont.classList.add('hidden');
             renderBanners();
-            alert('Banner ditambahkan!');
+            alert('Banner berhasil diunggah!');
         }
 
         function deleteBanner(index) {
@@ -612,12 +633,13 @@
             <div class="space-y-3 text-left">
                 <div>
                     <label class="text-xs font-bold text-gray-700">Nama Resto</label>
-                    <input type="text" id="admin-username" class="w-full p-2 border rounded-lg text-sm mt-1 focus:ring-2 focus:ring-sky-500 outline-none" placeholder="miebangka">
+                    <input type="text" id="admin-username" class="w-full p-2 border rounded-lg text-sm mt-1 focus:ring-2 focus:ring-sky-500 outline-none" autocomplete="off" placeholder="miebangka">
                 </div>
                 <div>
                     <label class="text-xs font-bold text-gray-700">Sandi</label>
                     <div class="relative mt-1">
-                        <input type="password" id="admin-password" class="w-full p-2 border rounded-lg text-sm focus:ring-2 focus:ring-sky-500 outline-none pr-10" placeholder="admin123">
+                        <!-- Kolom Sandi dengan Type Password & Icon Mata Sembunyi -->
+                        <input type="password" id="admin-password" class="w-full p-2 border rounded-lg text-sm focus:ring-2 focus:ring-sky-500 outline-none pr-10" autocomplete="new-password" placeholder="••••••••">
                         <button type="button" onclick="toggleVisibility('admin-password', 'eye-1')" class="absolute right-3 top-2.5">
                             <i id="eye-1" class="fa-solid fa-eye text-sky-600"></i>
                         </button>
@@ -626,7 +648,8 @@
                 <div>
                     <label class="text-xs font-bold text-gray-700">PIN Rahasia Resto</label>
                     <div class="relative mt-1">
-                        <input type="password" id="admin-pin" class="w-full p-2 border rounded-lg text-sm focus:ring-2 focus:ring-sky-500 outline-none pr-10" placeholder="886886">
+                        <!-- Kolom PIN dengan Type Password & Icon Mata Sembunyi -->
+                        <input type="password" id="admin-pin" class="w-full p-2 border rounded-lg text-sm focus:ring-2 focus:ring-sky-500 outline-none pr-10" autocomplete="new-password" placeholder="••••••">
                         <button type="button" onclick="toggleVisibility('admin-pin', 'eye-2')" class="absolute right-3 top-2.5">
                             <i id="eye-2" class="fa-solid fa-eye text-sky-600"></i>
                         </button>
@@ -670,7 +693,7 @@
     <!-- MAIN CONTENT CONTAINER -->
     <main class="max-w-7xl mx-auto p-4 space-y-4">
 
-        <!-- TAB 1: PESANAN (Sesuai Desain Gambar Referensi) -->
+        <!-- TAB 1: PESANAN -->
         <section id="section-orders" class="space-y-4">
             <div class="bg-white p-4 rounded-xl shadow border border-sky-100 space-y-3">
                 <div class="flex justify-between items-center">
@@ -719,16 +742,12 @@
                             </select>
                         </div>
                         <div>
-                            <label class="text-xs font-bold text-gray-600">URL Gambar (Opsional)</label>
-                            <input type="url" id="menu-image-url" class="w-full p-2 border rounded text-xs mt-1 focus:ring-2 focus:ring-sky-500 outline-none" placeholder="https://...">
+                            <label class="text-xs font-bold text-gray-600">Unggah Gambar Menu</label>
+                            <input type="file" id="menu-image-file" accept="image/*" onchange="previewMenuImageFile(event)" class="w-full p-1 border rounded text-xs mt-1">
                         </div>
                     </div>
-                    <div>
-                        <label class="text-xs font-bold text-gray-600">Atau Unggah File Gambar</label>
-                        <input type="file" id="menu-image-file" accept="image/*" onchange="previewMenuImageFile(event)" class="w-full p-1 border rounded text-xs mt-1">
-                        <div id="menu-img-preview-container" class="mt-2 hidden">
-                            <img id="menu-img-preview" class="w-24 h-24 object-cover rounded border">
-                        </div>
+                    <div id="menu-img-preview-container" class="mt-2 hidden">
+                        <img id="menu-img-preview" class="w-24 h-24 object-cover rounded border">
                     </div>
                     <div>
                         <label class="text-xs font-bold text-gray-600">Deskripsi Menu</label>
@@ -743,20 +762,23 @@
             </div>
         </section>
 
-        <!-- TAB 3: BANNER -->
+        <!-- TAB 3: BANNER (Upload File Sepenuhnya) -->
         <section id="section-banners" class="space-y-4 hidden">
             <div class="bg-white p-4 rounded-xl shadow border border-sky-100">
-                <h3 class="font-bold text-sm mb-3 text-sky-950">Tambah Banner Promo</h3>
+                <h3 class="font-bold text-sm mb-3 text-sky-950">Unggah Banner Promo / Logo</h3>
                 <form id="form-add-banner" onsubmit="addBanner(event)" class="space-y-3">
                     <div>
                         <label class="text-xs font-bold text-gray-600">Judul Banner</label>
                         <input type="text" id="banner-title" required class="w-full p-2 border rounded text-xs mt-1 focus:ring-2 focus:ring-sky-500 outline-none">
                     </div>
                     <div>
-                        <label class="text-xs font-bold text-gray-600">URL Gambar Banner</label>
-                        <input type="url" id="banner-image" required class="w-full p-2 border rounded text-xs mt-1 focus:ring-2 focus:ring-sky-500 outline-none">
+                        <label class="text-xs font-bold text-gray-600">Pilih File Gambar / PNG Banner</label>
+                        <input type="file" id="banner-image-file" accept="image/*" required onchange="previewBannerImageFile(event)" class="w-full p-1 border rounded text-xs mt-1">
                     </div>
-                    <button type="submit" class="bg-sky-600 text-white font-bold text-xs px-4 py-2 rounded shadow">Tambah Banner</button>
+                    <div id="banner-img-preview-container" class="mt-2 hidden">
+                        <img id="banner-img-preview" class="w-32 h-20 object-cover rounded border">
+                    </div>
+                    <button type="submit" class="bg-sky-600 text-white font-bold text-xs px-4 py-2 rounded shadow">Unggah Banner</button>
                 </form>
             </div>
             <div id="banner-list-container"></div>
@@ -781,7 +803,7 @@
         <!-- TAB 5: PENGATURAN -->
         <section id="section-settings" class="space-y-4 hidden">
             <div class="bg-white p-4 rounded-xl shadow border border-sky-100">
-                <h3 class="font-bold text-sm mb-3 text-sky-950">Pengaturan Resto</h3>
+                <h3 class="font-bold text-sm mb-3 text-sky-950">Pengaturan Resto & Suara Notifikasi</h3>
                 <form onsubmit="saveSettings(event)" class="space-y-3">
                     <div>
                         <label class="text-xs font-bold text-gray-600">Nomor WhatsApp Admin / Resto</label>
