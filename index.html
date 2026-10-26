@@ -4,35 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mie Bangka Teladan - Kota Tanjungpinang</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        * {
-            box-sizing: border-box;
-        }
-        body {
-            margin: 0;
-            background: #f0f9ff;
-            color: #1e293b;
-            font-family: Arial, Helvetica, sans-serif;
-        }
+        * { box-sizing: border-box; }
+        body { margin: 0; background: #f0f9ff; color: #1e293b; font-family: Arial, Helvetica, sans-serif; }
         .banner-slide { display: none; }
         .banner-slide.active { display: flex; animation: fadeIn 0.8s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0.3; } to { opacity: 1; } }
-        .modal-hidden {
-            display: none !important;
-        }
-        .line-clamp-2 {
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-        button:disabled {
-            cursor: not-allowed;
-            opacity: 0.6;
-        }
+        .modal-hidden { display: none !important; }
+        .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        button:disabled { cursor: not-allowed; opacity: 0.6; }
     </style>
 </head>
 <body class="bg-sky-50 text-gray-800 font-sans selection:bg-sky-500 selection:text-white">
@@ -42,12 +24,12 @@
         <i class="fa-solid fa-triangle-exclamation mr-1"></i> Mohon Maaf, Restoran saat ini sedang TUTUP / OFFLINE. Pesanan tidak dapat diproses.
     </div>
 
-    <!-- Header / Navbar Responsif -->
-    <header class="bg-sky-700 text-white shadow-lg sticky top-0 z-40">
+    <!-- Header / Navbar -->
+    <header class="bg-sky-600 text-white shadow-lg sticky top-0 z-40">
         <div class="mx-auto max-w-7xl px-4 py-3 flex flex-col sm:flex-row justify-between items-center gap-3">
             <div class="flex items-center space-x-3 w-full sm:w-auto justify-between sm:justify-start">
                 <div class="flex items-center space-x-3">
-                    <div class="w-11 h-11 bg-white text-sky-700 rounded-full flex items-center justify-center font-bold text-xl shadow">
+                    <div class="w-11 h-11 bg-white text-sky-600 rounded-full flex items-center justify-center font-bold text-xl shadow">
                         <i class="fa-solid fa-bowl-food"></i>
                     </div>
                     <div>
@@ -58,13 +40,14 @@
             </div>
 
             <div class="flex items-center justify-between sm:justify-end w-full sm:w-auto space-x-3">
-                <div class="text-right text-xs bg-sky-800 px-3 py-1.5 rounded-lg border border-sky-600 hidden sm:block">
+                <div class="text-right text-xs bg-sky-700 px-3 py-1.5 rounded-lg border border-sky-500 hidden sm:block">
                     <div id="live-time" class="font-bold text-white text-sm">00:00:00</div>
                     <div id="live-date" class="text-sky-200">Senin, 01 Jan 2026</div>
                 </div>
-                <button id="open-cart-button" onclick="openCart()" class="bg-white text-sky-700 hover:bg-sky-50 px-4 py-2 rounded-xl font-bold transition flex items-center shadow">
+                <!-- Tombol Putih Huruf Biru -->
+                <button id="open-cart-button" onclick="openCart()" class="bg-white text-sky-700 border border-sky-300 hover:bg-sky-50 px-4 py-2 rounded-xl font-bold transition flex items-center shadow">
                     <i class="fa-solid fa-cart-shopping mr-2"></i> Keranjang
-                    <span id="cart-count" class="ml-2 bg-sky-700 text-white text-xs px-2 py-0.5 rounded-full">0</span>
+                    <span id="cart-count" class="ml-2 bg-sky-600 text-white text-xs px-2 py-0.5 rounded-full">0</span>
                 </button>
             </div>
         </div>
@@ -74,8 +57,8 @@
     <section class="w-full bg-gradient-to-r from-sky-900 via-sky-700 to-cyan-600 text-white shadow-sm overflow-hidden relative">
         <div id="banner-container" class="relative h-56 sm:h-72 md:h-96 w-full flex items-center justify-center"></div>
         <div class="flex justify-center space-x-3 my-3 absolute bottom-2 left-0 right-0 z-10">
-            <button onclick="changeBannerSlide(-1)" class="bg-sky-100/90 hover:bg-sky-200 text-sky-900 px-4 py-1.5 rounded-xl text-xs font-bold transition shadow-sm"><i class="fa-solid fa-chevron-left mr-1"></i> Sebelumnya</button>
-            <button onclick="changeBannerSlide(1)" class="bg-sky-100/90 hover:bg-sky-200 text-sky-900 px-4 py-1.5 rounded-xl text-xs font-bold transition shadow-sm">Selanjutnya <i class="fa-solid fa-chevron-right ml-1"></i></button>
+            <button onclick="changeBannerSlide(-1)" class="bg-white text-sky-700 border border-sky-300 hover:bg-sky-50 px-4 py-1.5 rounded-xl text-xs font-bold transition shadow"><i class="fa-solid fa-chevron-left mr-1"></i> Sebelumnya</button>
+            <button onclick="changeBannerSlide(1)" class="bg-white text-sky-700 border border-sky-300 hover:bg-sky-50 px-4 py-1.5 rounded-xl text-xs font-bold transition shadow">Selanjutnya <i class="fa-solid fa-chevron-right ml-1"></i></button>
         </div>
     </section>
 
@@ -128,10 +111,11 @@
                     class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-500"
                 >
 
+                <!-- Tombol Putih Huruf Biru -->
                 <button
                     type="submit"
                     id="check-status-button"
-                    class="w-full rounded-xl bg-sky-700 px-4 py-3 font-bold text-white hover:bg-sky-800 transition shadow"
+                    class="w-full rounded-xl bg-white text-sky-700 border border-sky-500 px-4 py-3 font-bold hover:bg-sky-50 transition shadow"
                 >
                     Cek Status
                 </button>
@@ -147,10 +131,10 @@
 
     <!-- Tombol Panah Scroll Otomatis -->
     <div id="scroll-arrows" class="fixed bottom-6 right-6 z-50 flex flex-col space-y-2 transition-opacity duration-300 opacity-0 pointer-events-none">
-        <button onclick="scrollToTop()" class="bg-sky-700 hover:bg-sky-800 text-white w-11 h-11 rounded-full shadow-xl flex items-center justify-center transition transform hover:scale-110" title="Gulir ke Atas">
+        <button onclick="scrollToTop()" class="bg-sky-600 hover:bg-sky-700 text-white w-11 h-11 rounded-full shadow-xl flex items-center justify-center transition transform hover:scale-110" title="Gulir ke Atas">
             <i class="fa-solid fa-arrow-up text-base"></i>
         </button>
-        <button onclick="scrollToBottom()" class="bg-sky-700 hover:bg-sky-800 text-white w-11 h-11 rounded-full shadow-xl flex items-center justify-center transition transform hover:scale-110" title="Gulir ke Bawah">
+        <button onclick="scrollToBottom()" class="bg-sky-600 hover:bg-sky-700 text-white w-11 h-11 rounded-full shadow-xl flex items-center justify-center transition transform hover:scale-110" title="Gulir ke Bawah">
             <i class="fa-solid fa-arrow-down text-base"></i>
         </button>
     </div>
@@ -237,12 +221,14 @@
 
                 <div>
                     <label for="payment-method" class="mb-1 block text-sm font-bold text-gray-700">
-                        Metode Pembayaran
+                        Metode Pembayaran (Pilih Bank / Kasir)
                     </label>
                     <select
                         id="payment-method"
                         class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-500 font-medium"
                     >
+                        <option value="BCA">BCA - 1234567890 (a.n. Mie Bangka Teladan)</option>
+                        <option value="DANA">DANA - 081267166886 (a.n. Mie Bangka Teladan)</option>
                         <option value="Kasir">Bayar di Kasir (Tunai)</option>
                     </select>
                 </div>
@@ -252,17 +238,18 @@
                         id="order-confirmation"
                         type="checkbox"
                         required
-                        class="mt-0.5 h-4 w-4 text-sky-700 rounded"
+                        class="mt-0.5 h-4 w-4 text-sky-600 rounded"
                     >
                     <span>
                         Saya sudah memeriksa pesanan dan menyetujui untuk mengirim pesanan.
                     </span>
                 </label>
 
+                <!-- Tombol Putih Huruf Biru -->
                 <button
                     id="submit-order-button"
                     type="submit"
-                    class="w-full rounded-xl bg-sky-700 px-4 py-3 font-bold text-white hover:bg-sky-800 transition shadow"
+                    class="w-full rounded-xl bg-white text-sky-700 border border-sky-500 px-4 py-3 font-bold hover:bg-sky-50 transition shadow"
                 >
                     <i class="fa-solid fa-check mr-2"></i> Kirim Pesanan
                 </button>
@@ -276,24 +263,33 @@
         </div>
     </div>
 
-    <!-- Modal Timer Pembayaran / Konfirmasi Pesanan -->
+    <!-- Modal Timer Pembayaran 3 Menit -->
     <div id="payment-timer-modal" class="fixed inset-0 bg-black bg-opacity-80 hidden z-50 flex justify-center items-center p-4">
-        <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 text-center">
-            <div class="w-14 h-14 bg-sky-100 text-sky-700 rounded-full flex items-center justify-center text-2xl mx-auto mb-3">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 text-center border-t-4 border-sky-600">
+            <div class="w-14 h-14 bg-sky-100 text-sky-600 rounded-full flex items-center justify-center text-2xl mx-auto mb-3">
                 <i class="fa-solid fa-clock"></i>
             </div>
-            <h3 class="text-xl font-extrabold text-sky-950 mb-1">Pesanan Sedang Diproses</h3>
-            <p class="text-xs text-gray-500 mb-3">Batas waktu verifikasi resto:</p>
+            <h3 class="text-xl font-extrabold text-sky-950 mb-1">Pesanan Berhasil Dikirim</h3>
+            <p class="text-xs text-gray-500 mb-2">Batas waktu konfirmasi / verifikasi resto (3 Menit):</p>
             
             <div id="countdown-timer" class="text-3xl font-black text-sky-700 mb-4 tracking-widest bg-sky-50 py-2 rounded-xl border border-sky-200">03:00</div>
 
             <div class="bg-sky-50 p-3 rounded-2xl text-left text-xs space-y-2 mb-4 border border-sky-100">
                 <div><b>ID Pesanan:</b> <span id="pay-order-id"></span></div>
                 <div><b>Nama Pemesan:</b> <span id="pay-buyer-name"></span></div>
+                <div><b>Metode Pembayaran:</b> <span id="pay-method-chosen"></span></div>
                 <div><b>Total Harga:</b> <span id="pay-total" class="text-xl font-black text-sky-700 block mt-1"></span></div>
             </div>
-            <p class="text-[11px] text-gray-500">Menunggu konfirmasi dapur / kasir Resto Mie Bangka Teladan...</p>
-            <button onclick="closeTimerModal()" class="mt-4 bg-sky-700 text-white w-full py-2 rounded-xl text-xs font-bold hover:bg-sky-800 transition">Tutup / Lihat Status Pesanan</button>
+
+            <!-- Ucapan Sopan yang diminta -->
+            <div class="bg-emerald-50 text-emerald-800 p-3 rounded-xl text-xs font-bold mb-4 border border-emerald-200">
+                <i class="fa-solid fa-circle-check mr-1"></i> Silahkan lakukan pembayaran sesuai pilihan Anda. Pesanan akan segera diproses setelah diverifikasi resto.
+            </div>
+
+            <p class="text-[11px] text-gray-500 mb-3">Jika waktu habis tanpa diproses resto, pesanan akan otomatis dibatalkan/dihapus.</p>
+            
+            <!-- Tombol Putih Huruf Biru -->
+            <button onclick="closeTimerModal()" class="bg-white text-sky-700 border border-sky-500 w-full py-2.5 rounded-xl text-xs font-bold hover:bg-sky-50 transition shadow">Tutup / Lihat Status Pesanan</button>
         </div>
     </div>
 
@@ -381,6 +377,7 @@
             checkRestoStatus();
             loadBanners();
             renderMenu();
+            setInterval(checkCustomerOrdersExpiry, 1000);
         }
 
         function checkRestoStatus() {
@@ -404,9 +401,10 @@
             }
 
             banners.forEach((b, idx) => {
+                let bImg = typeof b === 'object' ? b.image : b;
                 container.innerHTML += `
                     <div class="banner-slide ${idx === 0 ? 'active' : ''} absolute inset-0 w-full h-full flex items-center justify-center">
-                        <img src="${b}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" class="w-full h-full object-cover">
+                        <img src="${bImg}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" class="w-full h-full object-cover">
                         <div class="absolute inset-0 flex flex-col items-center justify-center text-white font-bold bg-sky-950/60 p-4 text-center" style="display:none;">
                             <i class="fa-solid fa-bowl-food text-4xl mb-2 text-sky-300"></i>
                             <span class="text-xl">Mie Bangka Teladan</span>
@@ -465,7 +463,8 @@
                             <p class="mt-2 flex-1 text-sm leading-6 text-slate-600 line-clamp-2">${item.desc || item.description || '-'}</p>
                             <div class="mt-5 flex items-center justify-between gap-3">
                                 <strong class="text-lg font-extrabold text-sky-700">${rupiah(item.price)}</strong>
-                                <button type="button" onclick="addToCart('${item.id}')" class="rounded-xl bg-sky-700 px-4 py-2 text-sm font-bold text-white hover:bg-sky-800 transition">Pesan</button>
+                                <!-- Tombol Putih Huruf Biru -->
+                                <button type="button" onclick="addToCart('${item.id}')" class="rounded-xl bg-white text-sky-700 border border-sky-500 px-4 py-2 text-sm font-bold hover:bg-sky-50 transition shadow">Pesan</button>
                             </div>
                         </div>
                     </article>`;
@@ -602,10 +601,12 @@
             });
 
             const orderId = createOrderId();
+            const nowTime = Date.now();
             const dateStr = new Date().toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
 
             const order = {
                 id: orderId,
+                createdAt: nowTime,
                 created_at: dateStr,
                 date: dateStr,
                 name: name,
@@ -622,19 +623,18 @@
             checkoutMessage.textContent = "Pesanan sedang dikirim...";
 
             try {
-                // Simpan juga ke localStorage agar admin & pelanggan bisa langsung akses
                 let localOrders = [];
                 try { localOrders = JSON.parse(localStorage.getItem('mb_orders') || '[]'); } catch(e) { localOrders = []; }
                 localOrders.push(order);
                 localStorage.setItem('mb_orders', JSON.stringify(localOrders));
 
-                // Kirim ke SheetDB jika terhubung
                 try {
                     await apiRequest(SHEETDB_API, {
                         method: "POST",
                         body: JSON.stringify({
                             data: [{
                                 id: order.id,
+                                createdAt: order.createdAt,
                                 created_at: order.created_at,
                                 name: order.name,
                                 phone: order.phone,
@@ -660,9 +660,10 @@
                 submitButton.disabled = false;
                 checkoutMessage.textContent = "";
 
-                // Tampilkan Modal Timer / Sukses
+                // Tampilkan Modal Timer 3 Menit
                 document.getElementById('pay-order-id').textContent = order.id;
                 document.getElementById('pay-buyer-name').textContent = order.name;
+                document.getElementById('pay-method-chosen').textContent = payment;
                 document.getElementById('pay-total').textContent = rupiah(total);
                 document.getElementById('payment-timer-modal').classList.remove('hidden');
                 startCountdownTimer(3 * 60);
@@ -702,6 +703,28 @@
             }, 1000);
         }
 
+        function checkCustomerOrdersExpiry() {
+            let localOrders = [];
+            try { localOrders = JSON.parse(localStorage.getItem('mb_orders') || '[]'); } catch(e) { localOrders = []; }
+            let now = Date.now();
+            let changed = false;
+
+            localOrders = localOrders.filter(o => {
+                let isPending = (o.status === 'Menunggu' || o.status === 'Pending' || o.status === 'Menunggu Verifikasi Resto' || !o.status);
+                if (isPending && o.createdAt) {
+                    if (now - o.createdAt > 3 * 60 * 1000) {
+                        changed = true;
+                        return false;
+                    }
+                }
+                return true;
+            });
+
+            if (changed) {
+                localStorage.setItem('mb_orders', JSON.stringify(localOrders));
+            }
+        }
+
         async function checkOrderStatusSubmit(event) {
             event.preventDefault();
             const orderId = document.getElementById('lookup-order-id').value.trim();
@@ -713,14 +736,12 @@
 
             try {
                 let foundOrder = null;
-                // Cek dari localStorage dulu
                 let localOrders = [];
                 try { localOrders = JSON.parse(localStorage.getItem('mb_orders') || '[]'); } catch(e) { localOrders = []; }
                 
                 foundOrder = localOrders.find(o => String(o.id).toLowerCase() === String(orderId).toLowerCase() && normalizePhone(o.phone) === phone);
 
                 if (!foundOrder) {
-                    // Coba ambil dari SheetDB
                     try {
                         const data = await apiRequest(SHEETDB_API + "/search?id=" + encodeURIComponent(orderId));
                         if (Array.isArray(data) && data.length > 0) {
@@ -733,7 +754,7 @@
 
                 if (!foundOrder) {
                     resultDiv.className = "mt-4 rounded-xl p-4 text-sm bg-red-50 text-red-700";
-                    resultDiv.textContent = "Pesanan dengan ID dan Nomor HP tersebut tidak ditemukan.";
+                    resultDiv.textContent = "Pesanan dengan ID dan Nomor HP tersebut tidak ditemukan atau mungkin telah kedaluwarsa (waktu 3 menit habis).";
                     return;
                 }
 
@@ -751,6 +772,7 @@
                         <div><b>Nama:</b> ${foundOrder.name}</div>
                         <div><b>Status:</b> <span class="px-2 py-0.5 rounded font-bold ${statusBadgeClass}">${st}</span></div>
                         <div><b>Total:</b> ${rupiah(foundOrder.total)}</div>
+                        <div><b>Pembayaran:</b> ${foundOrder.payment || '-'}</div>
                         <div><b>Waktu:</b> ${foundOrder.created_at || foundOrder.date || '-'}</div>
                     </div>`;
 
