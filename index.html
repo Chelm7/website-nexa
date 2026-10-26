@@ -12,6 +12,7 @@
         .banner-slide { display: none; }
         .banner-slide.active { display: flex; animation: fadeIn 0.8s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0.3; } to { opacity: 1; } }
+        .modal-hidden { display: none !important; }
         .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         button:disabled { cursor: not-allowed; opacity: 0.6; }
     </style>
@@ -43,6 +44,11 @@
                     <div id="live-time" class="font-bold text-white text-sm">00:00:00</div>
                     <div id="live-date" class="text-sky-200">Senin, 01 Jan 2026</div>
                 </div>
+                <!-- Tombol Putih Huruf Biru -->
+                <button id="open-cart-button" onclick="openCart()" class="bg-white text-sky-700 border border-sky-300 hover:bg-sky-50 px-4 py-2 rounded-xl font-bold transition flex items-center shadow">
+                    <i class="fa-solid fa-cart-shopping mr-2"></i> Keranjang
+                    <span id="cart-count" class="ml-2 bg-sky-600 text-white text-xs px-2 py-0.5 rounded-full">0</span>
+                </button>
             </div>
         </div>
     </header>
@@ -65,7 +71,9 @@
         <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
                 <h2 class="text-2xl font-extrabold text-sky-950">Daftar Menu</h2>
-                <p class="mt-1 text-sm text-slate-500">Pilih menu dan isi formulir pesanan di bawah ini.</p>
+                <p class="mt-1 text-sm text-slate-500">Pilih menu, masukkan ke keranjang, lalu kirim pesanan.</p>
+                <!-- Informasi Topping B2 Non-Halal (Tanpa Logo Segitiga) -->
+                <p class="mt-1 text-xs font-semibold text-slate-700">Informasi: Topping B2 bersifat non-halal.</p>
             </div>
 
             <select
@@ -79,78 +87,36 @@
             </select>
         </div>
 
-        <div id="menu-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12"></div>
+        <div id="menu-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
 
-        <!-- FORMULIR PEMESANAN LANGSUNG -->
-        <section class="mx-auto max-w-2xl rounded-2xl bg-white p-5 shadow-md sm:p-7 border border-sky-100 mb-12">
-            <h2 class="text-xl font-extrabold text-sky-950 mb-2">Formulir Pemesanan</h2>
-            <p class="text-sm text-slate-500 mb-5">Pilih menu, lengkapi data Anda, lalu kirim pesanan.</p>
-
-            <form id="direct-order-form" onsubmit="submitDirectOrder(event)" class="space-y-4">
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-1">Pilih Menu & Jumlah</label>
-                    <select id="order-menu-select" required class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-500 font-medium">
-                        <!-- Diisi otomatis oleh JavaScript -->
-                    </select>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-1">Jumlah Porsi</label>
-                        <input id="order-qty" type="number" min="1" value="1" required class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-500">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-1">Metode Pembayaran</label>
-                        <select id="payment-method" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-500 font-medium">
-                            <option value="BCA">BCA - 1234567890 (a.n. Mie Bangka Teladan)</option>
-                            <option value="DANA">DANA - 081267166886 (a.n. Mie Bangka Teladan)</option>
-                            <option value="Kasir">Bayar di Kasir (Tunai)</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-1">Nama Pelanggan</label>
-                    <input id="buyer-name" type="text" required maxlength="80" placeholder="Nama lengkap" class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-500">
-                </div>
-
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-1">Nomor HP / WhatsApp</label>
-                    <input id="buyer-phone" type="tel" required maxlength="20" placeholder="Contoh: 081234567890" class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-500">
-                </div>
-
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-1">Nomor Meja</label>
-                    <input id="buyer-address" type="text" required maxlength="200" placeholder="Contoh: Meja 3" class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-500">
-                </div>
-
-                <button type="submit" id="submit-order-button" class="w-full rounded-xl bg-white text-sky-700 border border-sky-500 px-4 py-3 font-bold hover:bg-sky-50 transition shadow">
-                    <i class="fa-solid fa-check mr-2"></i> Kirim Pesanan
-                </button>
-
-                <p id="checkout-message" class="text-center text-sm" aria-live="polite"></p>
-            </form>
-        </section>
-
-        <!-- STATUS PESANAN (1 Kolom: Nomor Meja) -->
-        <section id="status-pesanan-section" class="mx-auto max-w-2xl rounded-2xl bg-white p-5 shadow-md sm:p-7 border border-sky-100 scroll-mt-24">
+        <!-- STATUS PESANAN -->
+        <section id="status-pesanan-section" class="mx-auto mt-16 max-w-2xl rounded-2xl bg-white p-5 shadow-md sm:p-7 border border-sky-100 scroll-mt-24">
             <h2 class="text-xl font-extrabold text-sky-950">
                 Status Pesanan
             </h2>
 
             <p class="mt-2 text-sm text-slate-500">
-                Masukkan nomor meja untuk melihat status pesanan dari resto yang sedang dikerjakan.
+                Masukkan ID pesanan dan nomor HP untuk melihat status pesanan dari resto yang sedang dikerjakan.
             </p>
 
-            <form id="status-form" onsubmit="checkOrderStatusByTable(event)" class="mt-5 space-y-3">
+            <form id="status-form" onsubmit="checkOrderStatusSubmit(event)" class="mt-5 space-y-3">
                 <input
-                    id="lookup-table"
+                    id="lookup-order-id"
                     type="text"
                     required
-                    placeholder="Contoh: Meja 3"
+                    placeholder="Contoh: ORD-ABC12345"
                     class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-500"
                 >
 
+                <input
+                    id="lookup-phone"
+                    type="tel"
+                    required
+                    placeholder="Contoh: 081234567890"
+                    class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-500"
+                >
+
+                <!-- Tombol Putih Huruf Biru -->
                 <button
                     type="submit"
                     id="check-status-button"
@@ -176,6 +142,157 @@
         <button onclick="scrollToBottom()" class="bg-sky-600 hover:bg-sky-700 text-white w-11 h-11 rounded-full shadow-xl flex items-center justify-center transition transform hover:scale-110" title="Gulir ke Bawah">
             <i class="fa-solid fa-arrow-down text-base"></i>
         </button>
+    </div>
+
+    <!-- MODAL KERANJANG -->
+    <div
+        id="cart-modal"
+        class="modal-hidden fixed inset-0 z-50 overflow-y-auto bg-black/60 p-4 flex justify-center items-center"
+    >
+        <div class="mx-auto my-5 max-w-lg w-full rounded-2xl bg-white p-5 shadow-2xl sm:p-7 relative max-h-[90vh] overflow-y-auto">
+
+            <div class="flex items-center justify-between border-b pb-4">
+                <h2 class="text-xl font-extrabold text-sky-950">
+                    Keranjang & Pembayaran
+                </h2>
+
+                <button
+                    id="close-cart-button"
+                    type="button"
+                    onclick="closeCart()"
+                    class="rounded-lg px-3 py-1 text-2xl text-slate-500 hover:bg-slate-100"
+                    aria-label="Tutup keranjang"
+                >
+                    ×
+                </button>
+            </div>
+
+            <div
+                id="cart-items"
+                class="mt-4 max-h-48 space-y-3 overflow-y-auto divide-y divide-gray-200"
+            ></div>
+
+            <div class="mt-5 border-t pt-4">
+                <div class="flex items-center justify-between text-lg font-extrabold mb-4">
+                    <span>Total</span>
+                    <span id="cart-total" class="text-sky-700">Rp 0</span>
+                </div>
+            </div>
+
+            <form id="checkout-form" onsubmit="submitOrder(event)" class="space-y-3">
+
+                <div>
+                    <label for="buyer-name" class="mb-1 block text-sm font-bold text-gray-700">
+                        Nama Pelanggan
+                    </label>
+                    <input
+                        id="buyer-name"
+                        type="text"
+                        required
+                        maxlength="80"
+                        placeholder="Nama lengkap"
+                        class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-500"
+                    >
+                </div>
+
+                <div>
+                    <label for="buyer-phone" class="mb-1 block text-sm font-bold text-gray-700">
+                        Nomor HP / WhatsApp
+                    </label>
+                    <input
+                        id="buyer-phone"
+                        type="tel"
+                        required
+                        maxlength="20"
+                        inputmode="tel"
+                        placeholder="Contoh: 081234567890"
+                        class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-500"
+                    >
+                </div>
+
+                <div>
+                    <label for="buyer-address" class="mb-1 block text-sm font-bold text-gray-700">
+                        Nomor Meja / Alamat
+                    </label>
+                    <input
+                        id="buyer-address"
+                        type="text"
+                        required
+                        maxlength="200"
+                        placeholder="Contoh: Meja 3 atau alamat pengiriman"
+                        class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-500"
+                    >
+                </div>
+
+                <div>
+                    <label for="payment-method" class="mb-1 block text-sm font-bold text-gray-700">
+                        Metode Pembayaran (Pilih Bank / Kasir)
+                    </label>
+                    <select
+                        id="payment-method"
+                        class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-500 font-medium"
+                    >
+                        <option value="BCA">BCA - 1234567890 (a.n. Mie Bangka Teladan)</option>
+                        <option value="DANA">DANA - 081267166886 (a.n. Mie Bangka Teladan)</option>
+                        <option value="Kasir">Bayar di Kasir (Tunai)</option>
+                    </select>
+                </div>
+
+                <label class="flex items-start gap-2 rounded-xl bg-sky-50 p-3 text-xs text-slate-700 cursor-pointer">
+                    <input
+                        id="order-confirmation"
+                        type="checkbox"
+                        required
+                        class="mt-0.5 h-4 w-4 text-sky-600 rounded"
+                    >
+                    <span>
+                        Saya sudah memeriksa pesanan dan menyetujui untuk mengirim pesanan.
+                    </span>
+                </label>
+
+                <!-- Tombol Putih Huruf Biru -->
+                <button
+                    id="submit-order-button"
+                    type="submit"
+                    class="w-full rounded-xl bg-white text-sky-700 border border-sky-500 px-4 py-3 font-bold hover:bg-sky-50 transition shadow"
+                >
+                    <i class="fa-solid fa-check mr-2"></i> Kirim Pesanan
+                </button>
+
+                <p
+                    id="checkout-message"
+                    class="text-center text-sm"
+                    aria-live="polite"
+                ></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Timer Pembayaran 3 Menit (Tanpa Tombol Tutup) -->
+    <div id="payment-timer-modal" class="fixed inset-0 bg-black bg-opacity-80 hidden z-50 flex justify-center items-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 text-center border-t-4 border-sky-600">
+            <div class="w-14 h-14 bg-sky-100 text-sky-600 rounded-full flex items-center justify-center text-2xl mx-auto mb-3">
+                <i class="fa-solid fa-clock"></i>
+            </div>
+            <h3 class="text-xl font-extrabold text-sky-950 mb-1">Pesanan Berhasil Dikirim</h3>
+            <p class="text-xs text-gray-500 mb-2">Batas waktu konfirmasi / verifikasi resto (3 Menit):</p>
+            
+            <div id="countdown-timer" class="text-3xl font-black text-sky-700 mb-4 tracking-widest bg-sky-50 py-2 rounded-xl border border-sky-200">03:00</div>
+
+            <div class="bg-sky-50 p-3 rounded-2xl text-left text-xs space-y-2 mb-4 border border-sky-100">
+                <div><b>ID Pesanan:</b> <span id="pay-order-id"></span></div>
+                <div><b>Nama Pemesan:</b> <span id="pay-buyer-name"></span></div>
+                <div><b>Metode Pembayaran:</b> <span id="pay-method-chosen"></span></div>
+                <div><b>Total Harga:</b> <span id="pay-total" class="text-xl font-black text-sky-700 block mt-1"></span></div>
+            </div>
+
+            <!-- Ucapan Sopan -->
+            <div class="bg-emerald-50 text-emerald-800 p-3 rounded-xl text-xs font-bold mb-4 border border-emerald-200">
+                <i class="fa-solid fa-circle-check mr-1"></i> Silahkan lakukan pembayaran sesuai pilihan Anda. Pesanan akan segera diproses setelah diverifikasi resto.
+            </div>
+
+            <p class="text-[11px] text-gray-500">Jika waktu habis tanpa diproses resto atau jika telah diverifikasi, modal ini akan tertutup otomatis.</p>
+        </div>
     </div>
 
     <footer class="mt-10 bg-sky-950 px-4 py-7 text-center text-sm text-sky-100">
@@ -224,10 +341,10 @@
         const defaultMenu = [
             {
                 id: "menu-001",
-                name: "Mie Bangka Spesial",
+                name: "Mie Bangka Spesial (Topping B2)",
                 category: "Makanan",
                 price: 25000,
-                description: "Mie kenyal khas Bangka dengan topping cincang gurih dan pangsit.",
+                description: "Mie kenyal khas Bangka dengan topping cincang B2 gurih dan pangsit.",
                 image: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=700&q=80"
             },
             {
@@ -248,9 +365,10 @@
             }
         ];
 
+        let cart = new Map();
         let currentCategory = "Semua";
         let currentSlideIndex = 0;
-        let activeTable = null;
+        let activeTrackingId = null;
 
         function initApp() {
             if (!safeGet('mb_menus')) safeSet('mb_menus', JSON.stringify(defaultMenu));
@@ -262,17 +380,8 @@
             checkRestoStatus();
             loadBanners();
             renderMenu();
-            populateMenuSelect();
-            
-            let savedTable = safeGet('mb_active_table');
-            if (savedTable) {
-                const tableInput = document.getElementById('lookup-table');
-                if (tableInput) tableInput.value = savedTable;
-                activeTable = savedTable;
-                displayOrderStatusAuto(savedTable);
-            }
-
             setInterval(checkCustomerOrdersExpiry, 1000);
+            setInterval(autoCheckActiveOrderStatus, 2000);
         }
 
         function checkRestoStatus() {
@@ -358,29 +467,82 @@
                             <p class="mt-2 flex-1 text-sm leading-6 text-slate-600 line-clamp-2">${item.desc || item.description || '-'}</p>
                             <div class="mt-5 flex items-center justify-between gap-3">
                                 <strong class="text-lg font-extrabold text-sky-700">${rupiah(item.price)}</strong>
-                                <button type="button" onclick="selectMenuForOrder('${item.id}')" class="rounded-xl bg-white text-sky-700 border border-sky-500 px-4 py-2 text-sm font-bold hover:bg-sky-50 transition shadow">Pilih</button>
+                                <button type="button" onclick="addToCart('${item.id}')" class="rounded-xl bg-white text-sky-700 border border-sky-500 px-4 py-2 text-sm font-bold hover:bg-sky-50 transition shadow">Pesan</button>
                             </div>
                         </div>
                     </article>`;
             });
         }
 
-        function populateMenuSelect() {
-            const select = document.getElementById('order-menu-select');
-            if (!select) return;
+        function addToCart(menuId) {
             let menuList = [];
             try { menuList = JSON.parse(safeGet('mb_menus')) || defaultMenu; } catch(e) { menuList = defaultMenu; }
-            select.innerHTML = '';
-            menuList.forEach(m => {
-                select.innerHTML += `<option value="${m.id}">${m.name} - ${rupiah(m.price)}</option>`;
-            });
+            const item = menuList.find(m => String(m.id) === String(menuId));
+            if (!item) return;
+
+            cart.set(item.id, (cart.get(item.id) || 0) + 1);
+            renderCart();
+            openCart();
         }
 
-        function selectMenuForOrder(menuId) {
-            const select = document.getElementById('order-menu-select');
-            if (select) select.value = menuId;
-            const formSec = document.getElementById('direct-order-form');
-            if (formSec) formSec.scrollIntoView({ behavior: 'smooth' });
+        function renderCart() {
+            const cartItems = document.getElementById('cart-items');
+            if (!cartItems) return;
+            cartItems.innerHTML = '';
+
+            let totalItems = 0;
+            let totalPrice = 0;
+
+            let menuList = [];
+            try { menuList = JSON.parse(safeGet('mb_menus')) || defaultMenu; } catch(e) { menuList = defaultMenu; }
+
+            cart.forEach((quantity, menuId) => {
+                const item = menuList.find(m => String(m.id) === String(menuId));
+                if (!item) return;
+
+                totalItems += quantity;
+                totalPrice += item.price * quantity;
+
+                cartItems.innerHTML += `
+                    <div class="flex items-center justify-between gap-3 p-2">
+                        <div class="min-w-0 flex-1">
+                            <p class="truncate font-bold text-slate-800 text-sm">${item.name}</p>
+                            <p class="text-xs text-slate-500">${quantity} × ${rupiah(item.price)}</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button type="button" onclick="changeQuantity('${menuId}', -1)" class="rounded-lg bg-slate-100 px-2.5 py-1 font-bold hover:bg-slate-200 text-xs">-</button>
+                            <span class="min-w-5 text-center font-bold text-sm">${quantity}</span>
+                            <button type="button" onclick="changeQuantity('${menuId}', 1)" class="rounded-lg bg-slate-100 px-2.5 py-1 font-bold hover:bg-slate-200 text-xs">+</button>
+                        </div>
+                    </div>`;
+            });
+
+            if (totalItems === 0) {
+                cartItems.innerHTML = `<p class="py-5 text-center text-sm text-slate-500">Keranjang masih kosong.</p>`;
+            }
+
+            document.getElementById('cart-count').textContent = String(totalItems);
+            document.getElementById('cart-total').textContent = rupiah(totalPrice);
+        }
+
+        function changeQuantity(menuId, delta) {
+            const qty = cart.get(menuId) || 0;
+            const newQty = qty + delta;
+            if (newQty <= 0) {
+                cart.delete(menuId);
+            } else {
+                cart.set(menuId, newQty);
+            }
+            renderCart();
+        }
+
+        function openCart() {
+            document.getElementById('cart-modal').classList.remove('modal-hidden');
+            renderCart();
+        }
+
+        function closeCart() {
+            document.getElementById('cart-modal').classList.add('modal-hidden');
         }
 
         function normalizePhone(phone) {
@@ -405,13 +567,17 @@
             return result;
         }
 
-        async function submitDirectOrder(event) {
+        async function submitOrder(event) {
             event.preventDefault();
             const checkoutMessage = document.getElementById('checkout-message');
             const submitButton = document.getElementById('submit-order-button');
 
-            const menuId = document.getElementById('order-menu-select').value;
-            const qty = parseInt(document.getElementById('order-qty').value) || 1;
+            if (cart.size === 0) {
+                checkoutMessage.className = "text-center text-sm text-red-600";
+                checkoutMessage.textContent = "Keranjang masih kosong. Silakan pilih menu terlebih dahulu.";
+                return;
+            }
+
             const name = document.getElementById('buyer-name').value.trim();
             const phone = document.getElementById('buyer-phone').value.trim();
             const address = document.getElementById('buyer-address').value.trim();
@@ -426,10 +592,17 @@
 
             let menuList = [];
             try { menuList = JSON.parse(safeGet('mb_menus')) || defaultMenu; } catch(e) { menuList = defaultMenu; }
-            const item = menuList.find(m => String(m.id) === String(menuId));
-            if (!item) return;
 
-            const total = item.price * qty;
+            const orderItems = [];
+            let total = 0;
+
+            cart.forEach((quantity, menuId) => {
+                const item = menuList.find(m => String(m.id) === String(menuId));
+                if (!item) return;
+                orderItems.push({ id: item.id, name: item.name, price: item.price, qty: quantity });
+                total += item.price * quantity;
+            });
+
             const orderId = createOrderId();
             const nowTime = Date.now();
             const dateStr = new Date().toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
@@ -442,7 +615,7 @@
                 name: name,
                 phone: normalizedPhone,
                 address: address,
-                items: [{ id: item.id, name: item.name, price: item.price, qty: qty }],
+                items: orderItems,
                 total: String(total),
                 payment: payment,
                 status: "Menunggu"
@@ -480,27 +653,59 @@
                     console.log("SheetDB cloud sync note:", err);
                 }
 
-                safeSet('mb_active_table', address);
-                activeTable = address;
-                const tableInput = document.getElementById('lookup-table');
-                if (tableInput) tableInput.value = address;
-                displayOrderStatusAuto(address);
+                localStorage.setItem("last_order_id", order.id);
+                document.getElementById('lookup-order-id').value = order.id;
+                document.getElementById('lookup-phone').value = normalizedPhone;
+                activeTrackingId = order.id;
 
+                cart.clear();
+                renderCart();
+                closeCart();
                 submitButton.disabled = false;
-                checkoutMessage.className = "text-center text-sm text-green-600 font-bold";
-                checkoutMessage.textContent = "Pesanan berhasil dikirim!";
-                
-                document.getElementById('direct-order-form').reset();
-                setTimeout(() => { checkoutMessage.textContent = ""; }, 4000);
+                checkoutMessage.textContent = "";
 
-                const statusSec = document.getElementById('status-pesanan-section');
-                if (statusSec) statusSec.scrollIntoView({ behavior: 'smooth' });
+                // Tampilkan Modal Timer 3 Menit (Tanpa Tombol Tutup)
+                document.getElementById('pay-order-id').textContent = order.id;
+                document.getElementById('pay-buyer-name').textContent = order.name;
+                document.getElementById('pay-method-chosen').textContent = payment;
+                document.getElementById('pay-total').textContent = rupiah(total);
+                document.getElementById('payment-timer-modal').classList.remove('hidden');
+                startCountdownTimer(3 * 60);
 
             } catch (error) {
                 submitButton.disabled = false;
                 checkoutMessage.className = "text-center text-sm text-red-600";
                 checkoutMessage.textContent = "Gagal mengirim pesanan: " + error.message;
             }
+        }
+
+        function closeTimerModal() {
+            document.getElementById('payment-timer-modal').classList.add('hidden');
+            const section = document.getElementById('status-pesanan-section');
+            if (section) section.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function startCountdownTimer(durationSeconds) {
+            let timer = durationSeconds;
+            const display = document.getElementById('countdown-timer');
+            if(!display) return;
+            
+            clearInterval(window.orderTimerInterval);
+            window.orderTimerInterval = setInterval(function () {
+                let minutes = parseInt(timer / 60, 10);
+                let seconds = parseInt(timer % 60, 10);
+
+                minutes = minutes < 10 ? "0" + minutes : minutes;
+                seconds = seconds < 10 ? "0" + seconds : seconds;
+
+                display.textContent = minutes + ":" + seconds;
+
+                if (--timer < 0) {
+                    clearInterval(window.orderTimerInterval);
+                    display.textContent = "Waktu Habis";
+                    closeTimerModal();
+                }
+            }, 1000);
         }
 
         function checkCustomerOrdersExpiry() {
@@ -525,54 +730,80 @@
             }
         }
 
-        function checkOrderStatusByTable(event) {
-            if (event) event.preventDefault();
-            const tableVal = document.getElementById('lookup-table').value.trim();
-            if (!tableVal) return;
-            safeSet('mb_active_table', tableVal);
-            activeTable = tableVal;
-            displayOrderStatusAuto(tableVal);
-        }
-
-        function displayOrderStatusAuto(tableQuery) {
-            const resultDiv = document.getElementById('status-result');
-            if (!resultDiv) return;
-
+        function autoCheckActiveOrderStatus() {
+            if (!activeTrackingId) return;
             let localOrders = [];
             try { localOrders = JSON.parse(localStorage.getItem('mb_orders') || '[]'); } catch(e) { localOrders = []; }
-
-            let foundOrders = localOrders.filter(o => String(o.address || "").toLowerCase().includes(tableQuery.toLowerCase()));
-
-            if (foundOrders.length === 0) {
-                resultDiv.className = "mt-4 rounded-xl p-4 text-sm bg-red-50 text-red-700";
-                resultDiv.textContent = `Tidak ditemukan pesanan untuk "${tableQuery}".`;
-                return;
+            let found = localOrders.find(o => o.id === activeTrackingId);
+            if (found && (found.status === 'Diproses' || found.status === 'Selesai')) {
+                const modal = document.getElementById('payment-timer-modal');
+                if (modal && !modal.classList.contains('hidden')) {
+                    closeTimerModal();
+                }
+                activeTrackingId = null;
             }
+        }
 
-            let foundOrder = foundOrders[foundOrders.length - 1];
+        async function checkOrderStatusSubmit(event) {
+            event.preventDefault();
+            const orderId = document.getElementById('lookup-order-id').value.trim();
+            const phone = normalizePhone(document.getElementById('lookup-phone').value);
+            const resultDiv = document.getElementById('status-result');
 
-            resultDiv.className = "mt-4 rounded-xl border border-sky-200 bg-white p-4 text-sm shadow-sm";
-            let statusBadgeClass = "bg-yellow-100 text-yellow-800";
-            const st = foundOrder.status || "Menunggu";
-            if(st === 'Diproses') statusBadgeClass = "bg-blue-100 text-blue-800";
-            if(st === 'Selesai') statusBadgeClass = "bg-green-100 text-green-800";
-            if(st === 'Dibatalkan') statusBadgeClass = "bg-red-100 text-red-800";
+            resultDiv.className = "mt-4 rounded-xl p-4 text-sm bg-sky-50 text-sky-800";
+            resultDiv.textContent = "Mencari status pesanan...";
 
-            let restNote = (st === 'Diproses' || st === 'Selesai') 
-                ? '<div class="mt-2 text-xs font-bold text-sky-700 bg-sky-50 p-2 rounded">Pesanan sedang dikerjakan / diproses oleh resto Mie Bangka Teladan.</div>' 
-                : '<div class="mt-2 text-xs font-bold text-amber-700 bg-amber-50 p-2 rounded">Menunggu verifikasi dan konfirmasi dari resto. Silakan lakukan pembayaran.</div>';
+            try {
+                let foundOrder = null;
+                let localOrders = [];
+                try { localOrders = JSON.parse(localStorage.getItem('mb_orders') || '[]'); } catch(e) { localOrders = []; }
+                
+                foundOrder = localOrders.find(o => String(o.id).toLowerCase() === String(orderId).toLowerCase() && normalizePhone(o.phone) === phone);
 
-            resultDiv.innerHTML = `
-                <p class="font-extrabold text-sky-950 text-base mb-2"><i class="fa-solid fa-circle-check text-green-600 mr-1"></i> Pesanan Ditemukan (${foundOrder.address})</p>
-                <div class="space-y-1 text-xs text-gray-700">
-                    <div><b>ID Pesanan:</b> ${foundOrder.id}</div>
-                    <div><b>Nama:</b> ${foundOrder.name}</div>
-                    <div><b>Status:</b> <span class="px-2 py-0.5 rounded font-bold ${statusBadgeClass}">${st}</span></div>
-                    <div><b>Total:</b> ${rupiah(foundOrder.total)}</div>
-                    <div><b>Pembayaran:</b> ${foundOrder.payment || '-'}</div>
-                    <div><b>Waktu:</b> ${foundOrder.created_at || foundOrder.date || '-'}</div>
-                    ${restNote}
-                </div>`;
+                if (!foundOrder) {
+                    try {
+                        const data = await apiRequest(SHEETDB_API + "/search?id=" + encodeURIComponent(orderId));
+                        if (Array.isArray(data) && data.length > 0) {
+                            foundOrder = data.find(o => normalizePhone(o.phone || o.telepon) === phone);
+                        }
+                    } catch(err) {
+                        console.log("Cloud search error:", err);
+                    }
+                }
+
+                if (!foundOrder) {
+                    resultDiv.className = "mt-4 rounded-xl p-4 text-sm bg-red-50 text-red-700";
+                    resultDiv.textContent = "Pesanan dengan ID dan Nomor HP tersebut tidak ditemukan atau waktu 3 menit telah habis.";
+                    return;
+                }
+
+                resultDiv.className = "mt-4 rounded-xl border border-sky-200 bg-white p-4 text-sm shadow-sm";
+                let statusBadgeClass = "bg-yellow-100 text-yellow-800";
+                const st = foundOrder.status || "Menunggu";
+                if(st === 'Diproses') statusBadgeClass = "bg-blue-100 text-blue-800";
+                if(st === 'Selesai') statusBadgeClass = "bg-green-100 text-green-800";
+                if(st === 'Dibatalkan') statusBadgeClass = "bg-red-100 text-red-800";
+
+                let restNote = (st === 'Diproses' || st === 'Selesai') 
+                    ? '<div class="mt-2 text-xs font-bold text-sky-700 bg-sky-50 p-2 rounded">Pesanan sedang dikerjakan / diproses oleh resto Mie Bangka Teladan.</div>' 
+                    : '<div class="mt-2 text-xs font-bold text-amber-700 bg-amber-50 p-2 rounded">Menunggu verifikasi dan konfirmasi dari resto. Silakan lakukan pembayaran.</div>';
+
+                resultDiv.innerHTML = `
+                    <p class="font-extrabold text-sky-950 text-base mb-2"><i class="fa-solid fa-circle-check text-green-600 mr-1"></i> Pesanan Ditemukan</p>
+                    <div class="space-y-1 text-xs text-gray-700">
+                        <div><b>ID Pesanan:</b> ${foundOrder.id}</div>
+                        <div><b>Nama:</b> ${foundOrder.name}</div>
+                        <div><b>Status:</b> <span class="px-2 py-0.5 rounded font-bold ${statusBadgeClass}">${st}</span></div>
+                        <div><b>Total:</b> ${rupiah(foundOrder.total)}</div>
+                        <div><b>Pembayaran:</b> ${foundOrder.payment || '-'}</div>
+                        <div><b>Waktu:</b> ${foundOrder.created_at || foundOrder.date || '-'}</div>
+                        ${restNote}
+                    </div>`;
+
+            } catch (error) {
+                resultDiv.className = "mt-4 rounded-xl p-4 text-sm bg-red-50 text-red-700";
+                resultDiv.textContent = "Gagal memuat status: " + error.message;
+            }
         }
 
         window.onload = initApp;
