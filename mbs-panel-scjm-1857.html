@@ -103,7 +103,6 @@
       await loadStatusToko();
       await loadOrders();
       
-      // Subscribe realtime pesanan baru
       supabaseClient
         .channel('public:orders')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, payload => {
