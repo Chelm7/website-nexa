@@ -268,7 +268,7 @@
         </div>
     </div>
 
-    <!-- Modal Timer Pembayaran 3 Menit (Tanpa Tombol Tutup) -->
+    <!-- Modal Timer Pembayaran 3 Menit (Tanpa Tombol Tutup & Tanpa Teks Keterangan) -->
     <div id="payment-timer-modal" class="fixed inset-0 bg-black bg-opacity-80 hidden z-50 flex justify-center items-center p-4">
         <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 text-center border-t-4 border-sky-600">
             <div class="w-14 h-14 bg-sky-100 text-sky-600 rounded-full flex items-center justify-center text-2xl mx-auto mb-3">
@@ -287,11 +287,9 @@
             </div>
 
             <!-- Ucapan Sopan -->
-            <div class="bg-emerald-50 text-emerald-800 p-3 rounded-xl text-xs font-bold mb-4 border border-emerald-200">
+            <div class="bg-emerald-50 text-emerald-800 p-3 rounded-xl text-xs font-bold border border-emerald-200">
                 <i class="fa-solid fa-circle-check mr-1"></i> Silahkan lakukan pembayaran sesuai pilihan Anda. Pesanan akan segera diproses setelah diverifikasi resto.
             </div>
-
-            <p class="text-[11px] text-gray-500">Jika waktu habis tanpa diproses resto atau jika telah diverifikasi, modal ini akan tertutup otomatis.</p>
         </div>
     </div>
 
@@ -664,7 +662,7 @@
                 submitButton.disabled = false;
                 checkoutMessage.textContent = "";
 
-                // Tampilkan Modal Timer 3 Menit (Tanpa Tombol Tutup)
+                // Tampilkan Modal Timer 3 Menit
                 document.getElementById('pay-order-id').textContent = order.id;
                 document.getElementById('pay-buyer-name').textContent = order.name;
                 document.getElementById('pay-method-chosen').textContent = payment;
