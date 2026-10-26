@@ -7,11 +7,8 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <style>
-    body { background-color: #f8fafc; font-family: sans-serif; }
-  </style>
 </head>
-<body class="pb-24">
+<body class="bg-slate-50 pb-24">
 
   <!-- Banner Restoran Tutup -->
   <div id="banner-tutup" class="hidden bg-red-600 text-white text-center py-2 px-4 text-sm font-semibold sticky top-0 z-50 shadow-md">
@@ -39,15 +36,6 @@
 
   <!-- Content Container -->
   <main class="max-w-md mx-auto p-4 space-y-4">
-
-    <!-- Info Jam Operasional -->
-    <div class="bg-sky-50 border border-sky-200 rounded-xl p-3 text-xs text-sky-800 flex justify-between items-center">
-      <div>
-        <i class="fa-regular fa-clock mr-1"></i> Jam Operasional: <span class="font-semibold">08:00 - 20:00 WIB</span>
-      </div>
-      <span class="font-bold text-sky-700">Resto Siap Melayani</span>
-    </div>
-
     <!-- Filter Menu -->
     <div class="flex gap-2 overflow-x-auto pb-1">
       <button onclick="filterKategori('semua')" class="btn-kategori bg-sky-600 text-white px-4 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap shadow-sm">Semua Menu</button>
@@ -59,7 +47,6 @@
     <div id="menu-container" class="grid grid-cols-1 gap-4">
       <p class="text-center text-gray-500 text-sm py-8">Memuat menu...</p>
     </div>
-
   </main>
 
   <!-- Modal Keranjang & Checkout -->
@@ -70,9 +57,7 @@
         <button onclick="toggleKeranjang()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-xl"></i></button>
       </div>
 
-      <div id="cart-items" class="space-y-3 text-sm divide-y">
-        <!-- Item keranjang dimasukkan via JS -->
-      </div>
+      <div id="cart-items" class="space-y-3 text-sm divide-y"></div>
 
       <div class="border-t pt-3 space-y-3">
         <div class="flex justify-between font-bold text-base">
@@ -91,7 +76,7 @@
           </div>
           <div>
             <label class="block text-xs font-medium text-gray-700">Catatan Tambahan (Opsional)</label>
-            <textarea id="catatan" placeholder="Contoh: Minta kuah dipisah, pedas sedang" class="w-full text-sm p-2 border rounded-lg mt-1 focus:ring-2 focus:ring-sky-500 outline-none" rows="2"></textarea>
+            <textarea id="catatan" placeholder="Contoh: Minta kuah dipisah" class="w-full text-sm p-2 border rounded-lg mt-1 focus:ring-2 focus:ring-sky-500 outline-none" rows="2"></textarea>
           </div>
           <button id="btn-submit" type="submit" class="w-full bg-sky-600 text-white font-bold py-2.5 rounded-xl text-sm shadow-md hover:bg-sky-700 transition">
             Kirim Pesanan Sekarang
@@ -116,7 +101,7 @@
     }
 
     async function cekStatusToko() {
-      const { data, error } = await supabaseClient.from('settings').select('*').eq('key', 'store_status').single();
+      const { data } = await supabaseClient.from('settings').select('*').eq('key', 'store_status').single();
       if (data) {
         tokoBuka = data.value === 'open';
         const banner = document.getElementById('banner-tutup');
@@ -135,11 +120,7 @@
     }
 
     async function loadMenu() {
-      const { data, error } = await supabaseClient.from('menus').select('*').eq('is_available', true);
-      if (error) {
-        console.error('Error fetching menu:', error);
-        return;
-      }
+      const { data } = await supabaseClient.from('menus').select('*').eq('is_available', true);
       listMenu = data || [];
       renderMenu(listMenu);
     }
@@ -147,10 +128,9 @@
     function renderMenu(items) {
       const container = document.getElementById('menu-container');
       if (items.length === 0) {
-        container.innerHTML = `<p class="text-center text-gray-500 text-sm py-8">Tidak ada menu yang tersedia saat ini.</p>`;
+        container.innerHTML = `<p class="text-center text-gray-500 text-sm py-8">Tidak ada menu yang tersedia.</p>`;
         return;
       }
-
       container.innerHTML = items.map(item => `
         <div class="bg-white rounded-2xl p-3 shadow-sm border border-gray-100 flex gap-3 items-center">
           <img src="${item.image_url || 'https://via.placeholder.com/100'}" alt="${item.name}" class="w-20 h-20 object-cover rounded-xl bg-gray-100">
@@ -159,9 +139,7 @@
             <p class="text-xs text-gray-500 line-clamp-1">${item.description || ''}</p>
             <div class="mt-2 flex justify-between items-center">
               <span class="font-extrabold text-sky-700 text-sm">Rp ${Number(item.price).toLocaleString('id-ID')}</span>
-              <button onclick="addToCart(${item.id})" class="bg-sky-600 text-white text-xs px-3 py-1.5 rounded-lg font-semibold hover:bg-sky-700 active:scale-95 transition">
-                + Tambah
-              </button>
+              <button onclick="addToCart(${item.id})" class="bg-sky-600 text-white text-xs px-3 py-1.5 rounded-lg font-semibold hover:bg-sky-700">+ Tambah</button>
             </div>
           </div>
         </div>
@@ -175,7 +153,6 @@
       }
       const item = listMenu.find(m => m.id === id);
       if (!item) return;
-
       const existing = cart.find(c => c.id === id);
       if (existing) {
         existing.qty += 1;
@@ -188,7 +165,6 @@
     function updateCartUI() {
       const count = cart.reduce((acc, c) => acc + c.qty, 0);
       document.getElementById('cart-count').innerText = count;
-
       const itemsContainer = document.getElementById('cart-items');
       if (cart.length === 0) {
         itemsContainer.innerHTML = '<p class="text-center text-gray-400 py-4">Keranjang masih kosong</p>';
@@ -207,16 +183,13 @@
           </div>
         `).join('');
       }
-
       const total = cart.reduce((acc, c) => acc + (c.price * c.qty), 0);
       document.getElementById('cart-total').innerText = 'Rp ' + total.toLocaleString('id-ID');
     }
 
     function changeQty(index, delta) {
       cart[index].qty += delta;
-      if (cart[index].qty <= 0) {
-        cart.splice(index, 1);
-      }
+      if (cart[index].qty <= 0) cart.splice(index, 1);
       updateCartUI();
     }
 
@@ -227,35 +200,29 @@
     async function kirimPesanan(e) {
       e.preventDefault();
       if (!tokoBuka) {
-        alert('Restoran sedang tutup, pesanan tidak dapat dikirim.');
+        alert('Restoran sedang tutup.');
         return;
       }
       if (cart.length === 0) {
-        alert('Keranjang Anda masih kosong!');
+        alert('Keranjang kosong!');
         return;
       }
 
-      const nama = document.getElementById('nama_pemesan').value;
-      const meja = document.getElementById('nomor_meja').value;
-      const catatan = document.getElementById('catatan').value;
-      const total = cart.reduce((acc, c) => acc + (c.price * c.qty), 0);
-
       const payload = {
         order_id: 'MB-' + Math.floor(1000 + Math.random() * 9000),
-        customer_name: nama,
-        table_number: meja,
-        notes: catatan,
+        customer_name: document.getElementById('nama_pemesan').value,
+        table_number: document.getElementById('nomor_meja').value,
+        notes: document.getElementById('catatan').value,
         items: cart,
-        total_price: total,
+        total_price: cart.reduce((acc, c) => acc + (c.price * c.qty), 0),
         status: 'pending'
       };
 
-      const { data, error } = await supabaseClient.from('orders').insert([payload]);
-
+      const { error } = await supabaseClient.from('orders').insert([payload]);
       if (error) {
-        alert('Gagal mengirim pesanan: ' + error.message);
+        alert('Gagal: ' + error.message);
       } else {
-        alert('Pesanan berhasil dikirim! Silakan tunggu konfirmasi kasir/dapur.');
+        alert('Pesanan berhasil dikirim!');
         cart = [];
         updateCartUI();
         toggleKeranjang();
