@@ -495,7 +495,7 @@
         window.onload = initApp;
     </script>
 
-// Ganti fungsi klik tombol proses di admin dengan kode ini:
+// Fungsi untuk memproses pesanan di panel admin
 function prosesPesananAdmin(namaPelanggan, menuPesanan, totalHarga, noHpPelanggan) {
   
   // 1. Data dikirim otomatis ke SheetDB Anda
@@ -518,7 +518,7 @@ function prosesPesananAdmin(namaPelanggan, menuPesanan, totalHarga, noHpPelangga
   })
   .then(response => response.json())
   .then(data => {
-    // 2. Berhasil masuk database, lalu buat laporan WhatsApp otomatis ke pelanggan
+    // 2. Jika sukses masuk Google Sheet, tampilkan pemberitahuan & buka WhatsApp
     alert('Pesanan berhasil diproses dan tercatat di laporan!');
     
     // Ubah format nomor HP (08xx jadi 628xx)
@@ -535,6 +535,7 @@ function prosesPesananAdmin(namaPelanggan, menuPesanan, totalHarga, noHpPelangga
     alert('Gagal menyimpan ke database, silakan coba lagi.');
   });
 }
+
 
 </body>
 </html>
