@@ -53,13 +53,17 @@
         </div>
     </header>
 
-    <!-- Banner Slider / Hero Section -->
-    <section class="w-full bg-gradient-to-r from-sky-900 via-sky-700 to-cyan-600 text-white shadow-sm overflow-hidden relative">
+    <!-- Banner Slider / Hero Section dengan Tombol Panah Kecil Transparan -->
+    <section class="w-full bg-gradient-to-r from-sky-900 via-sky-700 to-cyan-600 text-white shadow-sm overflow-hidden relative group">
         <div id="banner-container" class="relative h-56 sm:h-72 md:h-96 w-full flex items-center justify-center"></div>
-        <div class="flex justify-center space-x-3 my-3 absolute bottom-2 left-0 right-0 z-10">
-            <button onclick="changeBannerSlide(-1)" class="bg-white text-sky-700 border border-sky-300 hover:bg-sky-50 px-4 py-1.5 rounded-xl text-xs font-bold transition shadow"><i class="fa-solid fa-chevron-left mr-1"></i> Sebelumnya</button>
-            <button onclick="changeBannerSlide(1)" class="bg-white text-sky-700 border border-sky-300 hover:bg-sky-50 px-4 py-1.5 rounded-xl text-xs font-bold transition shadow">Selanjutnya <i class="fa-solid fa-chevron-right ml-1"></i></button>
-        </div>
+        
+        <!-- Panah Kecil Transparan di Kiri dan Kanan -->
+        <button onclick="changeBannerSlide(-1)" class="absolute left-3 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white w-9 h-9 rounded-full flex items-center justify-center text-sm transition z-20 backdrop-blur-sm">
+            <i class="fa-solid fa-chevron-left"></i>
+        </button>
+        <button onclick="changeBannerSlide(1)" class="absolute right-3 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white w-9 h-9 rounded-full flex items-center justify-center text-sm transition z-20 backdrop-blur-sm">
+            <i class="fa-solid fa-chevron-right"></i>
+        </button>
     </section>
 
     <!-- Kategori & Menu -->
@@ -68,7 +72,8 @@
             <div>
                 <h2 class="text-2xl font-extrabold text-sky-950">Daftar Menu</h2>
                 <p class="mt-1 text-sm text-slate-500">Pilih menu, masukkan ke keranjang, lalu kirim pesanan.</p>
-                <p class="mt-1 text-xs font-semibold text-red-600"><i class="fa-solid fa-triangle-exclamation"></i> Informasi: Topping B2 bersifat non-halal.</p>
+                <!-- Informasi Topping B2 Non-Halal (Tanpa Logo Segitiga) -->
+                <p class="mt-1 text-xs font-semibold text-slate-700">Informasi: Topping B2 bersifat non-halal.</p>
             </div>
 
             <select
@@ -701,7 +706,6 @@
                 if (--timer < 0) {
                     clearInterval(window.orderTimerInterval);
                     display.textContent = "Waktu Habis";
-                    // Jika waktu habis, tutup modal timer otomatis dan arahkan ke status
                     closeTimerModal();
                 }
             }, 1000);
@@ -735,7 +739,6 @@
             try { localOrders = JSON.parse(localStorage.getItem('mb_orders') || '[]'); } catch(e) { localOrders = []; }
             let found = localOrders.find(o => o.id === activeTrackingId);
             if (found && (found.status === 'Diproses' || found.status === 'Selesai')) {
-                // Jika sudah diproses atau selesai oleh resto, tutup modal timer otomatis & arahkan ke status pesanan
                 const modal = document.getElementById('payment-timer-modal');
                 if (modal && !modal.classList.contains('hidden')) {
                     closeTimerModal();
