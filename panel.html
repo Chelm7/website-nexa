@@ -633,13 +633,12 @@
             <div class="space-y-3 text-left">
                 <div>
                     <label class="text-xs font-bold text-gray-700">Nama Resto</label>
-                    <input type="text" id="admin-username" class="w-full p-2 border rounded-lg text-sm mt-1 focus:ring-2 focus:ring-sky-500 outline-none" autocomplete="off" placeholder="miebangka">
+                    <input type="text" id="admin-username" class="w-full p-2 border rounded-lg text-sm mt-1 focus:ring-2 focus:ring-sky-500 outline-none" autocomplete="off">
                 </div>
                 <div>
                     <label class="text-xs font-bold text-gray-700">Sandi</label>
                     <div class="relative mt-1">
-                        <!-- Kolom Sandi dengan Type Password & Icon Mata Sembunyi -->
-                        <input type="password" id="admin-password" class="w-full p-2 border rounded-lg text-sm focus:ring-2 focus:ring-sky-500 outline-none pr-10" autocomplete="new-password" placeholder="••••••••">
+                        <input type="password" id="admin-password" class="w-full p-2 border rounded-lg text-sm focus:ring-2 focus:ring-sky-500 outline-none pr-10" autocomplete="new-password">
                         <button type="button" onclick="toggleVisibility('admin-password', 'eye-1')" class="absolute right-3 top-2.5">
                             <i id="eye-1" class="fa-solid fa-eye text-sky-600"></i>
                         </button>
@@ -648,8 +647,7 @@
                 <div>
                     <label class="text-xs font-bold text-gray-700">PIN Rahasia Resto</label>
                     <div class="relative mt-1">
-                        <!-- Kolom PIN dengan Type Password & Icon Mata Sembunyi -->
-                        <input type="password" id="admin-pin" class="w-full p-2 border rounded-lg text-sm focus:ring-2 focus:ring-sky-500 outline-none pr-10" autocomplete="new-password" placeholder="••••••">
+                        <input type="password" id="admin-pin" class="w-full p-2 border rounded-lg text-sm focus:ring-2 focus:ring-sky-500 outline-none pr-10" autocomplete="new-password">
                         <button type="button" onclick="toggleVisibility('admin-pin', 'eye-2')" class="absolute right-3 top-2.5">
                             <i id="eye-2" class="fa-solid fa-eye text-sky-600"></i>
                         </button>
@@ -762,7 +760,7 @@
             </div>
         </section>
 
-        <!-- TAB 3: BANNER (Upload File Sepenuhnya) -->
+        <!-- TAB 3: BANNER -->
         <section id="section-banners" class="space-y-4 hidden">
             <div class="bg-white p-4 rounded-xl shadow border border-sky-100">
                 <h3 class="font-bold text-sm mb-3 text-sky-950">Unggah Banner Promo / Logo</h3>
