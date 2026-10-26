@@ -96,7 +96,7 @@
             </h2>
 
             <p class="mt-2 text-sm text-slate-500">
-                Masukkan ID pesanan dan nomor HP untuk melihat status pesanan dari resto yang sedang dikerjakan.
+                Masukkan urutan kode pesan untuk melihat status pesanan dari resto yang sedang dikerjakan.
             </p>
 
             <form id="status-form" onsubmit="checkOrderStatusSubmit(event)" class="mt-5 space-y-3">
@@ -108,21 +108,13 @@
                     class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-500"
                 >
 
-                <input
-                    id="lookup-phone"
-                    type="tel"
-                    required
-                    placeholder="Contoh: 081234567890"
-                    class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-500"
-                >
-
                 <!-- Tombol Putih Huruf Biru -->
                 <button
                     type="submit"
                     id="check-status-button"
                     class="w-full rounded-xl bg-white text-sky-700 border border-sky-500 px-4 py-3 font-bold hover:bg-sky-50 transition shadow"
                 >
-                    Cek Status
+                    Cek Pesanan
                 </button>
             </form>
 
@@ -655,8 +647,8 @@
 
                 localStorage.setItem("last_order_id", order.id);
                 document.getElementById('lookup-order-id').value = order.id;
-                document.getElementById('lookup-phone').value = normalizedPhone;
                 activeTrackingId = order.id;
+                checkOrderStatusSubmit();
 
                 cart.clear();
                 renderCart();
@@ -740,15 +732,17 @@
                 if (modal && !modal.classList.contains('hidden')) {
                     closeTimerModal();
                 }
+                checkOrderStatusSubmit();
                 activeTrackingId = null;
             }
         }
 
         async function checkOrderStatusSubmit(event) {
-            event.preventDefault();
+            if (event) event.preventDefault();
             const orderId = document.getElementById('lookup-order-id').value.trim();
-            const phone = normalizePhone(document.getElementById('lookup-phone').value);
             const resultDiv = document.getElementById('status-result');
+
+            if (!orderId) return;
 
             resultDiv.className = "mt-4 rounded-xl p-4 text-sm bg-sky-50 text-sky-800";
             resultDiv.textContent = "Mencari status pesanan...";
@@ -758,13 +752,13 @@
                 let localOrders = [];
                 try { localOrders = JSON.parse(localStorage.getItem('mb_orders') || '[]'); } catch(e) { localOrders = []; }
                 
-                foundOrder = localOrders.find(o => String(o.id).toLowerCase() === String(orderId).toLowerCase() && normalizePhone(o.phone) === phone);
+                foundOrder = localOrders.find(o => String(o.id).toLowerCase() === String(orderId).toLowerCase());
 
                 if (!foundOrder) {
                     try {
                         const data = await apiRequest(SHEETDB_API + "/search?id=" + encodeURIComponent(orderId));
                         if (Array.isArray(data) && data.length > 0) {
-                            foundOrder = data.find(o => normalizePhone(o.phone || o.telepon) === phone);
+                            foundOrder = data[0];
                         }
                     } catch(err) {
                         console.log("Cloud search error:", err);
@@ -773,7 +767,7 @@
 
                 if (!foundOrder) {
                     resultDiv.className = "mt-4 rounded-xl p-4 text-sm bg-red-50 text-red-700";
-                    resultDiv.textContent = "Pesanan dengan ID dan Nomor HP tersebut tidak ditemukan atau waktu 3 menit telah habis.";
+                    resultDiv.textContent = "Pesanan dengan kode tersebut tidak ditemukan.";
                     return;
                 }
 
