@@ -487,13 +487,26 @@
             orders.slice(0, 10).forEach(o => {
                 let badgeColor = o.status === 'Diproses' ? 'bg-blue-100 text-blue-800' : (o.status === 'Selesai' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800');
                 let noteMsg = o.status === 'Selesai' ? 'Pesanan Anda telah selesai. Terima kasih!' : (o.status === 'Diproses' ? 'Pesanan sedang disiapkan di dapur.' : 'Pesanan menunggu verifikasi resto.');
-                html += `<div class="p-3 bg-sky-50 rounded-xl border border-sky-200"><div class="flex justify-between font-bold"><span>ID: ${o.id} (${o.name})</span> <span class="px-2 py-0.5 rounded-full ${badgeColor}">${o.status}</span></div><div class="text-xs text-gray-600 mt-1">Meja/Alamat: ${o.address} | Total: Rp ${Number(o.total).toLocaleString('id-ID')}</div><div class="text-xs font-medium text-sky-800 mt-1">${noteMsg}</div></div>`;
-            });
-            container.innerHTML = html;
-        }
+                html += `<div class="p-3 bg-sky-50 rounded-xl border border-sky-200">
+            <div class="flex justify-between font-bold">
+                <span>ID: ${o.id} (${o.name})</span> 
+                <span class="px-2 py-0.5 rounded-full ${badgeColor}">${o.status}</span>
+            </div>
+            <div class="text-xs text-gray-600 mt-1">Meja/Alamat: ${o.address} | Total: Rp ${Number(o.total).toLocaleString('id-ID')}</div>
+            <div class="text-xs font-medium text-sky-800 mt-1">${noteMsg}</div>
+            
+            <!-- Tombol Proses & Kirim ke SheetDB -->
+            <button onclick="prosesPesananAdmin('${o.name}', 'Pesanan ID #${o.id}', ${o.total}, '${o.phone || '081267166886'}')" 
+                class="mt-2 w-full py-1.5 bg-green-600 text-white text-xs rounded-lg font-semibold hover:bg-green-700">
+                Proses & Simpan ke Sheets
+            </button>
+         </div>`;
+    });
+    container.innerHTML = html;
+}
 
-        window.onload = initApp;
-    </script>
+window.onload = initApp;
+</script>
 
 <script>
   // Fungsi untuk memproses pesanan di panel admin
