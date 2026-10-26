@@ -528,18 +528,10 @@ window.onload = initApp;
   }
 
 
-  // Fungsi yang ditekan oleh PIHAK RESTO saat pembayaran berhasil dikonfirmasi sebelum 3 menit
-  function restoKonfirmasiPembayaranBerhasil() {
-    // Hentikan timer batal otomatis karena resto sudah konfirmasi
-    clearTimeout(window.timerPesananAktif);
+    // Fungsi untuk memproses pesanan di panel admin
+  function prosesPesananAdmin(namaPelanggan, menuPesanan, totalHarga, noHpPelanggan) {
 
-    let data = window.dataPesananSementara;
-    if (!data) {
-      alert('Tidak ada pesanan aktif yang perlu diproses.');
-      return;
-    }
-
-    // Kirim data pesanan ke Google Sheets / SheetDB
+    // 1. Data dikirim otomatis ke SheetDB Anda
     fetch('https://sheetdb.io/api/v1/2ij5jepgf1fdy', {
       method: 'POST',
       headers: {
@@ -548,17 +540,28 @@ window.onload = initApp;
       },
       body: JSON.stringify({
         data: {
-          'Nama': data.nama,
-          'Menu': data.menu,
-          'Total': data.total
+          'Nama': namaPelanggan,
+          'Menu': menuPesanan,
+          'Total': totalHarga,
+          'NoHP': noHpPelanggan,
+          'Status': 'Selesai / Diproses',
+          'Tanggal': new Date().toLocaleString('id-ID')
         }
       })
     })
     .then(response => response.json())
-    .then(resData => {
-      alert('Pembayaran divalidasi resto! Pesanan berhasil tercatat di database laporan.');
-      // Bersihkan data sementara
-      window.dataPesananSementara = null;
+    .then(data => {
+      // 2. Jika sukses masuk Google Sheet, tampilkan pemberitahuan & buka WhatsApp
+      alert('Pesanan berhasil diproses dan tercatat di laporan!');
+
+      // Ubah format nomor HP (08xx jadi 628xx)
+      let formatNoHp = noHpPelanggan.replace(/^0/, '62');
+
+      // Pesan laporan yang otomatis terkirim ke pelanggan
+      let pesanLaporan = `Halo Kak ${namaPelanggan}, pesanan ${menuPesanan} (Total: Rp ${totalHarga}) sudah diproses dan sedang disiapkan ya! Terima kasih.`;
+      
+      let urlWa = `https://wa.me/${formatNoHp}?text=${encodeURIComponent(pesanLaporan)}`;
+      window.open(urlWa, '_blank');
     })
     .catch(error => {
       console.error('Error:', error);
