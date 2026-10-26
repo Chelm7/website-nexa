@@ -1,0 +1,832 @@
+<meta name='viewport' content='width=device-width, initial-scale=1'/><!DOCTYPE html>
+<html lang="id">
+<head> 
+    <meta charset="UTF-8"> 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+    <title>Panel Resto - Mie Bangka Teladan</title> 
+    <!-- Tailwind CSS --> 
+    <script src="https://cdn.tailwindcss.com"></script> 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"> 
+    
+    <script> 
+        let lastOrderCount = 0;
+        let audioCtx = null;
+
+        function checkAdminAuth() { 
+            if (sessionStorage.getItem('mb_admin_logged') !== 'true') { 
+                document.getElementById('login-modal').classList.remove('hidden'); 
+            } else { 
+                document.getElementById('login-modal').classList.add('hidden'); 
+                initAdminPanel(); 
+            } 
+        } 
+
+        function verifyAdminLogin() { 
+            let usernameInput = document.getElementById('admin-username').value.trim(); 
+            let passwordInput = document.getElementById('admin-password').value.trim(); 
+            let pinInput = document.getElementById('admin-pin').value.trim(); 
+            
+            let correctUsername = "miebangka"; 
+            let correctPassword = "admin123"; 
+            let correctPin = "886886"; 
+            
+            if (usernameInput !== correctUsername || passwordInput !== correctPassword) { 
+                alert('Nama Resto atau Sandi salah.'); 
+                return; 
+            } 
+            if (pinInput !== correctPin) { 
+                alert('PIN Rahasia Resto salah.'); 
+                return; 
+            } 
+            
+            try {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+            } catch(e) {
+                console.log("AudioContext init error:", e);
+            }
+
+            sessionStorage.setItem('mb_admin_logged', 'true'); 
+            alert('Masuk Panel Resto Berhasil.'); 
+            document.getElementById('login-modal').classList.add('hidden'); 
+            initAdminPanel(); 
+        } 
+
+        function logoutAdmin() {
+            sessionStorage.removeItem('mb_admin_logged');
+            location.reload();
+        }
+
+        function toggleVisibility(fieldId, iconId) { 
+            const field = document.getElementById(fieldId); 
+            const icon = document.getElementById(iconId); 
+            if (field.type === 'password') { 
+                field.type = 'text'; 
+                icon.className = 'fa-solid fa-eye-slash text-gray-500'; 
+            } else { 
+                field.type = 'password'; 
+                icon.className = 'fa-solid fa-eye text-gray-500'; 
+            } 
+        } 
+
+        function switchTab(tabName) {
+            const tabs = ['orders', 'menus', 'banners', 'banks', 'settings'];
+            tabs.forEach(t => {
+                let sec = document.getElementById(`section-${t}`);
+                let btn = document.getElementById(`tab-btn-${t}`);
+                if(sec) sec.classList.add('hidden');
+                if(btn) btn.className = "text-sky-200 hover:text-white pb-1";
+            });
+            let targetSec = document.getElementById(`section-${tabName}`);
+            let targetBtn = document.getElementById(`tab-btn-${tabName}`);
+            if(targetSec) targetSec.classList.remove('hidden');
+            if(targetBtn) targetBtn.className = "font-bold border-b-2 border-white pb-1";
+        }
+
+        function initAdminPanel() {
+            let status = localStorage.getItem('mb_resto_status') || 'Buka';
+            let statusSelect = document.getElementById('header-resto-status');
+            if(statusSelect) statusSelect.value = status;
+            
+            let orders = JSON.parse(localStorage.getItem('mb_orders') || '[]');
+            lastOrderCount = orders.length; 
+            
+            renderOrders();
+            setInterval(checkForNewOrders, 3000); 
+            
+            if(typeof renderMenus === 'function') renderMenus();
+            if(typeof renderBanners === 'function') renderBanners();
+            if(typeof renderBanks === 'function') renderBanks();
+            if(typeof renderSettings === 'function') renderSettings();
+        }
+
+        function playAdminSound() {
+            let soundEnabled = localStorage.getItem('mb_sound_enabled') !== 'false';
+            if(!soundEnabled) return;
+
+            try {
+                if (!audioCtx) {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+
+                let now = audioCtx.currentTime;
+                let osc1 = audioCtx.createOscillator();
+                let gain1 = audioCtx.createGain();
+                osc1.type = 'sine';
+                osc1.frequency.setValueAtTime(880, now); 
+                gain1.gain.setValueAtTime(0.2, now);
+                osc1.connect(gain1);
+                gain1.connect(audioCtx.destination);
+                osc1.start(now);
+                osc1.stop(now + 0.3);
+
+            } catch(e) {
+                console.log("Audio play failed:", e);
+            }
+        }
+
+        function checkForNewOrders() {
+            let orders = JSON.parse(localStorage.getItem('mb_orders') || '[]');
+            if (orders.length > lastOrderCount) {
+                if (lastOrderCount !== 0) {
+                    playAdminSound();
+                }
+                lastOrderCount = orders.length;
+                renderOrders();
+            }
+        }
+
+        function changeRestoStatus(val) {
+            localStorage.setItem('mb_resto_status', val);
+            alert('Status resto diubah menjadi: ' + val);
+        }
+
+        function clearOrders() {
+            if (confirm('Yakin ingin menghapus semua riwayat pesanan?')) {
+                localStorage.removeItem('mb_orders');
+                lastOrderCount = 0;
+                renderOrders();
+            }
+        }
+
+        function deleteSingleOrder(index) {
+            if (confirm('Hapus pesanan ini dari riwayat?')) {
+                let orders = JSON.parse(localStorage.getItem('mb_orders') || '[]');
+                let realIndex = orders.length - 1 - index;
+                orders.splice(realIndex, 1);
+                localStorage.setItem('mb_orders', JSON.stringify(orders));
+                lastOrderCount = orders.length;
+                renderOrders();
+            }
+        }
+
+        let currentFilter = 'Semua';
+        function filterOrders(status) {
+            currentFilter = status;
+            renderOrders();
+        }
+
+        function renderOrders() {
+            let ordersContainer = document.getElementById('orders-list-container');
+            if(!ordersContainer) return;
+            let orders = JSON.parse(localStorage.getItem('mb_orders') || '[]');
+            lastOrderCount = orders.length;
+            
+            if (orders.length === 0) {
+                ordersContainer.innerHTML = `<div class="bg-white p-6 rounded-xl shadow text-center text-gray-500">Belum ada pesanan masuk.</div>`;
+                return;
+            }
+
+            // Urutkan pesanan sesuai waktu berjalan (baru di atas)
+            let sortedOrders = orders.slice().sort((a, b) => {
+                let timeA = Number(a.id) || 0;
+                let timeB = Number(b.id) || 0;
+                return timeB - timeA;
+            });
+
+            let filteredOrders = sortedOrders.filter(order => {
+                if (currentFilter === 'Semua') return true;
+                if (currentFilter === 'Menunggu') return (order.status === 'Menunggu' || order.status === 'Pending' || order.status === 'Menunggu Verifikasi Resto' || !order.status);
+                if (currentFilter === 'Diproses') return order.status === 'Diproses';
+                if (currentFilter === 'Selesai') return order.status === 'Selesai';
+                return true;
+            });
+
+            if (filteredOrders.length === 0) {
+                ordersContainer.innerHTML = `<div class="bg-white p-6 rounded-xl shadow text-center text-gray-500">Tidak ada pesanan dengan filter "${currentFilter}".</div>`;
+                return;
+            }
+
+            let html = '<div class="space-y-4">';
+            filteredOrders.forEach((order, idx) => {
+                let originalIdx = orders.findIndex(o => o.id === order.id);
+                if(originalIdx === -1) originalIdx = idx;
+
+                let statusBadge = order.status || 'Menunggu';
+                let badgeClass = 'bg-yellow-100 text-yellow-800';
+                if(statusBadge === 'Diproses') badgeClass = 'bg-blue-100 text-blue-800';
+                if(statusBadge === 'Selesai') badgeClass = 'bg-green-100 text-green-800';
+                if(statusBadge === 'Dibatalkan') badgeClass = 'bg-red-100 text-red-800';
+
+                // EFEK LAMPU NEON:
+                // - Menunggu / Masuk = Lampu Biru Neon
+                // - Diproses (Tombol Proses ditekan) = Lampu Hijau Neon
+                // - Selesai / Lainnya = Padam (Normal)
+                let isPending = (statusBadge === 'Menunggu' || statusBadge === 'Pending' || statusBadge === 'Menunggu Verifikasi Resto' || !order.status);
+                let isProcessing = (statusBadge === 'Diproses');
+
+                let cardStyle = 'bg-white border shadow-sm';
+                if (isPending) {
+                    cardStyle = 'bg-blue-50/90 border-2 border-blue-500 shadow-[0_0_20px_rgba(0,149,255,0.9)]';
+                } else if (isProcessing) {
+                    cardStyle = 'bg-emerald-50/90 border-2 border-emerald-500 shadow-[0_0_20px_rgba(0,255,127,0.9)]';
+                }
+
+                let itemsList = '';
+                if(order.items && Array.isArray(order.items)) {
+                    itemsList = order.items.map(i => `<p class="text-xs text-gray-700">- ${i.name} (${i.qty}x) Rp ${(i.price * i.qty).toLocaleString('id-ID')}</p>`).join('');
+                }
+
+                html += `
+                    <div class="${cardStyle} p-4 rounded-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 transition-all">
+                        <div>
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="bg-sky-100 text-sky-800 font-bold px-2 py-0.5 rounded text-xs">#${order.id || (idx+1)}</span>
+                                <span class="text-xs text-gray-500">${order.date || 'Hari ini'}</span>
+                                <span class="${badgeClass} px-2 py-0.5 rounded text-xs font-bold">${statusBadge}</span>
+                            </div>
+                            <h4 class="font-bold text-gray-800">${order.name} (${order.phone || '-'})</h4>
+                            <p class="text-xs text-gray-600 mb-1">${order.address}</p>
+                            <div class="bg-white/80 p-2 rounded mb-1 border">${itemsList || '<p class="text-xs text-gray-500">Catatan: '+(order.note||'-')+'</p>'}</div>
+                            <p class="text-xs font-semibold text-sky-700">Total: Rp ${Number(order.total).toLocaleString('id-ID')} (${order.payment || 'Tunai/Transfer'})</p>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            <button onclick="updateOrderStatus(${originalIdx}, 'Diproses')" class="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1.5 rounded-lg font-bold">Proses</button>
+                            <button onclick="updateOrderStatus(${originalIdx}, 'Selesai')" class="bg-green-600 hover:bg-green-700 text-white text-xs px-3 py-1.5 rounded-lg font-bold">Selesai</button>
+                            <button onclick="printBluetoothOrder(${originalIdx})" class="bg-sky-500 hover:bg-sky-600 text-white text-xs px-3 py-1.5 rounded-lg font-bold"><i class="fa-solid fa-print mr-1"></i> Cetak</button>
+                            <button onclick="updateOrderStatus(${originalIdx}, 'Dibatalkan')" class="bg-orange-500 hover:bg-orange-600 text-white text-xs px-3 py-1.5 rounded-lg font-bold">Tolak</button>
+                            <button onclick="deleteSingleOrder(${originalIdx})" class="bg-red-100 hover:bg-red-200 text-red-700 text-xs px-3 py-1.5 rounded-lg font-bold">Hapus</button>
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            ordersContainer.innerHTML = html;
+        }
+
+        function updateOrderStatus(index, status) {
+            let orders = JSON.parse(localStorage.getItem('mb_orders') || '[]');
+            if(orders[index]) {
+                orders[index].status = status;
+                localStorage.setItem('mb_orders', JSON.stringify(orders));
+                renderOrders();
+            }
+        }
+
+        async function printBluetoothOrder(index) {
+            let orders = JSON.parse(localStorage.getItem('mb_orders') || '[]');
+            let o = orders[index];
+            if (!o) return;
+
+            if (!navigator.bluetooth) {
+                alert('Browser Anda tidak mendukung Web Bluetooth. Gunakan Google Chrome di HP Android.');
+                return;
+            }
+
+            try {
+                const device = await navigator.bluetooth.requestDevice({
+                    acceptAllDevices: true,
+                    optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb', '49535343-fe7d-4ae5-8fa9-9fafd205e455', '0000ff00-0000-1000-8000-00805f9b34fb']
+                });
+
+                const server = await device.gatt.connect();
+                const services = await server.getPrimaryServices();
+                let characteristic = null;
+
+                for (let service of services) {
+                    const chars = await service.getCharacteristics();
+                    for (let char of chars) {
+                        if (char.properties.write || char.properties.writeWithoutResponse) {
+                            characteristic = char;
+                            break;
+                        }
+                    }
+                    if (characteristic) break;
+                }
+
+                if (!characteristic) {
+                    alert('Tidak dapat menemukan jalur cetak pada printer Bluetooth ini.');
+                    return;
+                }
+
+                let encoder = new TextEncoder();
+                let printData = "\x1B\x40"; 
+                printData += "\x1B\x61\x01"; 
+                printData += "MIE BANGKA TELADAN\n";
+                printData += "Jalan Batu 8 Atas, Kota Tanjungpinang\n";
+                printData += "WA: 081267166886 / 082384039200\n";
+                printData += "--------------------------------\n";
+                printData += "\x1B\x61\x00"; 
+                printData += `No Pesanan : #${o.id || (index+1)}\n`;
+                printData += `Tanggal    : ${o.date || 'Hari ini'}\n`;
+                printData += `Pelanggan  : ${o.name} (${o.phone || '-'})\n`;
+                printData += `Alamat     : ${o.address}\n`;
+                printData += "--------------------------------\n";
+                printData += "DETAIL PESANAN (Topping B2 Non-Halal):\n";
+                
+                if(o.items && Array.isArray(o.items)) {
+                    o.items.forEach(i => {
+                        printData += `${i.name} x${i.qty} : Rp ${(i.price * i.qty).toLocaleString('id-ID')}\n`;
+                    });
+                } else {
+                    printData += `${o.note || 'Pesanan Resto'}\n`;
+                }
+
+                printData += "--------------------------------\n";
+                printData += `TOTAL: Rp ${Number(o.total).toLocaleString('id-ID')}\n`;
+                printData += `Pembayaran: ${o.payment || 'Tunai'}\n`;
+                printData += "--------------------------------\n";
+                printData += "\x1B\x61\x01"; 
+                printData += "Terima Kasih Atas Kunjungan Anda\n\n\n";
+
+                await characteristic.writeValue(encoder.encode(printData));
+                alert('Struk berhasil dicetak via Bluetooth!');
+            } catch (error) {
+                console.error(error);
+                alert('Gagal mencetak: ' + error.message);
+            }
+        }
+
+        let menuImageBase64 = "";
+
+        function previewMenuImageFile(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    menuImageBase64 = e.target.result;
+                    document.getElementById('menu-img-preview').src = menuImageBase64;
+                    document.getElementById('menu-img-preview-container').classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function renderMenus() {
+            let container = document.getElementById('menu-list-container');
+            if(!container) return;
+            let menus = JSON.parse(localStorage.getItem('mb_menus') || '[]');
+            if (menus.length === 0) {
+                container.innerHTML = `<div class="bg-white p-6 rounded-xl shadow text-center text-gray-500">Belum ada menu terdaftar. Tambahkan menu baru di atas.</div>`;
+                return;
+            }
+            let html = '<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">';
+            menus.forEach((m, idx) => {
+                let imgUrl = m.image || 'https://via.placeholder.com/400x300?text=No+Image';
+                html += `
+                    <div class="bg-white p-4 rounded-xl shadow flex flex-col justify-between border">
+                        <div>
+                            <img src="${imgUrl}" class="w-full h-32 object-cover rounded-lg mb-3 border">
+                            <span class="text-[10px] font-bold text-sky-600 bg-sky-50 px-2 py-0.5 rounded-full">${m.category || 'Makanan'}</span>
+                            <h4 class="font-bold text-gray-800 mt-1">${m.name}</h4>
+                            <p class="text-xs text-sky-700 font-bold mb-1">Rp ${Number(m.price).toLocaleString('id-ID')}</p>
+                            <p class="text-xs text-gray-600">${m.desc || '-'}</p>
+                        </div>
+                        <div class="mt-4 flex justify-end gap-2">
+                            <button onclick="deleteMenu(${idx})" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1 rounded text-xs font-bold">Hapus</button>
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        function addMenu(e) {
+            e.preventDefault();
+            let name = document.getElementById('menu-name').value;
+            let price = document.getElementById('menu-price').value;
+            let desc = document.getElementById('menu-desc').value;
+            let category = document.getElementById('menu-category').value;
+            let urlInput = document.getElementById('menu-image-url').value.trim();
+            
+            let finalImage = menuImageBase64 || urlInput || "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=500&q=80";
+
+            let menus = JSON.parse(localStorage.getItem('mb_menus') || '[]');
+            menus.push({ 
+                id: Date.now(),
+                name, 
+                price: Number(price), 
+                desc, 
+                category,
+                image: finalImage 
+            });
+            localStorage.setItem('mb_menus', JSON.stringify(menus));
+            
+            menuImageBase64 = "";
+            document.getElementById('form-add-menu').reset();
+            document.getElementById('menu-img-preview-container').classList.add('hidden');
+            renderMenus();
+            alert('Menu berhasil ditambahkan!');
+        }
+
+        function deleteMenu(idx) {
+            if(confirm('Hapus menu ini?')) {
+                let menus = JSON.parse(localStorage.getItem('mb_menus') || '[]');
+                menus.splice(idx, 1);
+                localStorage.setItem('mb_menus', JSON.stringify(menus));
+                renderMenus();
+            }
+        }
+
+        let bannerImageBase64 = "";
+
+        function previewBannerImageFile(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    bannerImageBase64 = e.target.result;
+                    document.getElementById('banner-img-preview').src = bannerImageBase64;
+                    document.getElementById('banner-img-preview-container').classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function renderBanners() {
+            let container = document.getElementById('banner-list-container');
+            if(!container) return;
+            let banners = JSON.parse(localStorage.getItem('mb_banners') || '[]');
+            if (banners.length === 0) {
+                container.innerHTML = `<div class="bg-white p-6 rounded-xl shadow text-center text-gray-500">Belum ada banner tersimpan. Tambahkan banner di atas.</div>`;
+                return;
+            }
+            let html = '<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">';
+            banners.forEach((b, idx) => {
+                html += `
+                    <div class="bg-white p-3 rounded-xl shadow border flex flex-col justify-between">
+                        <img src="${b}" class="w-full h-32 object-cover rounded-lg border mb-2">
+                        <button onclick="deleteBanner(${idx})" class="w-full bg-red-100 hover:bg-red-200 text-red-700 py-1.5 rounded text-xs font-bold">Hapus Banner</button>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        function addBanner(e) {
+            e.preventDefault();
+            let urlInput = document.getElementById('banner-image-url').value.trim();
+            let finalBanner = bannerImageBase64 || urlInput;
+
+            if(!finalBanner) {
+                alert('Mohon pilih file gambar PNG/JPG atau masukkan URL Gambar!');
+                return;
+            }
+
+            let banners = JSON.parse(localStorage.getItem('mb_banners') || '[]');
+            banners.push(finalBanner);
+            localStorage.setItem('mb_banners', JSON.stringify(banners));
+
+            bannerImageBase64 = "";
+            document.getElementById('form-add-banner').reset();
+            document.getElementById('banner-img-preview-container').classList.add('hidden');
+            renderBanners();
+            alert('Banner promo berhasil ditambahkan!');
+        }
+
+        function deleteBanner(idx) {
+            if(confirm('Hapus banner ini dari slider website?')) {
+                let banners = JSON.parse(localStorage.getItem('mb_banners') || '[]');
+                banners.splice(idx, 1);
+                localStorage.setItem('mb_banners', JSON.stringify(banners));
+                renderBanners();
+            }
+        }
+
+        function renderBanks() {
+            let banks = JSON.parse(localStorage.getItem('mb_banks') || '[]');
+            let container = document.getElementById('banks-list');
+            if(!container) return;
+            if(banks.length === 0) {
+                container.innerHTML = '<p class="text-sm text-gray-500">Belum ada rekening/e-wallet tersimpan.</p>';
+                return;
+            }
+            container.innerHTML = banks.map((b, i) => `<div class="p-3 bg-gray-50 rounded-lg border flex justify-between items-center text-sm"><span><b>${b.bank}</b> - ${b.account} a.n ${b.holder}</span> <button onclick="deleteBank(${i})" class="text-red-600 font-bold text-xs">Hapus</button></div>`).join('');
+        }
+
+        function addBank(e) {
+            e.preventDefault();
+            let bank = document.getElementById('bank-name').value;
+            let account = document.getElementById('bank-account').value;
+            let holder = document.getElementById('bank-holder').value;
+            let banks = JSON.parse(localStorage.getItem('mb_banks') || '[]');
+            banks.push({bank, account, holder});
+            localStorage.setItem('mb_banks', JSON.stringify(banks));
+            document.getElementById('form-add-bank').reset();
+            renderBanks();
+            alert('Metode pembayaran berhasil ditambah.');
+        }
+
+        function deleteBank(i) {
+            let banks = JSON.parse(localStorage.getItem('mb_banks') || '[]');
+            banks.splice(i, 1);
+            localStorage.setItem('mb_banks', JSON.stringify(banks));
+            renderBanks();
+        }
+
+        function renderSettings() {
+            let sName = document.getElementById('setting-resto-name');
+            let sPhone = document.getElementById('setting-resto-phone');
+            let sAddress = document.getElementById('setting-resto-address');
+            let sSound = document.getElementById('setting-sound-enabled');
+
+            if(sName) sName.value = localStorage.getItem('mb_setting_name') || "Mie Bangka Teladan";
+            if(sPhone) sPhone.value = localStorage.getItem('mb_admin_phone') || "081267166886";
+            if(sAddress) sAddress.value = localStorage.getItem('mb_setting_address') || "Jalan Batu 8 Atas, Kota Tanjungpinang";
+            if(sSound) sSound.value = localStorage.getItem('mb_sound_enabled') || "true";
+        }
+
+        function saveSettings(e) {
+            e.preventDefault();
+            localStorage.setItem('mb_setting_name', document.getElementById('setting-resto-name').value);
+            localStorage.setItem('mb_admin_phone', document.getElementById('setting-resto-phone').value);
+            localStorage.setItem('mb_setting_address', document.getElementById('setting-resto-address').value);
+            localStorage.setItem('mb_sound_enabled', document.getElementById('setting-sound-enabled').value);
+
+            alert('Pengaturan resto & notifikasi suara berhasil disimpan!');
+        }
+    </script> 
+</head> 
+<body class="bg-gray-100 text-gray-800 font-sans selection:bg-sky-500 selection:text-white" onload="checkAdminAuth()"> 
+
+    <!-- Modal Login --> 
+    <div id="login-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"> 
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-4"> 
+            <div class="text-center"> 
+                <div class="w-16 h-16 bg-sky-100 text-sky-600 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl font-bold">
+                    <i class="fa-solid fa-utensils"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900">Masuk Panel Resto</h3> 
+                <p class="text-xs text-gray-500 mt-1">Mie Bangka Teladan - Kota Tanjungpinang</p> 
+            </div> 
+            
+            <div class="space-y-3"> 
+                <div> 
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Nama Resto (Username)</label> 
+                    <input type="text" id="admin-username" class="w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-sky-500 outline-none"> 
+                </div> 
+                <div> 
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Sandi Resto (Password)</label> 
+                    <div class="relative">
+                        <input type="password" id="admin-password" class="w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-sky-500 outline-none pr-10"> 
+                        <button type="button" onclick="toggleVisibility('admin-password', 'eye-icon-1')" class="absolute right-3 top-2.5 text-gray-500">
+                            <i id="eye-icon-1" class="fa-solid fa-eye"></i>
+                        </button>
+                    </div>
+                </div> 
+                <div> 
+                    <label class="block text-xs font-bold text-gray-700 mb-1">PIN Rahasia Resto</label> 
+                    <div class="relative">
+                        <input type="password" id="admin-pin" class="w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-sky-500 outline-none pr-10"> 
+                        <button type="button" onclick="toggleVisibility('admin-pin', 'eye-icon-2')" class="absolute right-3 top-2.5 text-gray-500">
+                            <i id="eye-icon-2" class="fa-solid fa-eye"></i>
+                        </button>
+                    </div>
+                </div> 
+                <button onclick="verifyAdminLogin()" class="w-full bg-sky-600 hover:bg-sky-700 text-white font-bold py-2.5 rounded-xl text-sm transition shadow-lg shadow-sky-600/30">
+                    Masuk Panel
+                </button> 
+            </div> 
+        </div> 
+    </div> 
+
+    <!-- Main Admin Wrapper -->
+    <div class="min-h-screen flex flex-col">
+        <!-- Header -->
+        <header class="bg-sky-700 text-white shadow-md sticky top-0 z-40">
+            <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col sm:flex-row justify-between items-center gap-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-white text-sky-700 rounded-xl flex items-center justify-center font-bold text-lg shadow">
+                        <i class="fa-solid fa-bowl-food"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-base leading-tight">Panel Resto - Mie Bangka Teladan</h1>
+                        <p class="text-xs text-sky-200">Jalan Batu 8 Atas, Kota Tanjungpinang</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
+                    <div class="flex items-center gap-1.5 bg-sky-800 px-3 py-1.5 rounded-xl text-xs">
+                        <span class="text-sky-200 font-medium">Status:</span>
+                        <select id="header-resto-status" onchange="changeRestoStatus(this.value)" class="bg-sky-900 text-white font-bold px-2 py-0.5 rounded outline-none border border-sky-600 cursor-pointer">
+                            <option value="Buka">Buka</option>
+                            <option value="Tutup">Tutup</option>
+                        </select>
+                    </div>
+                    <a href="index.html" target="_blank" class="bg-sky-600 hover:bg-sky-800 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1">
+                        <i class="fa-solid fa-globe"></i> Website
+                    </a>
+                    <button onclick="logoutAdmin()" class="bg-red-500 hover:bg-red-600 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1">
+                        <i class="fa-solid fa-right-from-bracket"></i> Keluar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Navigation Tabs -->
+            <div class="bg-sky-800 border-t border-sky-600">
+                <div class="max-w-7xl mx-auto px-4 flex overflow-x-auto space-x-6 text-sm py-2.5">
+                    <button id="tab-btn-orders" onclick="switchTab('orders')" class="font-bold border-b-2 border-white pb-1 whitespace-nowrap"><i class="fa-solid fa-receipt mr-1"></i> Pesanan Masuk</button>
+                    <button id="tab-btn-menus" onclick="switchTab('menus')" class="text-sky-200 hover:text-white pb-1 whitespace-nowrap"><i class="fa-solid fa-utensils mr-1"></i> Kelola Menu</button>
+                    <button id="tab-btn-banners" onclick="switchTab('banners')" class="text-sky-200 hover:text-white pb-1 whitespace-nowrap"><i class="fa-solid fa-image mr-1"></i> Banner & Promo</button>
+                    <button id="tab-btn-banks" onclick="switchTab('banks')" class="text-sky-200 hover:text-white pb-1 whitespace-nowrap"><i class="fa-solid fa-wallet mr-1"></i> Rekening / Pembayaran</button>
+                    <button id="tab-btn-settings" onclick="switchTab('settings')" class="text-sky-200 hover:text-white pb-1 whitespace-nowrap"><i class="fa-solid fa-gears mr-1"></i> Pengaturan Resto</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Content Body -->
+        <main class="max-w-7xl mx-auto px-4 py-6 flex-grow w-full space-y-6">
+            
+            <!-- SECTION 1: ORDERS -->
+            <section id="section-orders" class="space-y-4">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white p-4 rounded-2xl shadow-sm">
+                    <div class="flex flex-wrap gap-2 text-xs">
+                        <button onclick="filterOrders('Semua')" class="px-3 py-1.5 rounded-lg font-bold bg-sky-100 text-sky-800 hover:bg-sky-200 transition">Semua</button>
+                        <button onclick="filterOrders('Menunggu')" class="px-3 py-1.5 rounded-lg font-bold bg-yellow-100 text-yellow-800 hover:bg-yellow-200 transition">Menunggu</button>
+                        <button onclick="filterOrders('Diproses')" class="px-3 py-1.5 rounded-lg font-bold bg-blue-100 text-blue-800 hover:bg-blue-200 transition">Diproses</button>
+                        <button onclick="filterOrders('Selesai')" class="px-3 py-1.5 rounded-lg font-bold bg-green-100 text-green-800 hover:bg-green-200 transition">Selesai</button>
+                    </div>
+                    <div class="flex gap-2 w-full sm:w-auto">
+                        <button onclick="clearOrders()" class="bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded-lg font-bold text-xs border border-red-200 transition w-full sm:w-auto">
+                            <i class="fa-solid fa-trash mr-1"></i> Bersihkan Riwayat
+                        </button>
+                    </div>
+                </div>
+
+                <div id="orders-list-container">
+                    <!-- Orders will be rendered here dynamically -->
+                </div>
+            </section>
+
+            <!-- SECTION 2: MENUS -->
+            <section id="section-menus" class="hidden space-y-6">
+                <div class="bg-white p-6 rounded-2xl shadow-sm">
+                    <h3 class="font-bold text-lg text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-plus-circle text-sky-600"></i> Tambah Menu Baru & Gambar
+                    </h3>
+                    <form id="form-add-menu" onsubmit="addMenu(event)" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Nama Menu</label>
+                            <input type="text" id="menu-name" required placeholder="Contoh: Mie Bangka Spesial B2" class="w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-sky-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Kategori Menu</label>
+                            <select id="menu-category" class="w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-sky-500 outline-none">
+                                <option value="Makanan">Makanan</option>
+                                <option value="Minuman">Minuman</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Harga (Rp)</label>
+                            <input type="number" id="menu-price" required placeholder="Contoh: 25000" class="w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-sky-500 outline-none">
+                        </div>
+                        <div class="sm:col-span-3">
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Deskripsi / Topping</label>
+                            <input type="text" id="menu-desc" placeholder="Contoh: Topping B2 cincang, pangsit rebus" class="w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-sky-500 outline-none">
+                        </div>
+
+                        <!-- INPUT GAMBAR MENU -->
+                        <div class="sm:col-span-3 border-t pt-3 mt-1">
+                            <label class="block text-xs font-bold text-gray-700 mb-1"><i class="fa-solid fa-image text-sky-600 mr-1"></i> Upload Gambar Menu (Upload File / Pakai Link URL)</label>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <span class="text-[11px] text-gray-500 block mb-1">Pilih File Foto dari HP / Komputer:</span>
+                                    <input type="file" accept="image/*" onchange="previewMenuImageFile(event)" class="w-full text-xs text-gray-500 file:mr-2 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100">
+                                </div>
+                                <div>
+                                    <span class="text-[11px] text-gray-500 block mb-1">Atau Tempel Link URL Gambar Online:</span>
+                                    <input type="url" id="menu-image-url" placeholder="https://..." class="w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-sky-500 outline-none">
+                                </div>
+                            </div>
+                            <div id="menu-img-preview-container" class="mt-3 hidden">
+                                <span class="text-xs font-bold text-gray-600 block mb-1">Pratinjau Gambar:</span>
+                                <img id="menu-img-preview" src="" class="w-32 h-32 object-cover rounded-xl border shadow-sm">
+                            </div>
+                        </div>
+
+                        <div class="sm:col-span-3 flex justify-end">
+                            <button type="submit" class="bg-sky-600 hover:bg-sky-700 text-white font-bold px-5 py-2.5 rounded-xl text-sm transition shadow-md shadow-sky-600/30">
+                                Simpan Menu & Gambar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl shadow-sm space-y-4">
+                    <h3 class="font-bold text-lg text-gray-800">Daftar Menu Resto</h3>
+                    <div id="menu-list-container">
+                        <!-- Menus rendered here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 3: BANNERS PNG & PROMO -->
+            <section id="section-banners" class="hidden space-y-6">
+                <div class="bg-white p-6 rounded-2xl shadow-sm space-y-4">
+                    <h3 class="font-bold text-lg text-gray-800"><i class="fa-solid fa-image text-sky-600 mr-2"></i> Pengaturan Banner & Promo Website (PNG / JPG)</h3>
+                    <p class="text-xs text-gray-500">Kelola gambar utama atau pengumuman promosi yang tampil di slider halaman depan pelanggan.</p>
+                    
+                    <form id="form-add-banner" onsubmit="addBanner(event)" class="space-y-4 border p-4 rounded-xl bg-gray-50">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">1. Upload Gambar Banner (PNG / JPG) dari Perangkat</label>
+                            <input type="file" accept="image/png, image/jpeg, image/jpg" onchange="previewBannerImageFile(event)" class="w-full text-xs text-gray-500 file:mr-2 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">2. Atau Masukkan Link URL Banner Online</label>
+                            <input type="url" id="banner-image-url" placeholder="https://..." class="w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-sky-500 outline-none">
+                        </div>
+                        <div id="banner-img-preview-container" class="hidden">
+                            <span class="text-xs font-bold text-gray-600 block mb-1">Pratinjau Banner:</span>
+                            <img id="banner-img-preview" src="" class="w-full h-40 object-cover rounded-xl border">
+                        </div>
+                        <button type="submit" class="bg-sky-600 hover:bg-sky-700 text-white font-bold px-5 py-2 rounded-xl text-sm transition shadow-md shadow-sky-600/30">
+                            Tambah Banner Baru
+                        </button>
+                    </form>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl shadow-sm space-y-4">
+                    <h3 class="font-bold text-lg text-gray-800">Daftar Banner Aktif</h3>
+                    <div id="banner-list-container">
+                        <!-- Banners rendered here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 4: BANKS / PAYMENT -->
+            <section id="section-banks" class="hidden space-y-6">
+                <div class="bg-white p-6 rounded-2xl shadow-sm">
+                    <h3 class="font-bold text-lg text-gray-800 mb-4"><i class="fa-solid fa-wallet text-sky-600 mr-2"></i> Tambah Metode Pembayaran / Rekening</h3>
+                    <form id="form-add-bank" onsubmit="addBank(event)" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Nama Bank / E-Wallet</label>
+                            <input type="text" id="bank-name" required placeholder="BCA / DANA / OVO" class="w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-sky-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Nomor Rekening</label>
+                            <input type="text" id="bank-account" required placeholder="Nomor rekening / HP" class="w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-sky-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Atas Nama (a.n)</label>
+                            <input type="text" id="bank-holder" required placeholder="Nama pemilik rekening" class="w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-sky-500 outline-none">
+                        </div>
+                        <div class="sm:col-span-3 flex justify-end">
+                            <button type="submit" class="bg-sky-600 hover:bg-sky-700 text-white font-bold px-5 py-2 rounded-xl text-sm transition">
+                                Tambah Rekening
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl shadow-sm space-y-3">
+                    <h3 class="font-bold text-base text-gray-800">Daftar Rekening Tersimpan</h3>
+                    <div id="banks-list" class="space-y-2">
+                        <!-- Banks rendered here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 5: SETTINGS & SUARA NOTIFIKASI -->
+            <section id="section-settings" class="hidden space-y-6">
+                <div class="bg-white p-6 rounded-2xl shadow-sm">
+                    <h3 class="font-bold text-lg text-gray-800 mb-4"><i class="fa-solid fa-gears text-sky-600 mr-2"></i> Pengaturan Informasi Resto & Notifikasi</h3>
+                    <form onsubmit="saveSettings(event)" class="space-y-4 max-w-xl">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Nama Resto</label>
+                            <input type="text" id="setting-resto-name" class="w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-sky-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Nomor WhatsApp Admin</label>
+                            <input type="text" id="setting-resto-phone" class="w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-sky-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Alamat Lengkap</label>
+                            <textarea id="setting-resto-address" rows="2" class="w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-sky-500 outline-none"></textarea>
+                        </div>
+
+                        <!-- PENGATURAN SUARA NOTIFIKASI -->
+                        <div class="p-4 bg-sky-50 rounded-xl border border-sky-100 space-y-3">
+                            <h4 class="font-bold text-sm text-sky-900"><i class="fa-solid fa-volume-high text-sky-600 mr-1"></i> Pengaturan Suara Notifikasi Pesanan Masuk</h4>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-1">Status Suara Notifikasi</label>
+                                <select id="setting-sound-enabled" class="w-full px-3 py-2 border rounded-xl text-sm bg-white font-semibold">
+                                    <option value="true">Aktif (ON)</option>
+                                    <option value="false">Mati (OFF)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="bg-sky-600 hover:bg-sky-700 text-white font-bold px-6 py-2.5 rounded-xl text-sm transition shadow-md shadow-sky-600/30">
+                            Simpan Semua Pengaturan
+                        </button>
+                    </form>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- Footer -->
+        <footer class="bg-white border-t py-4 text-center text-xs text-gray-500 mt-auto">
+            <p>&copy; 2026 Mie Bangka Teladan - Kota Tanjungpinang. All rights reserved.</p>
+        </footer>
+    </div>
+
+</body>
+</html>
