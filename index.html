@@ -9,7 +9,6 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     body { background-color: #f8fafc; font-family: sans-serif; }
-    .badge-nonhalal { background-color: #ef4444; color: white; padding: 2px 8px; border-radius: 9999px; font-size: 0.75rem; font-weight: bold; }
   </style>
 </head>
 <body class="pb-24">
@@ -28,7 +27,7 @@
         </div>
         <div>
           <h1 class="font-bold text-lg leading-tight">Mie Bangka Teladan</h1>
-          <p class="text-xs text-sky-100"><i class="fa-solid fa-location-dot"></i> Jalan Batu 8 Atas, Kota Tanjungpinang</p>
+          <p class="text-xs text-sky-100"><i class="fa-solid fa-location-dot"></i> Kota Tanjungpinang</p>
         </div>
       </div>
       <button onclick="toggleKeranjang()" class="relative bg-white text-sky-700 px-3 py-2 rounded-xl text-sm font-bold flex items-center gap-2 shadow">
@@ -41,12 +40,12 @@
   <!-- Content Container -->
   <main class="max-w-md mx-auto p-4 space-y-4">
 
-    <!-- Info Buka / Waktu -->
+    <!-- Info Jam Operasional -->
     <div class="bg-sky-50 border border-sky-200 rounded-xl p-3 text-xs text-sky-800 flex justify-between items-center">
       <div>
         <i class="fa-regular fa-clock mr-1"></i> Jam Operasional: <span class="font-semibold">08:00 - 20:00 WIB</span>
       </div>
-      <span class="badge-nonhalal">NON-HALAL (Topping B2)</span>
+      <span class="font-bold text-sky-700">Resto Siap Melayani</span>
     </div>
 
     <!-- Filter Menu -->
@@ -240,8 +239,6 @@
       const meja = document.getElementById('nomor_meja').value;
       const catatan = document.getElementById('catatan').value;
       const total = cart.reduce((acc, c) => acc + (c.price * c.qty), 0);
-
-      const itemsDetail = cart.map(c => `${c.name} (${c.qty}x)`).join(', ');
 
       const payload = {
         order_id: 'MB-' + Math.floor(1000 + Math.random() * 9000),
