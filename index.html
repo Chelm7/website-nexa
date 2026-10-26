@@ -531,31 +531,39 @@ window.onload = initApp;
     // Fungsi untuk memproses pesanan di panel admin
   function prosesPesananAdmin(namaPelanggan, menuPesanan, totalHarga, noHpPelanggan) {
 
-    // 1. Data dikirim otomatis ke SheetDB Anda
-    fetch('https://sheetdb.io/api/v1/2ij5jepgf1fdy', {
-      method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        data: {
-          'Nama': namaPelanggan,
-          'Menu': menuPesanan,
-          'Total': totalHarga,
-          'NoHP': noHpPelanggan,
-          'Status': 'Selesai / Diproses',
-          'Tanggal': new Date().toLocaleString('id-ID')
-        }
-      })
-    })
-    .then(response => response.json())
-    .then(data => {
-      // 2. Jika sukses masuk Google Sheet, tampilkan pemberitahuan & buka WhatsApp
-      alert('Pesanan berhasil diproses dan tercatat di laporan!');
+  var urlGoogleAppsScript = "https://script.google.com/macros/s/AKfycbwGpV3oY9la6DqYM5HSpYZ-MOUtuQn_RfBUR63hCgtM8qHBRUCGzlUoOUTzJLbFwWXZ/exec";
 
-      // Ubah format nomor HP (08xx jadi 628xx)
-      let formatNoHp = noHpPelanggan.replace(/^0/, '62');
+  var dataKirim = {
+    nama: namaPelanggan,
+    menu: menuPesanan,
+    total: totalHarga,
+    nohp: noHpPelanggan,
+    status: 'Selesai / Diproses',
+    tanggal: new Date().toLocaleString('id-ID')
+  };
+
+  fetch(urlGoogleAppsScript, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(dataKirim)
+  })
+  .then(response => {
+    alert('Pesanan berhasil diproses dan tercatat di laporan!');
+
+    let formatNoHp = noHpPelanggan.replace(/^0/, '62');
+    let pesanLaporan = `Halo Kak ${namaPelanggan}, pesanan ${menuPesanan} (Total: Rp ${totalHarga}) sudah diproses dan sedang disiapkan ya! Terima kasih.`;
+    let urlWa = `https://wa.me/${formatNoHp}?text=${encodeURIComponent(pesanLaporan)}`;
+    window.open(urlWa, '_blank');
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    alert('Gagal mencatat pesanan ke database, silakan coba lagi.');
+  });
+}
+
 
       // Pesan laporan yang otomatis terkirim ke pelanggan
       let pesanLaporan = `Halo Kak ${namaPelanggan}, pesanan ${menuPesanan} (Total: Rp ${totalHarga}) sudah diproses dan sedang disiapkan ya! Terima kasih.`;
