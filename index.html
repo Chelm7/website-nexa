@@ -84,14 +84,14 @@
 
         <div id="menu-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
 
-        <!-- CEK STATUS PESANAN -->
+        <!-- STATUS PESANAN -->
         <section id="status-pesanan-section" class="mx-auto mt-16 max-w-2xl rounded-2xl bg-white p-5 shadow-md sm:p-7 border border-sky-100 scroll-mt-24">
             <h2 class="text-xl font-extrabold text-sky-950">
-                Cek Status Pesanan
+                Status Pesanan
             </h2>
 
             <p class="mt-2 text-sm text-slate-500">
-                Masukkan ID pesanan dan nomor HP yang digunakan saat checkout.
+                Masukkan ID pesanan dan nomor HP untuk melihat status pesanan dari resto yang sedang dikerjakan.
             </p>
 
             <form id="status-form" onsubmit="checkOrderStatusSubmit(event)" class="mt-5 space-y-3">
@@ -281,15 +281,15 @@
                 <div><b>Total Harga:</b> <span id="pay-total" class="text-xl font-black text-sky-700 block mt-1"></span></div>
             </div>
 
-            <!-- Ucapan Sopan yang diminta -->
+            <!-- Ucapan Sopan -->
             <div class="bg-emerald-50 text-emerald-800 p-3 rounded-xl text-xs font-bold mb-4 border border-emerald-200">
                 <i class="fa-solid fa-circle-check mr-1"></i> Silahkan lakukan pembayaran sesuai pilihan Anda. Pesanan akan segera diproses setelah diverifikasi resto.
             </div>
 
             <p class="text-[11px] text-gray-500 mb-3">Jika waktu habis tanpa diproses resto, pesanan akan otomatis dibatalkan/dihapus.</p>
             
-            <!-- Tombol Putih Huruf Biru -->
-            <button onclick="closeTimerModal()" class="bg-white text-sky-700 border border-sky-500 w-full py-2.5 rounded-xl text-xs font-bold hover:bg-sky-50 transition shadow">Tutup / Lihat Status Pesanan</button>
+            <!-- Tombol Tutup (Mengarah langsung ke Status Pesanan) -->
+            <button onclick="closeTimerModal()" class="bg-white text-sky-700 border border-sky-500 w-full py-2.5 rounded-xl text-xs font-bold hover:bg-sky-50 transition shadow">Tutup</button>
         </div>
     </div>
 
@@ -363,9 +363,10 @@
             }
         ];
 
-        const cart = new Map();
+        let cart = new Map();
         let currentCategory = "Semua";
         let currentSlideIndex = 0;
+        let activeTrackingId = null;
 
         function initApp() {
             if (!safeGet('mb_menus')) safeSet('mb_menus', JSON.stringify(defaultMenu));
@@ -378,6 +379,7 @@
             loadBanners();
             renderMenu();
             setInterval(checkCustomerOrdersExpiry, 1000);
+            setInterval(autoCheckActiveOrderStatus, 2000);
         }
 
         function checkRestoStatus() {
@@ -463,7 +465,6 @@
                             <p class="mt-2 flex-1 text-sm leading-6 text-slate-600 line-clamp-2">${item.desc || item.description || '-'}</p>
                             <div class="mt-5 flex items-center justify-between gap-3">
                                 <strong class="text-lg font-extrabold text-sky-700">${rupiah(item.price)}</strong>
-                                <!-- Tombol Putih Huruf Biru -->
                                 <button type="button" onclick="addToCart('${item.id}')" class="rounded-xl bg-white text-sky-700 border border-sky-500 px-4 py-2 text-sm font-bold hover:bg-sky-50 transition shadow">Pesan</button>
                             </div>
                         </div>
@@ -653,6 +654,7 @@
                 localStorage.setItem("last_order_id", order.id);
                 document.getElementById('lookup-order-id').value = order.id;
                 document.getElementById('lookup-phone').value = normalizedPhone;
+                activeTrackingId = order.id;
 
                 cart.clear();
                 renderCart();
@@ -699,6 +701,8 @@
                 if (--timer < 0) {
                     clearInterval(window.orderTimerInterval);
                     display.textContent = "Waktu Habis";
+                    // Jika waktu habis, tutup modal timer otomatis dan arahkan ke status
+                    closeTimerModal();
                 }
             }, 1000);
         }
@@ -722,6 +726,21 @@
 
             if (changed) {
                 localStorage.setItem('mb_orders', JSON.stringify(localOrders));
+            }
+        }
+
+        function autoCheckActiveOrderStatus() {
+            if (!activeTrackingId) return;
+            let localOrders = [];
+            try { localOrders = JSON.parse(localStorage.getItem('mb_orders') || '[]'); } catch(e) { localOrders = []; }
+            let found = localOrders.find(o => o.id === activeTrackingId);
+            if (found && (found.status === 'Diproses' || found.status === 'Selesai')) {
+                // Jika sudah diproses atau selesai oleh resto, tutup modal timer otomatis & arahkan ke status pesanan
+                const modal = document.getElementById('payment-timer-modal');
+                if (modal && !modal.classList.contains('hidden')) {
+                    closeTimerModal();
+                }
+                activeTrackingId = null;
             }
         }
 
@@ -754,7 +773,7 @@
 
                 if (!foundOrder) {
                     resultDiv.className = "mt-4 rounded-xl p-4 text-sm bg-red-50 text-red-700";
-                    resultDiv.textContent = "Pesanan dengan ID dan Nomor HP tersebut tidak ditemukan atau mungkin telah kedaluwarsa (waktu 3 menit habis).";
+                    resultDiv.textContent = "Pesanan dengan ID dan Nomor HP tersebut tidak ditemukan atau waktu 3 menit telah habis.";
                     return;
                 }
 
@@ -765,6 +784,10 @@
                 if(st === 'Selesai') statusBadgeClass = "bg-green-100 text-green-800";
                 if(st === 'Dibatalkan') statusBadgeClass = "bg-red-100 text-red-800";
 
+                let restNote = (st === 'Diproses' || st === 'Selesai') 
+                    ? '<div class="mt-2 text-xs font-bold text-sky-700 bg-sky-50 p-2 rounded">Pesanan sedang dikerjakan / diproses oleh resto Mie Bangka Teladan.</div>' 
+                    : '<div class="mt-2 text-xs font-bold text-amber-700 bg-amber-50 p-2 rounded">Menunggu verifikasi dan konfirmasi dari resto. Silakan lakukan pembayaran.</div>';
+
                 resultDiv.innerHTML = `
                     <p class="font-extrabold text-sky-950 text-base mb-2"><i class="fa-solid fa-circle-check text-green-600 mr-1"></i> Pesanan Ditemukan</p>
                     <div class="space-y-1 text-xs text-gray-700">
@@ -774,6 +797,7 @@
                         <div><b>Total:</b> ${rupiah(foundOrder.total)}</div>
                         <div><b>Pembayaran:</b> ${foundOrder.payment || '-'}</div>
                         <div><b>Waktu:</b> ${foundOrder.created_at || foundOrder.date || '-'}</div>
+                        ${restNote}
                     </div>`;
 
             } catch (error) {
