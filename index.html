@@ -1,496 +1,272 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mie Bangka Teladan - Kota Tanjungpinang</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        .banner-slide { display: none; }
-        .banner-slide.active { display: flex; animation: fadeIn 0.8s ease-in-out; }
-        @keyframes fadeIn { from { opacity: 0.3; } to { opacity: 1; } }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mie Bangka Teladan - Kota Tanjungpinang</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body { background-color: #f8fafc; font-family: sans-serif; }
+    .badge-nonhalal { background-color: #ef4444; color: white; padding: 2px 8px; border-radius: 9999px; font-size: 0.75rem; font-weight: bold; }
+  </style>
 </head>
-<body class="bg-sky-50 text-gray-800 font-sans selection:bg-sky-500 selection:text-white" onload="initApp()">
+<body class="pb-24">
 
-    <!-- Notifikasi Resto Tutup -->
-    <div id="resto-closed-banner" class="bg-red-600 text-white text-center py-2 px-4 text-xs font-bold hidden sticky top-0 z-50 shadow-md">
-        <i class="fa-solid fa-triangle-exclamation mr-1"></i> Mohon Maaf, Restoran saat ini sedang TUTUP / OFFLINE. Pesanan tidak dapat diproses.
+  <!-- Banner Restoran Tutup -->
+  <div id="banner-tutup" class="hidden bg-red-600 text-white text-center py-2 px-4 text-sm font-semibold sticky top-0 z-50 shadow-md">
+    <i class="fa-solid fa-triangle-exclamation mr-1"></i> Mohon Maaf, Restoran saat ini sedang TUTUP / OFFLINE. Pesanan tidak dapat diproses.
+  </div>
+
+  <!-- Header -->
+  <header class="bg-sky-600 text-white p-4 shadow-md sticky top-0 z-40">
+    <div class="max-w-md mx-auto flex justify-between items-center">
+      <div class="flex items-center gap-3">
+        <div class="bg-white text-sky-600 p-2 rounded-full w-10 h-10 flex items-center justify-center font-bold">
+          <i class="fa-solid fa-bowl-rice text-xl"></i>
+        </div>
+        <div>
+          <h1 class="font-bold text-lg leading-tight">Mie Bangka Teladan</h1>
+          <p class="text-xs text-sky-100"><i class="fa-solid fa-location-dot"></i> Jalan Batu 8 Atas, Kota Tanjungpinang</p>
+        </div>
+      </div>
+      <button onclick="toggleKeranjang()" class="relative bg-white text-sky-700 px-3 py-2 rounded-xl text-sm font-bold flex items-center gap-2 shadow">
+        <i class="fa-solid fa-cart-shopping"></i>
+        <span id="cart-count" class="bg-sky-600 text-white rounded-full px-2 py-0.5 text-xs">0</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Content Container -->
+  <main class="max-w-md mx-auto p-4 space-y-4">
+
+    <!-- Info Buka / Waktu -->
+    <div class="bg-sky-50 border border-sky-200 rounded-xl p-3 text-xs text-sky-800 flex justify-between items-center">
+      <div>
+        <i class="fa-regular fa-clock mr-1"></i> Jam Operasional: <span class="font-semibold">08:00 - 20:00 WIB</span>
+      </div>
+      <span class="badge-nonhalal">NON-HALAL (Topping B2)</span>
     </div>
 
-    <!-- Header / Navbar Responsif -->
-    <header class="bg-sky-600 text-white shadow-md sticky top-0 z-40">
-        <div class="container mx-auto px-4 py-3 flex flex-col sm:flex-row justify-between items-center gap-3">
-            <div class="flex items-center space-x-3 w-full sm:w-auto justify-between sm:justify-start">
-                <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 bg-white text-sky-600 rounded-full flex items-center justify-center font-bold text-xl shadow">
-                        <i class="fa-solid fa-bowl-food"></i>
-                    </div>
-                    <div>
-                        <h1 class="text-lg sm:text-xl font-extrabold tracking-wide">Mie Bangka Teladan</h1>
-                        <p class="text-xs text-sky-100">Kota Tanjungpinang</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="flex items-center justify-between sm:justify-end w-full sm:w-auto space-x-3">
-                <div class="text-right text-xs bg-sky-700 px-3 py-1.5 rounded-lg border border-sky-500">
-                    <div id="live-time" class="font-bold text-white text-sm">00:00:00</div>
-                    <div id="live-date" class="text-sky-200">Senin, 01 Jan 2026</div>
-                </div>
-                <button onclick="toggleCart()" class="bg-white text-sky-600 hover:bg-sky-50 px-4 py-2 rounded-xl font-bold transition flex items-center shadow">
-                    <i class="fa-solid fa-cart-shopping mr-2"></i> Keranjang
-                    <span id="cart-count" class="ml-2 bg-sky-600 text-white text-xs px-2 py-0.5 rounded-full">0</span>
-                </button>
-            </div>
-        </div>
-    </header>
-
-    <!-- Banner Slider -->
-    <section class="w-full bg-white shadow-sm mb-6 overflow-hidden">
-        <div id="banner-container" class="relative h-56 sm:h-72 md:h-96 w-full bg-gradient-to-r from-sky-800 to-sky-600 flex items-center justify-center text-white"></div>
-        <div class="flex justify-center space-x-3 my-3">
-            <button onclick="changeBannerSlide(-1)" class="bg-sky-100 hover:bg-sky-200 text-sky-800 px-4 py-1.5 rounded-xl text-xs font-bold transition shadow-sm"><i class="fa-solid fa-chevron-left mr-1"></i> Sebelumnya</button>
-            <button onclick="changeBannerSlide(1)" class="bg-sky-100 hover:bg-sky-200 text-sky-800 px-4 py-1.5 rounded-xl text-xs font-bold transition shadow-sm">Selanjutnya <i class="fa-solid fa-chevron-right ml-1"></i></button>
-        </div>
-    </section>
-
-    <!-- Kategori Menu -->
-    <main class="container mx-auto px-4 py-4 max-w-7xl">
-        <div class="flex justify-center space-x-2 sm:space-x-4 mb-8 overflow-x-auto py-2">
-            <button onclick="filterMenu('all')" id="btn-all" class="px-5 py-2 rounded-xl text-sm font-bold bg-sky-600 text-white shadow transition whitespace-nowrap">Semua Menu</button>
-            <button onclick="filterMenu('Makanan')" id="btn-makanan" class="px-5 py-2 rounded-xl text-sm font-bold bg-white text-sky-600 border border-sky-300 shadow transition whitespace-nowrap">Makanan</button>
-            <button onclick="filterMenu('Minuman')" id="btn-minuman" class="px-5 py-2 rounded-xl text-sm font-bold bg-white text-sky-600 border border-sky-300 shadow transition whitespace-nowrap">Minuman</button>
-        </div>
-
-        <div id="menu-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
-
-        <!-- Status Pesanan Pelanggan -->
-        <div id="status-pesanan-section" class="mt-16 bg-white p-4 sm:p-6 rounded-2xl shadow-md border border-sky-100 max-w-2xl mx-auto scroll-mt-24">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
-                <h3 class="text-lg sm:text-xl font-bold text-sky-900"><i class="fa-solid fa-list-check mr-2"></i> Status Pesanan Pelanggan</h3>
-                <button onclick="loadCustomerOrders()" class="bg-white text-sky-600 border border-sky-600 hover:bg-sky-50 px-4 py-1.5 rounded-xl text-xs font-bold transition shadow flex items-center">
-                    <i class="fa-solid fa-rotate mr-1"></i> Reload Status
-                </button>
-            </div>
-            <div id="customer-orders-list" class="space-y-3 text-sm max-h-80 overflow-y-auto pr-1"></div>
-        </div>
-    </main>
-
-    <!-- Tombol Panah Scroll Otomatis -->
-    <div id="scroll-arrows" class="fixed bottom-6 right-6 z-50 flex flex-col space-y-2 transition-opacity duration-300 opacity-0 pointer-events-none">
-        <button onclick="scrollToTop()" class="bg-sky-600 hover:bg-sky-700 text-white w-11 h-11 rounded-full shadow-xl flex items-center justify-center transition transform hover:scale-110" title="Gulir ke Atas">
-            <i class="fa-solid fa-arrow-up text-base"></i>
-        </button>
-        <button onclick="scrollToBottom()" class="bg-sky-600 hover:bg-sky-700 text-white w-11 h-11 rounded-full shadow-xl flex items-center justify-center transition transform hover:scale-110" title="Gulir ke Bawah">
-            <i class="fa-solid fa-arrow-down text-base"></i>
-        </button>
+    <!-- Filter Menu -->
+    <div class="flex gap-2 overflow-x-auto pb-1">
+      <button onclick="filterKategori('semua')" class="btn-kategori bg-sky-600 text-white px-4 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap shadow-sm">Semua Menu</button>
+      <button onclick="filterKategori('makanan')" class="btn-kategori bg-white border border-gray-200 text-gray-700 px-4 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap shadow-sm">Makanan</button>
+      <button onclick="filterKategori('minuman')" class="btn-kategori bg-white border border-gray-200 text-gray-700 px-4 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap shadow-sm">Minuman</button>
     </div>
 
-    <!-- Modal Keranjang -->
-    <div id="cart-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex justify-center items-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-5 sm:p-6 relative max-h-[90vh] overflow-y-auto">
-            <button onclick="toggleCart()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-xl"><i class="fa-solid fa-xmark"></i></button>
-            <h3 class="text-xl sm:text-2xl font-bold mb-4 text-sky-900"><i class="fa-solid fa-basket-shopping mr-2"></i> Keranjang & Pembayaran</h3>
-            
-            <div id="cart-items" class="divide-y divide-gray-200 mb-4 max-h-48 overflow-y-auto"></div>
-
-            <div class="border-t pt-4 mb-4">
-                <div class="flex justify-between font-bold text-base sm:text-lg mb-4">
-                    <span>Total Pembayaran:</span>
-                    <span id="cart-total" class="text-sky-600">Rp 0</span>
-                </div>
-                
-                <div class="space-y-3">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Nama Pelanggan</label>
-                        <input type="text" id="buyer-name" class="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-sky-500 outline-none text-sm" placeholder="Nama lengkap">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Deskripsi / Catatan Pesanan</label>
-                        <input type="text" id="buyer-desc" class="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-sky-500 outline-none text-sm" placeholder="Contoh: Jangan terlalu pedas, kuah dipisah...">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Nomor Meja / Alamat Pengiriman</label>
-                        <input type="text" id="buyer-address" class="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-sky-500 outline-none text-sm" placeholder="Nomor Meja atau Alamat di Tanjungpinang">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Pilih Metode Pembayaran</label>
-                        <select id="payment-method" class="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-sky-500 outline-none font-medium text-sm">
-                            <option value="">-- Pilih Pembayaran --</option>
-                            <option value="Kasir">Bayar di Kasir (Tunai)</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="flex items-center mt-2 cursor-pointer">
-                            <input type="checkbox" id="payment-confirmed" class="w-4 h-4 text-sky-600 rounded">
-                            <span class="ml-2 text-xs text-gray-700 font-medium">Saya centang sebagai konfirmasi pesanan.</span>
-                        </label>
-                    </div>
-                </div>
-            </div>
-
-            <button onclick="checkout()" class="w-full bg-white text-sky-600 border-2 border-sky-600 hover:bg-sky-50 font-bold py-3 rounded-xl transition shadow text-sm">
-                <i class="fa-solid fa-check mr-2"></i> Konfirmasi Pesanan
-            </button>
-        </div>
+    <!-- Daftar Menu Grid -->
+    <div id="menu-container" class="grid grid-cols-1 gap-4">
+      <p class="text-center text-gray-500 text-sm py-8">Memuat menu...</p>
     </div>
 
-    <!-- Modal Timer Pembayaran / Konfirmasi Pesanan -->
-    <div id="payment-timer-modal" class="fixed inset-0 bg-black bg-opacity-80 hidden z-50 flex justify-center items-center p-4">
-        <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 text-center">
-            <div class="w-14 h-14 bg-sky-100 text-sky-600 rounded-full flex items-center justify-center text-2xl mx-auto mb-3">
-                <i class="fa-solid fa-clock"></i>
-            </div>
-            <h3 class="text-xl font-extrabold text-sky-900 mb-1">Pesanan Sedang Diproses</h3>
-            <p class="text-xs text-gray-500 mb-3">Batas waktu verifikasi resto:</p>
-            
-            <div id="countdown-timer" class="text-3xl font-black text-sky-600 mb-4 tracking-widest bg-sky-50 py-2 rounded-xl border border-sky-200">03:00</div>
+  </main>
 
-            <div class="bg-sky-50 p-3 rounded-2xl text-left text-xs space-y-2 mb-4 border border-sky-100">
-                <div><b>ID Pesanan:</b> <span id="pay-order-id"></span></div>
-                <div><b>Nama Pemesan:</b> <span id="pay-buyer-name"></span></div>
-                <div><b>Total Item:</b> <span id="pay-total-items" class="font-bold"></span></div>
-                <div><b>Total Harga:</b> <span id="pay-total" class="text-2xl font-black text-sky-700 block mt-1"></span></div>
-                <div><b>Metode Pembayaran:</b><div id="pay-method-container" class="mt-1"></div></div>
-            </div>
-            <p class="text-[11px] text-gray-500">Menunggu konfirmasi dapur / kasir Resto Mie Bangka Teladan...</p>
-            <button onclick="closeTimerModal()" class="mt-4 bg-sky-600 text-white w-full py-2 rounded-xl text-xs font-bold hover:bg-sky-700 transition">Tutup / Lihat Status Pesanan</button>
+  <!-- Modal Keranjang & Checkout -->
+  <div id="modal-keranjang" class="fixed inset-0 bg-black/50 z-50 hidden flex items-end justify-center">
+    <div class="bg-white w-full max-w-md rounded-t-2xl p-4 max-h-[85vh] overflow-y-auto space-y-4">
+      <div class="flex justify-between items-center border-b pb-2">
+        <h3 class="font-bold text-gray-800"><i class="fa-solid fa-basket-shopping text-sky-600"></i> Keranjang Belanja</h3>
+        <button onclick="toggleKeranjang()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-xl"></i></button>
+      </div>
+
+      <div id="cart-items" class="space-y-3 text-sm divide-y">
+        <!-- Item keranjang dimasukkan via JS -->
+      </div>
+
+      <div class="border-t pt-3 space-y-3">
+        <div class="flex justify-between font-bold text-base">
+          <span>Total Bayar:</span>
+          <span id="cart-total" class="text-sky-700">Rp 0</span>
         </div>
+
+        <form id="form-pesanan" onsubmit="kirimPesanan(event)" class="space-y-3">
+          <div>
+            <label class="block text-xs font-medium text-gray-700">Nama Pemesan</label>
+            <input type="text" id="nama_pemesan" required placeholder="Contoh: Budi" class="w-full text-sm p-2 border rounded-lg mt-1 focus:ring-2 focus:ring-sky-500 outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-700">Nomor Meja / Keterangan</label>
+            <input type="text" id="nomor_meja" required placeholder="Contoh: Meja 03 / Takeaway" class="w-full text-sm p-2 border rounded-lg mt-1 focus:ring-2 focus:ring-sky-500 outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-700">Catatan Tambahan (Opsional)</label>
+            <textarea id="catatan" placeholder="Contoh: Minta kuah dipisah, pedas sedang" class="w-full text-sm p-2 border rounded-lg mt-1 focus:ring-2 focus:ring-sky-500 outline-none" rows="2"></textarea>
+          </div>
+          <button id="btn-submit" type="submit" class="w-full bg-sky-600 text-white font-bold py-2.5 rounded-xl text-sm shadow-md hover:bg-sky-700 transition">
+            Kirim Pesanan Sekarang
+          </button>
+        </form>
+      </div>
     </div>
+  </div>
 
-    <footer class="bg-sky-900 text-sky-100 py-6 text-center mt-12 text-sm px-4">
-        <p>&copy; 2026 Mie Bangka Teladan - Kota Tanjungpinang. All rights reserved.</p>
-    </footer>
+  <script>
+    const SUPABASE_URL = "https://bshjfhjwfbdwtdqphjla.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_-RoutcoL6TizW60mnEkB7Q_Hn7Zgy1Z";
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    <script>
-        const memoryStorage = {};
-        function safeGet(key) {
-            try { return localStorage.getItem(key); } catch (e) { return memoryStorage[key] !== undefined ? memoryStorage[key] : null; }
+    let listMenu = [];
+    let cart = [];
+    let tokoBuka = true;
+
+    async function init() {
+      await cekStatusToko();
+      await loadMenu();
+    }
+
+    async function cekStatusToko() {
+      const { data, error } = await supabaseClient.from('settings').select('*').eq('key', 'store_status').single();
+      if (data) {
+        tokoBuka = data.value === 'open';
+        const banner = document.getElementById('banner-tutup');
+        const btnSubmit = document.getElementById('btn-submit');
+        if (!tokoBuka) {
+          banner.classList.remove('hidden');
+          if (btnSubmit) {
+            btnSubmit.disabled = true;
+            btnSubmit.classList.add('bg-gray-400');
+            btnSubmit.innerText = 'Toko Sedang Tutup';
+          }
+        } else {
+          banner.classList.add('hidden');
         }
-        function safeSet(key, val) {
-            try { localStorage.setItem(key, val); } catch (e) { memoryStorage[key] = val; }
-        }
+      }
+    }
 
-        let scrollTimeout;
-        window.addEventListener('scroll', function() {
-            const scrollArrows = document.getElementById('scroll-arrows');
-            if (!scrollArrows) return;
-            scrollArrows.classList.remove('opacity-0', 'pointer-events-none');
-            scrollArrows.classList.add('opacity-100', 'pointer-events-auto');
-            clearTimeout(scrollTimeout);
-            scrollTimeout = setTimeout(function() {
-                scrollArrows.classList.remove('opacity-100', 'pointer-events-auto');
-                scrollArrows.classList.add('opacity-0', 'pointer-events-none');
-            }, 1500);
-        });
+    async function loadMenu() {
+      const { data, error } = await supabaseClient.from('menus').select('*').eq('is_available', true);
+      if (error) {
+        console.error('Error fetching menu:', error);
+        return;
+      }
+      listMenu = data || [];
+      renderMenu(listMenu);
+    }
 
-        function scrollToTop() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
-        function scrollToBottom() { window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' }); }
+    function renderMenu(items) {
+      const container = document.getElementById('menu-container');
+      if (items.length === 0) {
+        container.innerHTML = `<p class="text-center text-gray-500 text-sm py-8">Tidak ada menu yang tersedia saat ini.</p>`;
+        return;
+      }
 
-        function updateLiveClock() {
-            const now = new Date();
-            document.getElementById('live-time').innerText = now.toLocaleTimeString('id-ID', { timeZone: 'Asia/Jakarta' });
-            document.getElementById('live-date').innerText = now.toLocaleDateString('id-ID', { timeZone: 'Asia/Jakarta', weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' });
-        }
-        setInterval(updateLiveClock, 1000);
-        updateLiveClock();
+      container.innerHTML = items.map(item => `
+        <div class="bg-white rounded-2xl p-3 shadow-sm border border-gray-100 flex gap-3 items-center">
+          <img src="${item.image_url || 'https://via.placeholder.com/100'}" alt="${item.name}" class="w-20 h-20 object-cover rounded-xl bg-gray-100">
+          <div class="flex-1">
+            <h4 class="font-bold text-gray-800 text-sm">${item.name}</h4>
+            <p class="text-xs text-gray-500 line-clamp-1">${item.description || ''}</p>
+            <div class="mt-2 flex justify-between items-center">
+              <span class="font-extrabold text-sky-700 text-sm">Rp ${Number(item.price).toLocaleString('id-ID')}</span>
+              <button onclick="addToCart(${item.id})" class="bg-sky-600 text-white text-xs px-3 py-1.5 rounded-lg font-semibold hover:bg-sky-700 active:scale-95 transition">
+                + Tambah
+              </button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
 
-        const defaultMenu = [
-            { id: 1, name: "Mie Bangka Spesial (Topping B2)", category: "Makanan", price: 25000, desc: "Mie kenyal khas Bangka dengan topping cincang B2 gurih dan pangsit.", image: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=500&q=80" },
-            { id: 2, name: "Mie Bangka Pangsit Kuah", category: "Makanan", price: 22000, desc: "Disajikan hangat dengan kaldu lezat dan pangsit rebus lembut.", image: "https://images.unsplash.com/photo-1612929633738-8fe44f7ec841?auto=format&fit=crop&w=500&q=80" },
-            { id: 3, name: "Es Jeruk Kunci Bangka", category: "Minuman", price: 8000, desc: "Minuman es khas Bangka dengan jeruk kunci segar.", image: "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=500&q=80" }
-        ];
+    function addToCart(id) {
+      if (!tokoBuka) {
+        alert('Mohon maaf, restoran saat ini sedang TUTUP.');
+        return;
+      }
+      const item = listMenu.find(m => m.id === id);
+      if (!item) return;
 
-        let cart = [];
-        let currentCategory = 'all';
-        let currentSlideIndex = 0;
-        let activeOrderId = null;
-        let timerInterval = null;
-        let orderStatusCheckInterval = null;
+      const existing = cart.find(c => c.id === id);
+      if (existing) {
+        existing.qty += 1;
+      } else {
+        cart.push({ id: item.id, name: item.name, price: item.price, qty: 1 });
+      }
+      updateCartUI();
+    }
 
-        function initApp() {
-            if (!safeGet('mb_menus')) safeSet('mb_menus', JSON.stringify(defaultMenu));
-            if (!safeGet('mb_banners')) safeSet('mb_banners', JSON.stringify(["https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80", "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=1200&q=80"]));
-            if (!safeGet('mb_resto_status')) safeSet('mb_resto_status', 'Buka');
-            checkRestoStatus();
-            loadBanners();
-            renderMenu();
-            loadBankOptions();
-            loadCustomerOrders();
-        }
+    function updateCartUI() {
+      const count = cart.reduce((acc, c) => acc + c.qty, 0);
+      document.getElementById('cart-count').innerText = count;
 
-        function checkRestoStatus() {
-            const status = safeGet('mb_resto_status') || 'Buka';
-            const banner = document.getElementById('resto-closed-banner');
-            if (status === 'Tutup') banner.classList.remove('hidden'); else banner.classList.add('hidden');
-        }
+      const itemsContainer = document.getElementById('cart-items');
+      if (cart.length === 0) {
+        itemsContainer.innerHTML = '<p class="text-center text-gray-400 py-4">Keranjang masih kosong</p>';
+      } else {
+        itemsContainer.innerHTML = cart.map((c, index) => `
+          <div class="flex justify-between items-center pt-2">
+            <div>
+              <p class="font-semibold text-gray-800">${c.name}</p>
+              <p class="text-xs text-gray-500">Rp ${Number(c.price).toLocaleString('id-ID')} x ${c.qty}</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="changeQty(${index}, -1)" class="w-6 h-6 bg-gray-200 rounded-full text-xs font-bold">-</button>
+              <span class="text-xs font-bold">${c.qty}</span>
+              <button onclick="changeQty(${index}, 1)" class="w-6 h-6 bg-sky-600 text-white rounded-full text-xs font-bold">+</button>
+            </div>
+          </div>
+        `).join('');
+      }
 
-        function loadBanners() {
-            let banners = [];
-            try { banners = JSON.parse(safeGet('mb_banners')) || []; } catch(e) { banners = []; }
+      const total = cart.reduce((acc, c) => acc + (c.price * c.qty), 0);
+      document.getElementById('cart-total').innerText = 'Rp ' + total.toLocaleString('id-ID');
+    }
 
-            const container = document.getElementById('banner-container');
-            container.innerHTML = '';
-            
-            if (banners.length === 0) {
-                container.innerHTML = `<div class="banner-slide active absolute inset-0 w-full h-full bg-gradient-to-r from-sky-800 to-sky-600 flex flex-col items-center justify-center text-white font-bold p-4 text-center"><i class="fa-solid fa-bowl-food text-4xl mb-2"></i><span class="text-xl">Mie Bangka Teladan</span><span class="text-xs text-sky-200 mt-1">Kota Tanjungpinang</span></div>`;
-                return;
-            }
+    function changeQty(index, delta) {
+      cart[index].qty += delta;
+      if (cart[index].qty <= 0) {
+        cart.splice(index, 1);
+      }
+      updateCartUI();
+    }
 
-            banners.forEach((b, idx) => {
-                container.innerHTML += `
-                    <div class="banner-slide ${idx === 0 ? 'active' : ''} absolute inset-0 w-full h-full flex items-center justify-center bg-gradient-to-r from-sky-900 to-sky-700">
-                        <img src="${b}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" class="w-full h-full object-cover">
-                        <div class="absolute inset-0 flex flex-col items-center justify-center text-white font-bold bg-sky-900/60 p-4 text-center" style="display:none;">
-                            <i class="fa-solid fa-bowl-food text-4xl mb-2 text-sky-300"></i>
-                            <span class="text-xl">Mie Bangka Teladan</span>
-                            <span class="text-xs text-sky-200 mt-1">Jalan Batu 8 Atas, Kota Tanjungpinang</span>
-                        </div>
-                    </div>`;
-            });
-        }
+    function toggleKeranjang() {
+      document.getElementById('modal-keranjang').classList.toggle('hidden');
+    }
 
-        function changeBannerSlide(n) {
-            const slides = document.getElementsByClassName('banner-slide');
-            if(slides.length === 0) return;
-            slides[currentSlideIndex].classList.remove('active');
-            currentSlideIndex = (currentSlideIndex + n + slides.length) % slides.length;
-            slides[currentSlideIndex].classList.add('active');
-        }
-        setInterval(() => { changeBannerSlide(1); }, 5000);
+    async function kirimPesanan(e) {
+      e.preventDefault();
+      if (!tokoBuka) {
+        alert('Restoran sedang tutup, pesanan tidak dapat dikirim.');
+        return;
+      }
+      if (cart.length === 0) {
+        alert('Keranjang Anda masih kosong!');
+        return;
+      }
 
-        function filterMenu(cat) {
-            currentCategory = cat;
-            document.getElementById('btn-all').className = cat === 'all' ? "px-5 py-2 rounded-xl text-sm font-bold bg-sky-600 text-white shadow transition whitespace-nowrap" : "px-5 py-2 rounded-xl text-sm font-bold bg-white text-sky-600 border border-sky-300 shadow transition whitespace-nowrap";
-            document.getElementById('btn-makanan').className = cat === 'Makanan' ? "px-5 py-2 rounded-xl text-sm font-bold bg-sky-600 text-white shadow transition whitespace-nowrap" : "px-5 py-2 rounded-xl text-sm font-bold bg-white text-sky-600 border border-sky-300 shadow transition whitespace-nowrap";
-            document.getElementById('btn-minuman').className = cat === 'Minuman' ? "px-5 py-2 rounded-xl text-sm font-bold bg-sky-600 text-white shadow transition whitespace-nowrap" : "px-5 py-2 rounded-xl text-sm font-bold bg-white text-sky-600 border border-sky-300 shadow transition whitespace-nowrap";
-            renderMenu();
-        }
+      const nama = document.getElementById('nama_pemesan').value;
+      const meja = document.getElementById('nomor_meja').value;
+      const catatan = document.getElementById('catatan').value;
+      const total = cart.reduce((acc, c) => acc + (c.price * c.qty), 0);
 
-        function renderMenu() {
-            const grid = document.getElementById('menu-grid');
-            let menuList = [];
-            try { menuList = JSON.parse(safeGet('mb_menus')) || []; } catch(e) { menuList = defaultMenu; }
+      const itemsDetail = cart.map(c => `${c.name} (${c.qty}x)`).join(', ');
 
-            const filtered = currentCategory === 'all' ? menuList : menuList.filter(m => m.category === currentCategory);
-            grid.innerHTML = '';
-            if (filtered.length === 0) { grid.innerHTML = `<p class="col-span-full text-center text-gray-500 py-8">Belum ada menu dalam kategori ini.</p>`; return; }
-            
-            filtered.forEach(item => {
-                const imgSrc = item.image && item.image.trim() !== '' ? item.image : '';
-                grid.innerHTML += `
-                    <div class="bg-white rounded-2xl shadow-md overflow-hidden flex flex-col justify-between border border-sky-100 hover:shadow-lg transition">
-                        <div>
-                            <div class="w-full h-48 bg-sky-100 relative overflow-hidden flex items-center justify-center text-sky-400">
-                                <i class="fa-solid fa-bowl-food text-5xl absolute"></i>
-                                <img src="${imgSrc}" onerror="this.style.display='none'" onload="this.style.display='block'" class="w-full h-48 object-cover relative z-10" style="display:none;">
-                            </div>
-                            <div class="p-5">
-                                <span class="text-xs font-bold text-sky-600 bg-sky-50 px-2.5 py-1 rounded-full">${item.category || 'Makanan'}</span>
-                                <h4 class="font-bold text-lg text-sky-900 mt-2">${item.name}</h4>
-                                <p class="text-xs text-gray-500 mt-1 line-clamp-2">${item.desc || ''}</p>
-                                <div class="font-extrabold text-sky-600 text-base mt-3">Rp ${item.price.toLocaleString('id-ID')}</div>
-                            </div>
-                        </div>
-                        <div class="p-5 pt-0">
-                            <button onclick="addToCart(${item.id})" class="w-full bg-sky-600 hover:bg-sky-700 text-white py-2 rounded-xl text-xs font-bold transition flex items-center justify-center shadow">
-                                <i class="fa-solid fa-cart-plus mr-1"></i> Tambah ke Keranjang
-                            </button>
-                        </div>
-                    </div>`;
-            });
-        }
+      const payload = {
+        order_id: 'MB-' + Math.floor(1000 + Math.random() * 9000),
+        customer_name: nama,
+        table_number: meja,
+        notes: catatan,
+        items: cart,
+        total_price: total,
+        status: 'pending'
+      };
 
-        function addToCart(id) {
-            let menuList = [];
-            try { menuList = JSON.parse(safeGet('mb_menus')) || defaultMenu; } catch(e) { menuList = defaultMenu; }
-            const item = menuList.find(m => m.id === id);
-            if(!item) return;
+      const { data, error } = await supabaseClient.from('orders').insert([payload]);
 
-            const existing = cart.find(c => c.id === id);
-            if(existing) {
-                existing.qty += 1;
-            } else {
-                cart.push({ id: item.id, name: item.name, price: item.price, qty: 1 });
-            }
-            updateCartUI();
-        }
+      if (error) {
+        alert('Gagal mengirim pesanan: ' + error.message);
+      } else {
+        alert('Pesanan berhasil dikirim! Silakan tunggu konfirmasi kasir/dapur.');
+        cart = [];
+        updateCartUI();
+        toggleKeranjang();
+        document.getElementById('form-pesanan').reset();
+      }
+    }
 
-        function updateCartUI() {
-            const countEl = document.getElementById('cart-count');
-            const totalQty = cart.reduce((sum, item) => sum + item.qty, 0);
-            countEl.innerText = totalQty;
-
-            const itemsContainer = document.getElementById('cart-items');
-            itemsContainer.innerHTML = '';
-
-            if(cart.length === 0) {
-                itemsContainer.innerHTML = `<p class="text-center text-gray-400 py-4 text-xs">Keranjang masih kosong</p>`;
-                document.getElementById('cart-total').innerText = 'Rp 0';
-                return;
-            }
-
-            let total = 0;
-            cart.forEach((c, idx) => {
-                total += c.price * c.qty;
-                itemsContainer.innerHTML += `
-                    py-3 flex justify-between items-center text-xs">
-                        <div>
-                            <div class="font-bold text-gray-800">${c.name}</div>
-                            <div class="text-sky-600">Rp ${c.price.toLocaleString('id-ID')} x ${c.qty}</div>
-                        </div>
-                        <div class="flex items-center space-x-2">
-                            <button onclick="changeQty(${idx}, -1)" class="w-6 h-6 bg-gray-100 hover:bg-gray-200 rounded font-bold">-</button>
-                            <span>${c.qty}</span>
-                            <button onclick="changeQty(${idx}, 1)" class="w-6 h-6 bg-gray-100 hover:bg-gray-200 rounded font-bold">+</button>
-                            <button onclick="removeItem(${idx})" class="text-red-500 hover:text-red-700 ml-2"><i class="fa-solid fa-trash"></i></button>
-                        </div>
-                    </div>`;
-            });
-            document.getElementById('cart-total').innerText = `Rp ${total.toLocaleString('id-ID')}`;
-        }
-
-        function changeQty(idx, delta) {
-            cart[idx].qty += delta;
-            if(cart[idx].qty <= 0) cart.splice(idx, 1);
-            updateCartUI();
-        }
-
-        function removeItem(idx) {
-            cart.splice(idx, 1);
-            updateCartUI();
-        }
-
-        function toggleCart() {
-            const modal = document.getElementById('cart-modal');
-            modal.classList.toggle('hidden');
-            updateCartUI();
-        }
-
-        function loadBankOptions() {
-            const select = document.getElementById('payment-method');
-            select.innerHTML = `<option value="">-- Pilih Pembayaran --</option><option value="Kasir">Bayar di Kasir (Tunai)</option>`;
-        }
-
-        function checkout() {
-            if (safeGet('mb_resto_status') === 'Tutup') {
-                alert('Mohon Maaf, Restoran saat ini sedang TUTUP. Pesanan tidak dapat diproses.');
-                return;
-            }
-            if (cart.length === 0) { alert('Keranjang belanja masih kosong!'); return; }
-            
-            const name = document.getElementById('buyer-name').value.trim();
-            const address = document.getElementById('buyer-address').value.trim();
-            const method = document.getElementById('payment-method').value;
-            const confirmed = document.getElementById('payment-confirmed').checked;
-
-            if (!name) { alert('Silakan masukkan nama pelanggan!'); return; }
-            if (!address) { alert('Silakan masukkan nomor meja atau alamat pengiriman!'); return; }
-            if (!method) { alert('Silakan pilih metode pembayaran!'); return; }
-            if (!confirmed) { alert('Harap centang konfirmasi pesanan terlebih dahulu!'); return; }
-
-            const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-            const totalQty = cart.reduce((sum, item) => sum + item.qty, 0);
-            const orderId = 'MB-' + Math.floor(1000 + Math.random() * 9000);
-            const desc = document.getElementById('buyer-desc').value.trim();
-
-            const newOrder = {
-                id: orderId,
-                name: name,
-                desc: desc,
-                address: address,
-                items: [...cart],
-                total: total,
-                totalQty: totalQty,
-                method: method,
-                status: 'Pending',
-                time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
-            };
-
-            let orders = [];
-            try { orders = JSON.parse(safeGet('mb_orders')) || []; } catch(e) { orders = []; }
-            orders.unshift(newOrder);
-            safeSet('mb_orders', JSON.stringify(orders));
-
-            // Reset Cart
-            cart = [];
-            updateCartUI();
-            toggleCart();
-
-            // Show Timer Modal
-            activeOrderId = orderId;
-            document.getElementById('pay-order-id').innerText = orderId;
-            document.getElementById('pay-buyer-name').innerText = name;
-            document.getElementById('pay-total-items').innerText = totalQty + ' item';
-            document.getElementById('pay-total').innerText = 'Rp ' + total.toLocaleString('id-ID');
-            document.getElementById('pay-method-container').innerHTML = `<span class="bg-sky-100 text-sky-800 px-2 py-0.5 rounded text-xs font-bold">${method}</span>`;
-
-            document.getElementById('payment-timer-modal').classList.remove('hidden');
-            startTimer(180); // 3 menit
-            loadCustomerOrders();
-        }
-
-        function startTimer(duration) {
-            let timer = duration, minutes, seconds;
-            clearInterval(timerInterval);
-            timerInterval = setInterval(function () {
-                minutes = parseInt(timer / 60, 10);
-                seconds = parseInt(timer % 60, 10);
-                minutes = minutes < 10 ? "0" + minutes : minutes;
-                seconds = seconds < 10 ? "0" + seconds : seconds;
-
-                const timerEl = document.getElementById('countdown-timer');
-                if(timerEl) timerEl.textContent = minutes + ":" + seconds;
-
-                if (--timer < 0) {
-                    clearInterval(timerInterval);
-                    const timerEl = document.getElementById('countdown-timer');
-                    if(timerEl) timerEl.textContent = "Waktu Habis";
-                }
-            }, 1000);
-        }
-
-        function closeTimerModal() {
-            clearInterval(timerInterval);
-            document.getElementById('payment-timer-modal').classList.add('hidden');
-            const section = document.getElementById('status-pesanan-section');
-            if(section) section.scrollIntoView({ behavior: 'smooth' });
-        }
-
-        function loadCustomerOrders() {
-            let orders = [];
-            try { orders = JSON.parse(safeGet('mb_orders')) || []; } catch(e) { orders = []; }
-            const container = document.getElementById('customer-orders-list');
-            if(!container) return;
-
-            container.innerHTML = '';
-            if(orders.length === 0) {
-                container.innerHTML = `<p class="text-gray-400 text-center py-2">Belum ada riwayat pesanan.</p>`;
-                return;
-            }
-
-            orders.slice(0, 10).forEach(o => {
-                let badgeColor = 'bg-yellow-100 text-yellow-800';
-                if(o.status === 'Diproses') badgeColor = 'bg-blue-100 text-blue-800';
-                if(o.status === 'Selesai') badgeColor = 'bg-green-100 text-green-800';
-                if(o.status === 'Dibatalkan') badgeColor = 'bg-red-100 text-red-800';
-
-                container.innerHTML += `
-                    <div class="bg-sky-50/50 p-3 rounded-xl border border-sky-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                        <div>
-                            <div class="flex items-center space-x-2">
-                                <span class="font-bold text-sky-900">${o.id}</span>
-                                <span class="text-xs px-2 py-0.5 rounded-full font-bold ${badgeColor}">${o.status}</span>
-                            </div>
-                            <div class="text-xs text-gray-600 mt-1"><b>${o.name}</b> (${o.address}) - Rp ${o.total.toLocaleString('id-ID')}</div>
-                            <div class="text-[11px] text-gray-400">${o.time} | ${o.method}</div>
-                        </div>
-                    </div>`;
-            });
-        }
-    </script>
+    init();
+  </script>
 </body>
 </html>
