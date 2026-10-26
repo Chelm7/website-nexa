@@ -509,10 +509,37 @@ window.onload = initApp;
 </script>
 
 <script>
-  // Fungsi untuk memproses pesanan di panel admin
-  function prosesPesananAdmin(namaPelanggan, menuPesanan, totalHarga, noHpPelanggan) {
+    // Menyimpan data pesanan sementara dan memulai timer 3 menit
+  function mulaiPesananBaru(namaPelanggan, menuPesanan, totalHarga) {
     
-    // 1. Data dikirim otomatis ke SheetDB Anda
+    // Tampilkan informasi ke resto/pelanggan bahwa waktu konfirmasi berjalan
+    alert('Pesanan dibuat. Resto memiliki waktu 3 menit untuk mengonfirmasi pembayaran.');
+
+    // Set timer selama 3 menit (3 * 60 * 1000 milidetik)
+    let batasWaktu = setTimeout(function() {
+      // Aksi jika waktu 3 menit habis dan resto belum konfirmasi
+      alert('Waktu konfirmasi habis (3 menit). Pesanan otomatis gagal dan dibatalkan, silakan pesan ulang dari awal.');
+      // Hapus data sementara atau reset halaman/keranjang di sini jika perlu
+    }, 180000); // 180.000 ms = 3 menit
+
+    // Simpan batasWaktu ke variabel global atau tombol konfirmasi resto agar bisa dibatalkan jika resto menekan tombol konfirmasi tepat waktu
+    window.timerPesananAktif = batasWaktu;
+    window.dataPesananSementara = { nama: namaPelanggan, menu: menuPesanan, total: totalHarga };
+  }
+
+
+  // Fungsi yang ditekan oleh PIHAK RESTO saat pembayaran berhasil dikonfirmasi sebelum 3 menit
+  function restoKonfirmasiPembayaranBerhasil() {
+    // Hentikan timer batal otomatis karena resto sudah konfirmasi
+    clearTimeout(window.timerPesananAktif);
+
+    let data = window.dataPesananSementara;
+    if (!data) {
+      alert('Tidak ada pesanan aktif yang perlu diproses.');
+      return;
+    }
+
+    // Kirim data pesanan ke Google Sheets / SheetDB
     fetch('https://sheetdb.io/api/v1/2ij5jepgf1fdy', {
       method: 'POST',
       headers: {
@@ -521,25 +548,24 @@ window.onload = initApp;
       },
       body: JSON.stringify({
         data: {
-          'Nama': namaPelanggan,
-          'Menu': menuPesanan,
-          'Total': totalHarga,
-          'NoHP': noHpPelanggan,
-          'Status': 'Selesai / Diproses',
-          'Tanggal': new Date().toLocaleString('id-ID')
+          'Nama': data.nama,
+          'Menu': data.menu,
+          'Total': data.total
         }
       })
     })
     .then(response => response.json())
-    .then(data => {
-      // 2. Jika sukses masuk Google Sheet, tampilkan pemberitahuan & buka WhatsApp
-      alert('Pesanan berhasil diproses dan tercatat di laporan!');
-      
-      // Ubah format nomor HP (08xx jadi 628xx)
-      let formatNoHp = noHpPelanggan.replace(/^0/, '62');
-      
-      // Pesan laporan yang otomatis terkirim ke pelanggan
-      let pesanLaporan = `Halo Kak ${namaPelanggan}, pesanan ${menuPesanan} (Total: Rp ${totalHarga}) sudah diproses dan sedang disiapkan ya! Terima kasih.`;
+    .then(resData => {
+      alert('Pembayaran divalidasi resto! Pesanan berhasil tercatat di database laporan.');
+      // Bersihkan data sementara
+      window.dataPesananSementara = null;
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('Gagal mencatat pesanan ke database, silakan coba lagi.');
+    });
+  }
+
       
       // Buka WhatsApp untuk kirim laporan ke pelanggan
       window.open(`https://wa.me/${formatNoHp}?text=${encodeURIComponent(pesanLaporan)}`, '_blank');
