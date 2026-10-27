@@ -46,10 +46,10 @@
                     <div id="live-time" class="font-bold text-white text-sm">00:00:00</div>
                     <div id="live-date" class="text-sky-200">Senin, 01 Jan 2026</div>
                 </div>
-                <!-- Tombol Keranjang dengan Badge Merah Bulat -->
-                <button id="open-cart-button" onclick="openCart()" class="bg-white text-sky-700 border border-sky-300 hover:bg-sky-50 px-4 py-2 rounded-xl font-bold transition flex items-center shadow">
+                <!-- Tombol Keranjang -->
+                <button id="open-cart-button" onclick="openCart()" class="bg-white text-sky-700 border border-sky-300 hover:bg-sky-50 px-4 py-2 rounded-xl font-bold transition flex items-center shadow relative">
                     <i class="fa-solid fa-cart-shopping mr-2"></i> Keranjang
-                    <span id="cart-count" class="ml-2 bg-red-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold">0</span>
+                    <span id="cart-count" class="ml-2 bg-red-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold hidden">0</span>
                 </button>
             </div>
         </div>
@@ -308,27 +308,6 @@
             try { localStorage.setItem(key, val); } catch (e) { memoryStorage[key] = val; }
         }
 
-        // Fungsi Suara Beep
-        function playNotificationSound() {
-            try {
-                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                const oscillator = audioCtx.createOscillator();
-                const gainNode = audioCtx.createGain();
-                
-                oscillator.type = 'sine';
-                oscillator.frequency.setValueAtTime(880, audioCtx.currentTime);
-                gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
-                
-                oscillator.connect(gainNode);
-                gainNode.connect(audioCtx.destination);
-                
-                oscillator.start();
-                oscillator.stop(audioCtx.currentTime + 0.4);
-            } catch (e) {
-                console.log("Audio tidak didukung oleh browser ini.");
-            }
-        }
-
         let scrollTimeout;
         window.addEventListener('scroll', function() {
             const scrollArrows = document.getElementById('scroll-arrows');
@@ -520,7 +499,7 @@
             });
         }
 
-        // Masuk ke keranjang tanpa membuka modal, berbunyi beep, dan badge merah bulat bertambah
+        // Masuk ke keranjang tanpa membuka modal dan update badge merah bulat
         function addToCart(menuId) {
             const status = safeGet('mb_resto_status') || 'Buka';
             if (status === 'Tutup') {
@@ -538,7 +517,6 @@
             cart.set(key, currentQty + 1);
             
             renderCart();
-            playNotificationSound(); // Bunyi beep saat item masuk ke keranjang
         }
 
         function renderCart() {
@@ -580,7 +558,15 @@
                 cartItems.innerHTML = `<p class="py-5 text-center text-sm text-slate-500">Keranjang masih kosong.</p>`;
             }
 
-            document.getElementById('cart-count').textContent = String(totalItems);
+            const countEl = document.getElementById('cart-count');
+            if (totalItems > 0) {
+                countEl.textContent = String(totalItems);
+                countEl.classList.remove('hidden');
+            } else {
+                countEl.textContent = '0';
+                countEl.classList.add('hidden');
+            }
+
             document.getElementById('cart-total').textContent = rupiah(totalPrice);
         }
 
