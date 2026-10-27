@@ -1,825 +1,718 @@
 <!DOCTYPE html>
 <html lang="id">
-<head> 
-    <meta charset="UTF-8"> 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
-    <title>Panel Resto - Mie Bangka Teladan</title> 
-    <script src="https://cdn.tailwindcss.com"></script> 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"> 
-    
-    <script> 
-        let lastOrderCount = 0;
-        let audioCtx = null;
-
-        function checkAdminAuth() { 
-            if (sessionStorage.getItem('mb_admin_logged') !== 'true') { 
-                document.getElementById('login-modal').classList.remove('hidden'); 
-            } else { 
-                document.getElementById('login-modal').classList.add('hidden'); 
-                initAdminPanel(); 
-            } 
-        } 
-
-        function verifyAdminLogin() { 
-            let usernameInput = document.getElementById('admin-username').value.trim(); 
-            let passwordInput = document.getElementById('admin-password').value.trim(); 
-            let pinInput = document.getElementById('admin-pin').value.trim(); 
-            
-            let correctUsername = "miebangka"; 
-            let correctPassword = "admin123"; 
-            let correctPin = "886886"; 
-            
-            if (usernameInput !== correctUsername || passwordInput !== correctPassword) { 
-                alert('Nama Resto atau Sandi salah.'); 
-                return; 
-            } 
-            if (pinInput !== correctPin) { 
-                alert('PIN Rahasia Resto salah.'); 
-                return; 
-            } 
-            
-            try {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                if (audioCtx.state === 'suspended') {
-                    audioCtx.resume();
-                }
-            } catch(e) {
-                console.log("AudioContext init error:", e);
-            }
-
-            sessionStorage.setItem('mb_admin_logged', 'true'); 
-            alert('Masuk Panel Resto Berhasil.'); 
-            document.getElementById('login-modal').classList.add('hidden'); 
-            initAdminPanel(); 
-        } 
-
-        function logoutAdmin() {
-            sessionStorage.removeItem('mb_admin_logged');
-            location.reload();
-        }
-
-        function toggleVisibility(fieldId, iconId) { 
-            const field = document.getElementById(fieldId); 
-            const icon = document.getElementById(iconId); 
-            if (field.type === 'password') { 
-                field.type = 'text'; 
-                icon.className = 'fa-solid fa-eye-slash text-sky-600'; 
-            } else { 
-                field.type = 'password'; 
-                icon.className = 'fa-solid fa-eye text-sky-600'; 
-            } 
-        } 
-
-        function switchTab(tabName) {
-            const tabs = ['orders', 'menus', 'banners', 'banks', 'settings'];
-            tabs.forEach(t => {
-                let sec = document.getElementById(`section-${t}`);
-                let btn = document.getElementById(`tab-btn-${t}`);
-                if(sec) sec.classList.add('hidden');
-                if(btn) btn.className = "text-sky-100 hover:text-white pb-1 font-semibold";
-            });
-            let targetSec = document.getElementById(`section-${tabName}`);
-            let targetBtn = document.getElementById(`tab-btn-${tabName}`);
-            if(targetSec) targetSec.classList.remove('hidden');
-            if(targetBtn) targetBtn.className = "font-bold border-b-2 border-white pb-1 text-white";
-        }
-
-        function initAdminPanel() {
-            let status = localStorage.getItem('mb_resto_status') || 'Buka';
-            let statusSelect = document.getElementById('header-resto-status');
-            if(statusSelect) statusSelect.value = status;
-            
-            let orders = JSON.parse(localStorage.getItem('mb_orders') || '[]');
-            lastOrderCount = orders.length; 
-            
-            renderOrders();
-            setInterval(checkForNewOrders, 3000); 
-            setInterval(checkExpiredOrders, 1000);
-            
-            if(typeof renderMenus === 'function') renderMenus();
-            if(typeof renderBanners === 'function') renderBanners();
-            if(typeof renderBanks === 'function') renderBanks();
-            if(typeof renderSettings === 'function') renderSettings();
-        }
-
-        function playAdminSound() {
-            let soundEnabled = localStorage.getItem('mb_sound_enabled') !== 'false';
-            if(!soundEnabled) return;
-
-            try {
-                if (!audioCtx) {
-                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                }
-                if (audioCtx.state === 'suspended') {
-                    audioCtx.resume();
-                }
-
-                let now = audioCtx.currentTime;
-                let osc1 = audioCtx.createOscillator();
-                let gain1 = audioCtx.createGain();
-                osc1.type = 'sine';
-                osc1.frequency.setValueAtTime(880, now); 
-                gain1.gain.setValueAtTime(0.3, now);
-                osc1.connect(gain1);
-                gain1.connect(audioCtx.destination);
-                osc1.start(now);
-                osc1.stop(now + 0.4);
-            } catch(e) {
-                console.log("Audio play failed:", e);
-            }
-        }
-
-        function checkForNewOrders() {
-            let orders = JSON.parse(localStorage.getItem('mb_orders') || '[]');
-            if (orders.length > lastOrderCount) {
-                if (lastOrderCount !== 0) {
-                    playAdminSound();
-                }
-                lastOrderCount = orders.length;
-                renderOrders();
-            }
-        }
-
-        function checkExpiredOrders() {
-            let orders = JSON.parse(localStorage.getItem('mb_orders') || '[]');
-            let now = Date.now();
-            let updated = false;
-
-            orders = orders.filter(o => {
-                let isPending = (o.status === 'Menunggu' || o.status === 'Pending' || o.status === 'Menunggu Verifikasi Resto' || !o.status);
-                if (isPending && o.createdAt) {
-                    let elapsed = now - o.createdAt;
-                    if (elapsed > 3 * 60 * 1000) {
-                        updated = true;
-                        return false; 
-                    }
-                }
-                return true;
-            });
-
-            if (updated) {
-                localStorage.setItem('mb_orders', JSON.stringify(orders));
-                lastOrderCount = orders.length;
-                renderOrders();
-            }
-        }
-
-        function changeRestoStatus(val) {
-            localStorage.setItem('mb_resto_status', val);
-            alert('Status resto diubah menjadi: ' + val);
-        }
-
-        function clearOrders() {
-            if (confirm('Yakin ingin menghapus semua riwayat pesanan?')) {
-                localStorage.removeItem('mb_orders');
-                lastOrderCount = 0;
-                renderOrders();
-            }
-        }
-
-        function deleteSingleOrder(index) {
-            if (confirm('Hapus pesanan ini dari riwayat?')) {
-                let orders = JSON.parse(localStorage.getItem('mb_orders') || '[]');
-                let realIndex = orders.length - 1 - index;
-                orders.splice(realIndex, 1);
-                localStorage.setItem('mb_orders', JSON.stringify(orders));
-                lastOrderCount = orders.length;
-                renderOrders();
-            }
-        }
-
-        let currentFilter = 'Semua Pesanan';
-        function filterOrders(status) {
-            currentFilter = status;
-            renderOrders();
-        }
-
-        function renderOrders() {
-            let ordersContainer = document.getElementById('orders-list-container');
-            if(!ordersContainer) return;
-            let orders = JSON.parse(localStorage.getItem('mb_orders') || '[]');
-            lastOrderCount = orders.length;
-            
-            if (orders.length === 0) {
-                ordersContainer.innerHTML = `<div class="bg-white p-6 rounded-xl shadow text-center text-gray-500">Belum ada pesanan masuk.</div>`;
-                return;
-            }
-
-            let sortedOrders = orders.slice().sort((a, b) => {
-                let timeA = Number(a.timestamp) || Number(a.createdAt) || 0;
-                let timeB = Number(b.timestamp) || Number(b.createdAt) || 0;
-                return timeB - timeA;
-            });
-
-            let filteredOrders = sortedOrders.filter(order => {
-                if (currentFilter === 'Semua Pesanan') return true;
-                let st = order.status || 'Menunggu';
-                if (currentFilter === 'Menunggu Verifikasi Resto') return (st === 'Menunggu' || st === 'Pending' || st === 'Menunggu Verifikasi Resto');
-                if (currentFilter === 'Diproses') return st === 'Diproses';
-                if (currentFilter === 'Selesai') return st === 'Selesai';
-                return true;
-            });
-
-            if (filteredOrders.length === 0) {
-                ordersContainer.innerHTML = `<div class="bg-white p-6 rounded-xl shadow text-center text-gray-500">Tidak ada pesanan dengan filter "${currentFilter}".</div>`;
-                return;
-            }
-
-            let html = '<div class="space-y-4">';
-            let now = Date.now();
-
-            filteredOrders.forEach((order, idx) => {
-                let originalIdx = orders.findIndex(o => o.id === order.id);
-                if(originalIdx === -1) originalIdx = idx;
-
-                let statusBadge = order.status || 'Menunggu';
-                let badgeClass = 'bg-yellow-100 text-yellow-800';
-                if(statusBadge === 'Diproses') badgeClass = 'bg-blue-100 text-blue-800';
-                if(statusBadge === 'Selesai') badgeClass = 'bg-green-100 text-green-800';
-                if(statusBadge === 'Dibatalkan') badgeClass = 'bg-red-100 text-red-800';
-
-                let isPending = (statusBadge === 'Menunggu' || statusBadge === 'Pending' || statusBadge === 'Menunggu Verifikasi Resto' || !order.status);
-                let isProcessing = (statusBadge === 'Diproses');
-
-                let cardStyle = 'bg-white border shadow-sm';
-                if (isPending) {
-                    cardStyle = 'bg-sky-50/90 border-2 border-sky-500 shadow-[0_0_15px_rgba(14,165,233,0.4)]';
-                } else if (isProcessing) {
-                    cardStyle = 'bg-sky-50/50 border-2 border-sky-300';
-                }
-
-                let timeRemainingStr = '';
-                if (isPending && order.createdAt) {
-                    let elapsed = now - order.createdAt;
-                    let remaining = (3 * 60 * 1000) - elapsed;
-                    if (remaining > 0) {
-                        let mins = Math.floor(remaining / 60000);
-                        let secs = Math.floor((remaining % 60000) / 1000);
-                        timeRemainingStr = `<div class="text-xs text-red-600 font-bold mt-1"><i class="fa-regular fa-clock mr-1"></i> ${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}</div>`;
-                    } else {
-                        timeRemainingStr = `<div class="text-xs text-red-600 font-bold mt-1">Waktu Habis</div>`;
-                    }
-                }
-
-                let itemsList = '';
-                if(order.items && Array.isArray(order.items)) {
-                    itemsList = order.items.map(i => `<p class="text-xs text-gray-700">- ${i.name} (${i.qty || i.quantity || 1}x) Rp ${( (i.price || 0) * (i.qty || i.quantity || 1) ).toLocaleString('id-ID')}</p>`).join('');
-                }
-
-                html += `
-                    <div class="${cardStyle} p-4 rounded-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 transition-all">
-                        <div class="flex-1">
-                            <div class="flex items-center gap-2 mb-1 flex-wrap">
-                                <span class="bg-sky-100 text-sky-800 font-bold px-2 py-0.5 rounded text-xs">#${order.id || (idx+1)}</span>
-                                <span class="text-xs text-gray-500">${order.date || order.created_at || 'Hari ini'}</span>
-                                <span class="${badgeClass} px-2 py-0.5 rounded text-xs font-bold">${statusBadge}</span>
-                            </div>
-                            <h4 class="font-bold text-gray-800">${order.name} (${order.phone || '-'})</h4>
-                            <p class="text-xs text-gray-600 mb-1">${order.address || '-'}</p>
-                            <div class="bg-white/90 p-2 rounded mb-1 border">${itemsList || '<p class="text-xs text-gray-500">Catatan: '+(order.note||'-')+'</p>'}</div>
-                            <p class="text-xs font-semibold text-sky-700">Total: Rp ${Number(order.total || 0).toLocaleString('id-ID')} (Pembayaran: ${order.payment || 'Tunai/Bank'})</p>
-                            ${timeRemainingStr}
-                        </div>
-                        <div class="flex flex-wrap gap-2 items-center">
-                            <button onclick="updateOrderStatus(${originalIdx}, 'Diproses')" class="bg-sky-600 hover:bg-sky-700 text-white text-xs px-3 py-1.5 rounded-lg font-bold shadow">Proses</button>
-                            <button onclick="updateOrderStatus(${originalIdx}, 'Selesai')" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-3 py-1.5 rounded-lg font-bold shadow">Selesai</button>
-                            
-                            <button onclick="editOrderModal(${originalIdx})" class="bg-white text-sky-700 border border-sky-400 hover:bg-sky-50 text-xs px-3 py-1.5 rounded-lg font-bold shadow"><i class="fa-solid fa-pen mr-1"></i> Edit</button>
-                            <button onclick="printBluetoothOrder(${originalIdx})" class="bg-white text-sky-700 border border-sky-400 hover:bg-sky-50 text-xs px-3 py-1.5 rounded-lg font-bold shadow"><i class="fa-solid fa-print mr-1"></i> Cetak</button>
-                            
-                            <button onclick="updateOrderStatus(${originalIdx}, 'Dibatalkan')" class="bg-amber-600 hover:bg-amber-700 text-white text-xs px-3 py-1.5 rounded-lg font-bold shadow">Tolak</button>
-                            <button onclick="deleteSingleOrder(${originalIdx})" class="bg-red-100 hover:bg-red-200 text-red-700 text-xs px-3 py-1.5 rounded-lg font-bold shadow">Hapus</button>
-                        </div>
-                    </div>
-                `;
-            });
-            html += '</div>';
-            ordersContainer.innerHTML = html;
-        }
-
-        function updateOrderStatus(index, status) {
-            let orders = JSON.parse(localStorage.getItem('mb_orders') || '[]');
-            if(orders[index]) {
-                orders[index].status = status;
-                localStorage.setItem('mb_orders', JSON.stringify(orders));
-                renderOrders();
-                alert('Status pesanan berhasil diperbarui menjadi: ' + status);
-            } else {
-                alert('Pesanan tidak ditemukan.');
-            }
-        }
-
-        function editOrderModal(index) {
-            let orders = JSON.parse(localStorage.getItem('mb_orders') || '[]');
-            let o = orders[index];
-            if (!o) return;
-            let newName = prompt("Ubah Nama Pelanggan:", o.name);
-            if (newName !== null) {
-                o.name = newName;
-                let newPhone = prompt("Ubah Nomor Telepon:", o.phone);
-                if (newPhone !== null) o.phone = newPhone;
-                let newTotal = prompt("Ubah Total Harga:", o.total);
-                if (newTotal !== null) o.total = newTotal;
-                
-                localStorage.setItem('mb_orders', JSON.stringify(orders));
-                renderOrders();
-                alert('Data pesanan berhasil diubah.');
-            }
-        }
-
-        async function printBluetoothOrder(index) {
-            let orders = JSON.parse(localStorage.getItem('mb_orders') || '[]');
-            let o = orders[index];
-            if (!o) return;
-
-            if (!navigator.bluetooth) {
-                alert('Browser Anda tidak mendukung Web Bluetooth. Gunakan Google Chrome di HP Android.');
-                return;
-            }
-
-            try {
-                const device = await navigator.bluetooth.requestDevice({
-                    acceptAllDevices: true,
-                    optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb', '49535343-fe7d-4ae5-8fa9-9fafd205e455', '0000ff00-0000-1000-8000-00805f9b34fb']
-                });
-
-                const server = await device.gatt.connect();
-                const services = await server.getPrimaryServices();
-                let characteristic = null;
-
-                for (let service of services) {
-                    const chars = await service.getCharacteristics();
-                    for (let char of chars) {
-                        if (char.properties.write || char.properties.writeWithoutResponse) {
-                            characteristic = char;
-                            break;
-                        }
-                    }
-                    if (characteristic) break;
-                }
-
-                if (!characteristic) {
-                    alert('Tidak dapat menemukan jalur cetak pada printer Bluetooth ini.');
-                    return;
-                }
-
-                let encoder = new TextEncoder();
-                let printData = "\x1B\x40"; 
-                printData += "\x1B\x61\x01"; 
-                printData += "MIE BANGKA TELADAN\n";
-                printData += "Jalan Batu 8 Atas, Kota Tanjungpinang\n";
-                printData += "WA: 081267166886 / 082384039200\n";
-                printData += "--------------------------------\n";
-                printData += "\x1B\x61\x00"; 
-                printData += `No Pesanan : #${o.id || (index+1)}\n`;
-                printData += `Tanggal    : ${o.date || o.created_at || 'Hari ini'}\n`;
-                printData += `Pelanggan  : ${o.name} (${o.phone || '-'})\n`;
-                printData += `Alamat     : ${o.address || '-'}\n`;
-                printData += "--------------------------------\n";
-                printData += "DETAIL PESANAN (Topping B2 Non-Halal):\n";
-                
-                if(o.items && Array.isArray(o.items)) {
-                    o.items.forEach(i => {
-                        printData += `${i.name} x${i.qty || i.quantity || 1} : Rp ${( (i.price || 0) * (i.qty || i.quantity || 1) ).toLocaleString('id-ID')}\n`;
-                    });
-                } else {
-                    printData += `${o.note || 'Pesanan Resto'}\n`;
-                }
-
-                printData += "--------------------------------\n";
-                printData += `TOTAL: Rp ${Number(o.total || 0).toLocaleString('id-ID')}\n`;
-                printData += `Pembayaran: ${o.payment || 'Tunai/Bank'}\n`;
-                printData += "--------------------------------\n";
-                printData += "\x1B\x61\x01"; 
-                printData += "Silahkan Lakukan Pembayaran\n";
-                printData += "Terima Kasih Atas Kunjungan Anda\n\n\n";
-
-                await characteristic.writeValue(encoder.encode(printData));
-                alert('Struk berhasil dicetak via Bluetooth!');
-            } catch (error) {
-                console.error(error);
-                alert('Gagal mencetak: ' + error.message);
-            }
-        }
-
-        let menuImageBase64 = "";
-        function previewMenuImageFile(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    menuImageBase64 = e.target.result;
-                    let prev = document.getElementById('menu-img-preview');
-                    if(prev) prev.src = menuImageBase64;
-                    let cont = document.getElementById('menu-img-preview-container');
-                    if(cont) cont.classList.remove('hidden');
-                };
-                reader.readAsDataURL(file);
-            }
-        }
-
-        function renderMenus() {
-            let container = document.getElementById('menu-list-container');
-            if(!container) return;
-            let menus = JSON.parse(localStorage.getItem('mb_menus') || '[]');
-            if (menus.length === 0) {
-                container.innerHTML = `<div class="bg-white p-6 rounded-xl shadow text-center text-gray-500">Belum ada menu terdaftar. Tambahkan menu baru di atas.</div>`;
-                return;
-            }
-            let html = '<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">';
-            menus.forEach((m, idx) => {
-                let imgUrl = m.image || 'https://via.placeholder.com/400x300?text=No+Image';
-                html += `
-                    <div class="bg-white p-4 rounded-xl shadow flex flex-col justify-between border">
-                        <div>
-                            <img src="${imgUrl}" class="w-full h-32 object-cover rounded-lg mb-3 border">
-                            <span class="text-[10px] font-bold text-sky-700 bg-sky-50 px-2 py-0.5 rounded-full">${m.category || 'Makanan'}</span>
-                            <h4 class="font-bold text-gray-800 mt-1">${m.name}</h4>
-                            <p class="text-xs text-sky-700 font-bold mb-1">Rp ${Number(m.price || 0).toLocaleString('id-ID')}</p>
-                            <p class="text-xs text-gray-600">${m.desc || m.description || '-'}</p>
-                        </div>
-                        <div class="mt-4 flex justify-end gap-2">
-                            <button onclick="deleteMenu(${idx})" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1 rounded text-xs font-bold">Hapus</button>
-                        </div>
-                    </div>
-                `;
-            });
-            html += '</div>';
-            container.innerHTML = html;
-        }
-
-        function addMenu(e) {
-            e.preventDefault();
-            let name = document.getElementById('menu-name').value;
-            let price = document.getElementById('menu-price').value;
-            let desc = document.getElementById('menu-desc').value;
-            let category = document.getElementById('menu-category').value;
-
-            let finalImage = menuImageBase64 || "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=500&q=80";
-
-            let menus = JSON.parse(localStorage.getItem('mb_menus') || '[]');
-            menus.push({ 
-                id: 'menu-' + Date.now(),
-                name, 
-                price: Number(price), 
-                desc, 
-                category,
-                image: finalImage 
-            });
-            localStorage.setItem('mb_menus', JSON.stringify(menus));
-            
-            menuImageBase64 = "";
-            document.getElementById('form-add-menu').reset();
-            let prevCont = document.getElementById('menu-img-preview-container');
-            if(prevCont) prevCont.classList.add('hidden');
-            renderMenus();
-            alert('Menu berhasil ditambahkan!');
-        }
-
-        function deleteMenu(index) {
-            if (confirm('Hapus menu ini?')) {
-                let menus = JSON.parse(localStorage.getItem('mb_menus') || '[]');
-                menus.splice(index, 1);
-                localStorage.setItem('mb_menus', JSON.stringify(menus));
-                renderMenus();
-            }
-        }
-
-        let bannerImageBase64 = "";
-        function previewBannerImageFile(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    bannerImageBase64 = e.target.result;
-                    let prev = document.getElementById('banner-img-preview');
-                    if(prev) prev.src = bannerImageBase64;
-                    let cont = document.getElementById('banner-img-preview-container');
-                    if(cont) cont.classList.remove('hidden');
-                };
-                reader.readAsDataURL(file);
-            }
-        }
-
-        function renderBanners() {
-            let container = document.getElementById('banner-list-container');
-            if(!container) return;
-            let banners = JSON.parse(localStorage.getItem('mb_banners') || '[]');
-            if (banners.length === 0) {
-                container.innerHTML = `<div class="bg-white p-4 rounded-xl text-center text-gray-500 text-xs">Belum ada banner aktif.</div>`;
-                return;
-            }
-            let html = '<div class="space-y-2">';
-            banners.forEach((b, idx) => {
-                let bTitle = typeof b === 'object' ? (b.title || 'Banner') : 'Banner ' + (idx+1);
-                let bImg = typeof b === 'object' ? b.image : b;
-                html += `
-                    <div class="bg-white p-3 rounded-lg border flex justify-between items-center text-xs">
-                        <div class="flex items-center gap-3">
-                            <img src="${bImg}" class="w-12 h-10 object-cover rounded border">
-                            <div>
-                                <span class="font-bold text-sky-700">${bTitle}</span>
-                            </div>
-                        </div>
-                        <button onclick="deleteBanner(${idx})" class="bg-red-100 text-red-700 px-2 py-1 rounded font-bold">Hapus</button>
-                    </div>
-                `;
-            });
-            html += '</div>';
-            container.innerHTML = html;
-        }
-
-        function addBanner(e) {
-            e.preventDefault();
-            let title = document.getElementById('banner-title').value;
-            if (!bannerImageBase64) {
-                alert('Silakan pilih file gambar banner terlebih dahulu.');
-                return;
-            }
-            let banners = JSON.parse(localStorage.getItem('mb_banners') || '[]');
-            banners.push({ title, image: bannerImageBase64 });
-            localStorage.setItem('mb_banners', JSON.stringify(banners));
-            document.getElementById('form-add-banner').reset();
-            bannerImageBase64 = "";
-            let cont = document.getElementById('banner-img-preview-container');
-            if(cont) cont.classList.add('hidden');
-            renderBanners();
-            alert('Banner berhasil diunggah!');
-        }
-
-        function deleteBanner(index) {
-            let banners = JSON.parse(localStorage.getItem('mb_banners') || '[]');
-            banners.splice(index, 1);
-            localStorage.setItem('mb_banners', JSON.stringify(banners));
-            renderBanners();
-        }
-
-        function renderBanks() {
-            let container = document.getElementById('bank-list-container');
-            if(!container) return;
-            let banks = JSON.parse(localStorage.getItem('mb_banks') || '[]');
-            if (banks.length === 0) {
-                container.innerHTML = `<div class="bg-white p-4 rounded-xl text-center text-gray-500 text-xs">Belum ada rekening terdaftar.</div>`;
-                return;
-            }
-            let html = '<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">';
-            banks.forEach((b, idx) => {
-                html += `
-                    <div class="bg-white p-3 rounded-lg border flex justify-between items-center text-xs">
-                        <div>
-                            <span class="font-bold text-gray-800">${b.bankName} - ${b.accNum}</span>
-                            <p class="text-gray-500">A/N ${b.accName}</p>
-                        </div>
-                        <button onclick="deleteBank(${idx})" class="bg-red-100 text-red-700 px-2 py-1 rounded font-bold">Hapus</button>
-                    </div>
-                `;
-            });
-            html += '</div>';
-            container.innerHTML = html;
-        }
-
-        function addBank(e) {
-            e.preventDefault();
-            let bankName = document.getElementById('bank-name').value;
-            let accNum = document.getElementById('bank-accnum').value;
-            let accName = document.getElementById('bank-accname').value;
-            let banks = JSON.parse(localStorage.getItem('mb_banks') || '[]');
-            banks.push({ bankName, accNum, accName });
-            localStorage.setItem('mb_banks', JSON.stringify(banks));
-            document.getElementById('form-add-bank').reset();
-            renderBanks();
-            alert('Rekening ditambahkan!');
-        }
-
-        function deleteBank(index) {
-            let banks = JSON.parse(localStorage.getItem('mb_banks') || '[]');
-            banks.splice(index, 1);
-            localStorage.setItem('mb_banks', JSON.stringify(banks));
-            renderBanks();
-        }
-
-        function renderSettings() {
-            let wa = localStorage.getItem('mb_admin_wa') || '081267166886';
-            let fee = localStorage.getItem('mb_delivery_fee') || '0';
-            let sound = localStorage.getItem('mb_sound_enabled') !== 'false';
-            
-            if(document.getElementById('setting-wa')) document.getElementById('setting-wa').value = wa;
-            if(document.getElementById('setting-fee')) document.getElementById('setting-fee').value = fee;
-            if(document.getElementById('setting-sound')) document.getElementById('setting-sound').checked = sound;
-        }
-
-        function saveSettings(e) {
-            e.preventDefault();
-            let wa = document.getElementById('setting-wa').value;
-            let fee = document.getElementById('setting-fee').value;
-            let sound = document.getElementById('setting-sound').checked;
-            
-            localStorage.setItem('mb_admin_wa', wa);
-            localStorage.setItem('mb_delivery_fee', fee);
-            localStorage.setItem('mb_sound_enabled', sound);
-            alert('Pengaturan berhasil disimpan!');
-        }
-    </script> 
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Resto - Mie Bangka Teladan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; background: #f0f9ff; color: #1e293b; font-family: Arial, Helvetica, sans-serif; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0.3; } to { opacity: 1; } }
+        .modal-hidden { display: none !important; }
+        button:disabled { cursor: not-allowed; opacity: 0.6; }
+    </style>
 </head>
+<body class="bg-sky-50 text-gray-800 font-sans selection:bg-sky-500 selection:text-white">
 
-<body class="bg-sky-50 font-sans text-gray-800" onload="checkAdminAuth()">
-
-    <!-- MODAL LOGIN RESTO -->
-    <div id="login-modal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 text-center border-t-4 border-sky-600">
-            <h2 class="text-xl font-bold text-sky-700 mb-1">Masuk Panel Resto</h2>
-            <p class="text-xs text-gray-500 mb-4">Mie Bangka Teladan (Jalan Batu 8 Atas, Tanjungpinang)</p>
-            
-            <div class="space-y-3 text-left">
-                <div>
-                    <label class="text-xs font-bold text-gray-700">Nama Resto</label>
-                    <input type="text" id="admin-username" class="w-full p-2 border rounded-lg text-sm mt-1 focus:ring-2 focus:ring-sky-500 outline-none" autocomplete="off">
+    <!-- HALAMAN LOGIN ADMIN -->
+    <div id="login-section" class="min-h-screen flex items-center justify-center p-4">
+        <div class="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 border border-sky-100">
+            <div class="text-center mb-6">
+                <div class="w-14 h-14 bg-sky-600 text-white rounded-full flex items-center justify-center text-2xl mx-auto mb-3 shadow">
+                    <i class="fa-solid fa-lock"></i>
                 </div>
-                <div>
-                    <label class="text-xs font-bold text-gray-700">Sandi</label>
-                    <div class="relative mt-1">
-                        <input type="password" id="admin-password" class="w-full p-2 border rounded-lg text-sm focus:ring-2 focus:ring-sky-500 outline-none pr-10" autocomplete="new-password">
-                        <button type="button" onclick="toggleVisibility('admin-password', 'eye-1')" class="absolute right-3 top-2.5">
-                            <i id="eye-1" class="fa-solid fa-eye text-sky-600"></i>
-                        </button>
-                    </div>
-                </div>
-                <div>
-                    <label class="text-xs font-bold text-gray-700">PIN Rahasia Resto</label>
-                    <div class="relative mt-1">
-                        <input type="password" id="admin-pin" class="w-full p-2 border rounded-lg text-sm focus:ring-2 focus:ring-sky-500 outline-none pr-10" autocomplete="new-password">
-                        <button type="button" onclick="toggleVisibility('admin-pin', 'eye-2')" class="absolute right-3 top-2.5">
-                            <i id="eye-2" class="fa-solid fa-eye text-sky-600"></i>
-                        </button>
-                    </div>
-                </div>
-                <button onclick="verifyAdminLogin()" class="w-full bg-sky-600 hover:bg-sky-700 text-white font-bold py-2.5 rounded-lg text-sm transition mt-2 shadow">
-                    Masuk Panel
-                </button>
+                <h1 class="text-2xl font-extrabold text-sky-950">Panel Resto Admin</h1>
+                <p class="text-xs text-slate-500 mt-1">Mie Bangka Teladan - Kota Tanjungpinang</p>
             </div>
+
+            <form onsubmit="handleLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Username Admin</label>
+                    <input id="admin-user" type="text" required placeholder="Masukkan username" class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Password</label>
+                    <input id="admin-pass" type="password" required placeholder="Masukkan password" class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-500">
+                </div>
+                <button type="submit" class="w-full rounded-xl bg-sky-600 text-white px-4 py-3 font-bold hover:bg-sky-700 transition shadow">
+                    <i class="fa-solid fa-right-to-bracket mr-2"></i> Masuk Panel
+                </button>
+                <p id="login-error" class="text-center text-sm text-red-600 mt-2" aria-live="polite"></p>
+            </form>
         </div>
     </div>
 
-    <!-- HEADER ADMIN PANEL -->
-    <header class="bg-sky-600 text-white shadow-md">
-        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col sm:flex-row justify-between items-center gap-3">
-            <div class="flex items-center gap-3">
-                <h1 class="font-bold text-lg">Panel Resto - Mie Bangka Teladan</h1>
-                <select id="header-resto-status" onchange="changeRestoStatus(this.value)" class="bg-sky-700 text-white border border-sky-500 rounded px-2 py-1 text-xs font-bold outline-none">
-                    <option value="Buka">Resto Buka</option>
-                    <option value="Tutup">Resto Tutup</option>
-                </select>
+    <!-- PANEL UTAMA ADMIN (TERSEMBUNYI SEBELUM LOGIN) -->
+    <div id="admin-panel" class="hidden min-h-screen flex flex-col">
+        
+        <!-- Header Admin -->
+        <header class="bg-sky-600 text-white shadow-lg sticky top-0 z-40">
+            <div class="mx-auto max-w-7xl px-4 py-3 flex flex-col sm:flex-row justify-between items-center gap-3">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-white text-sky-600 rounded-full flex items-center justify-center font-bold text-lg shadow">
+                        <i class="fa-solid fa-bowl-food"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-base sm:text-lg font-extrabold">Panel Resto - Mie Bangka Teladan</h1>
+                        <p class="text-[11px] text-sky-100">Kota Tanjungpinang</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-3">
+                    <!-- Tombol Status Resto (Buka/Tutup) -->
+                    <select id="resto-status-toggle" onchange="toggleRestoStatus(this.value)" class="rounded-xl border border-sky-400 bg-sky-700 text-white px-3 py-2 text-xs font-bold outline-none focus:ring-2 focus:ring-white shadow-sm cursor-pointer">
+                        <option value="Buka">Resto Buka</option>
+                        <option value="Tutup">Resto Tutup</option>
+                    </select>
+
+                    <button onclick="handleLogout()" class="bg-white text-sky-700 border border-sky-300 hover:bg-sky-50 px-3 py-2 rounded-xl text-xs font-bold transition shadow flex items-center">
+                        <i class="fa-solid fa-right-from-bracket mr-1.5"></i> Keluar
+                    </button>
+                </div>
             </div>
+
+            <!-- Tab Navigasi -->
+            <div class="bg-sky-700 px-4 flex space-x-2 overflow-x-auto border-t border-sky-500">
+                <button onclick="switchTab('pesanan')" id="tab-btn-pesanan" class="tab-btn px-4 py-3 text-xs font-bold text-white border-b-2 border-white transition">Pesanan</button>
+                <button onclick="switchTab('menu')" id="tab-btn-menu" class="tab-btn px-4 py-3 text-xs font-bold text-sky-200 hover:text-white transition">Kelola Menu</button>
+                <button onclick="switchTab('banner')" id="tab-btn-banner" class="tab-btn px-4 py-3 text-xs font-bold text-sky-200 hover:text-white transition">Banner</button>
+                <button onclick="switchTab('rekening')" id="tab-btn-rekening" class="tab-btn px-4 py-3 text-xs font-bold text-sky-200 hover:text-white transition">Rekening</button>
+                <button onclick="switchTab('pengaturan')" id="tab-btn-pengaturan" class="tab-btn px-4 py-3 text-xs font-bold text-sky-200 hover:text-white transition">Pengaturan</button>
+            </div>
+        </header>
+
+        <!-- Konten Utama Admin -->
+        <main class="container mx-auto px-4 py-6 max-w-7xl flex-1">
+
+            <!-- TAB 1: PESANAN -->
+            <section id="tab-pesanan" class="tab-content active space-y-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white p-4 rounded-2xl shadow-sm border border-sky-100">
+                    <div>
+                        <h2 class="text-lg font-extrabold text-sky-950">Daftar Pesanan Masuk & Riwayat</h2>
+                        <p class="text-xs text-slate-500">Kelola dan update status pesanan pelanggan secara real-time.</p>
+                    </div>
+                    <button onclick="clearAllOrders()" class="bg-white text-red-600 border border-red-300 hover:bg-red-50 text-xs font-bold px-3 py-2 rounded-xl transition shadow">
+                        <i class="fa-solid fa-trash mr-1.5"></i> Hapus Semua Riwayat
+                    </button>
+                </div>
+
+                <div id="admin-orders-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Diisi otomatis oleh JavaScript -->
+                </div>
+            </section>
+
+            <!-- TAB 2: KELOLA MENU -->
+            <section id="tab-menu" class="tab-content space-y-6">
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-sky-100 max-w-2xl mx-auto">
+                    <h2 class="text-lg font-extrabold text-sky-950 mb-3" id="menu-form-title">Tambah Menu Baru</h2>
+                    <form id="menu-form" onsubmit="saveMenu(event)" class="space-y-4">
+                        <input type="hidden" id="edit-menu-id">
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-1">Nama Menu</label>
+                            <input id="menu-name" type="text" required placeholder="Contoh: Mie Bangka Spesial" class="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-sky-500">
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-1">Kategori</label>
+                                <select id="menu-category" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-sky-500">
+                                    <option value="Makanan">Makanan</option>
+                                    <option value="Minuman">Minuman</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-1">Harga (Rp)</label>
+                                <input id="menu-price" type="number" min="0" required placeholder="25000" class="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-sky-500">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-1">URL Gambar / Foto Menu</label>
+                            <input id="menu-image" type="url" placeholder="https://images.unsplash.com/..." class="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-sky-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-1">Deskripsi Singkat</label>
+                            <textarea id="menu-desc" rows="2" placeholder="Deskripsi menu..." class="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-sky-500"></textarea>
+                        </div>
+                        <div class="flex gap-3">
+                            <button type="submit" class="flex-1 bg-sky-600 text-white font-bold py-2.5 rounded-xl hover:bg-sky-700 transition shadow text-sm">Simpan Menu</button>
+                            <button type="button" onclick="resetMenuForm()" id="cancel-edit-btn" class="hidden bg-slate-200 text-slate-700 font-bold py-2.5 px-4 rounded-xl hover:bg-slate-300 transition text-sm">Batal</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-sky-100">
+                    <h2 class="text-lg font-extrabold text-sky-950 mb-4">Daftar Menu Saat Ini</h2>
+                    <div id="admin-menu-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+                </div>
+            </section>
+
+            <!-- TAB 3: BANNER -->
+            <section id="tab-banner" class="tab-content space-y-6">
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-sky-100 max-w-2xl mx-auto">
+                    <h2 class="text-lg font-extrabold text-sky-950 mb-3">Tambah Banner Promosi</h2>
+                    <form onsubmit="addBanner(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-1">URL Gambar Banner</label>
+                            <input id="banner-url-input" type="url" required placeholder="https://images.unsplash.com/..." class="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-sky-500">
+                        </div>
+                        <button type="submit" class="w-full bg-sky-600 text-white font-bold py-2.5 rounded-xl hover:bg-sky-700 transition shadow text-sm">Tambah Banner</button>
+                    </form>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-sky-100 max-w-4xl mx-auto">
+                    <h2 class="text-lg font-extrabold text-sky-950 mb-4">Daftar Banner Aktif</h2>
+                    <div id="admin-banner-list" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
+                </div>
+            </section>
+
+            <!-- TAB 4: REKENING -->
+            <section id="tab-rekening" class="tab-content space-y-6">
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-sky-100 max-w-2xl mx-auto">
+                    <h2 class="text-lg font-extrabold text-sky-950 mb-3">Kelola Metode Pembayaran</h2>
+                    <form onsubmit="savePaymentMethods(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-1">Daftar Pembayaran (Satu per baris)</label>
+                            <textarea id="payment-methods-textarea" rows="6" placeholder="BCA - 1234567890 (a.n. Mie Bangka Teladan)&#10;DANA - 081267166886 (a.n. Mie Bangka Teladan)&#10;Kasir (Tunai)" class="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-sky-500 font-mono"></textarea>
+                        </div>
+                        <button type="submit" class="w-full bg-sky-600 text-white font-bold py-2.5 rounded-xl hover:bg-sky-700 transition shadow text-sm">Simpan Rekening</button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- TAB 5: PENGATURAN -->
+            <section id="tab-pengaturan" class="tab-content space-y-6">
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-sky-100 max-w-2xl mx-auto">
+                    <h2 class="text-lg font-extrabold text-sky-950 mb-3">Pengaturan Akun Admin</h2>
+                    <form onsubmit="saveAdminCredentials(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-1">Username Baru</label>
+                            <input id="new-admin-user" type="text" required class="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-sky-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-1">Password Baru</label>
+                            <input id="new-admin-pass" type="password" required class="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-sky-500">
+                        </div>
+                        <button type="submit" class="w-full bg-sky-600 text-white font-bold py-2.5 rounded-xl hover:bg-sky-700 transition shadow text-sm">Simpan Perubahan Akun</button>
+                    </form>
+                </div>
+            </section>
+
+        </main>
+        
+        <footer class="bg-sky-950 px-4 py-6 text-center text-xs text-sky-100 mt-auto">
+            <p>&copy; 2026 Panel Admin Mie Bangka Teladan - Kota Tanjungpinang</p>
+        </footer>
+    </div>
+
+    <!-- MODAL EDIT PESANAN -->
+    <div id="edit-order-modal" class="modal-hidden fixed inset-0 z-50 bg-black/60 p-4 flex justify-center items-center">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative">
+            <h3 class="text-lg font-extrabold text-sky-950 mb-4">Edit Pesanan Pelanggan</h3>
+            <form id="edit-order-form" onsubmit="saveEditedOrder(event)" class="space-y-3">
+                <input type="hidden" id="edit-order-id-input">
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Nama Pelanggan</label>
+                    <input id="edit-buyer-name" type="text" required class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-sky-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Nomor HP / WhatsApp</label>
+                    <input id="edit-buyer-phone" type="tel" required class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-sky-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Nomor Meja / Alamat</label>
+                    <input id="edit-buyer-address" type="text" required class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-sky-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Total Harga (Rp)</label>
+                    <input id="edit-order-total" type="number" required class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-sky-500">
+                </div>
+                <div class="flex gap-2 pt-2">
+                    <button type="submit" class="flex-1 bg-sky-600 text-white font-bold py-2 rounded-xl text-sm hover:bg-sky-700 transition">Simpan</button>
+                    <button type="button" onclick="closeEditModal()" class="bg-slate-200 text-slate-700 font-bold py-2 px-4 rounded-xl text-sm hover:bg-slate-300 transition">Batal</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        "use strict";
+
+        const SHEETDB_API = "https://sheetdb.io/api/v1/2ij5jepgf1fdy";
+
+        const memoryStorage = {};
+        function safeGet(key) {
+            try { return localStorage.getItem(key); } catch (e) { return memoryStorage[key] !== undefined ? memoryStorage[key] : null; }
+        }
+        function safeSet(key, val) {
+            try { localStorage.setItem(key, val); } catch (e) { memoryStorage[key] = val; }
+        }
+
+        function checkLoginState() {
+            if (safeGet('mb_admin_logged') === 'true') {
+                document.getElementById('login-section').classList.add('hidden');
+                document.getElementById('admin-panel').classList.remove('hidden');
+                initAdminPanel();
+            } else {
+                document.getElementById('login-section').classList.remove('hidden');
+                document.getElementById('admin-panel').classList.add('hidden');
+            }
+        }
+
+        function handleLogin(event) {
+            event.preventDefault();
+            const u = document.getElementById('admin-user').value.trim();
+            const p = document.getElementById('admin-pass').value.trim();
+
+            let savedUser = safeGet('mb_admin_user') || 'admin';
+            let savedPass = safeGet('mb_admin_pass') || 'admin123';
+
+            if (u === savedUser && p === savedPass) {
+                safeSet('mb_admin_logged', 'true');
+                checkLoginState();
+            } else {
+                document.getElementById('login-error').textContent = 'Username atau Password salah!';
+            }
+        }
+
+        function handleLogout() {
+            safeSet('mb_admin_logged', 'false');
+            checkLoginState();
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => {
+                el.classList.remove('border-b-2', 'border-white', 'text-white');
+                el.classList.add('text-sky-200');
+            });
+
+            document.getElementById('tab-' + tabName).classList.add('active');
+            const btn = document.getElementById('tab-btn-' + tabName);
+            if(btn) {
+                btn.classList.add('border-b-2', 'border-white', 'text-white');
+                btn.classList.remove('text-sky-200');
+            }
+        }
+
+        function toggleRestoStatus(val) {
+            safeSet('mb_resto_status', val);
+            const toggle = document.getElementById('resto-status-toggle');
+            if(toggle) {
+                toggle.value = val;
+                if(val === 'Buka') {
+                    toggle.className = "rounded-xl border border-sky-400 bg-sky-700 text-white px-3 py-2 text-xs font-bold outline-none focus:ring-2 focus:ring-white shadow-sm cursor-pointer";
+                } else {
+                    toggle.className = "rounded-xl border border-red-400 bg-red-700 text-white px-3 py-2 text-xs font-bold outline-none focus:ring-2 focus:ring-white shadow-sm cursor-pointer";
+                }
+            }
+        }
+
+        function initAdminPanel() {
+            const status = safeGet('mb_resto_status') || 'Buka';
+            toggleRestoStatus(status);
+            renderAdminOrders();
+            renderAdminMenu();
+            renderAdminBanners();
+            loadPaymentMethodsSettings();
             
-            <div class="flex items-center gap-2">
-                <button onclick="logoutAdmin()" class="bg-white text-sky-700 border border-sky-300 hover:bg-sky-50 px-3 py-1.5 rounded-lg text-xs font-bold shadow">
-                    <i class="fa-solid fa-right-from-bracket mr-1"></i> Keluar
-                </button>
-            </div>
-        </div>
+            const u = safeGet('mb_admin_user') || 'admin';
+            const p = safeGet('mb_admin_pass') || 'admin123';
+            document.getElementById('new-admin-user').value = u;
+            document.getElementById('new-admin-pass').value = p;
 
-        <!-- NAV TABS -->
-        <div class="max-w-7xl mx-auto px-4 flex gap-6 text-sm overflow-x-auto border-t border-sky-500 pt-2 pb-1">
-            <button id="tab-btn-orders" onclick="switchTab('orders')" class="font-bold border-b-2 border-white pb-1 text-white">Pesanan</button>
-            <button id="tab-btn-menus" onclick="switchTab('menus')" class="text-sky-100 hover:text-white pb-1 font-semibold">Kelola Menu</button>
-            <button id="tab-btn-banners" onclick="switchTab('banners')" class="text-sky-100 hover:text-white pb-1 font-semibold">Banner</button>
-            <button id="tab-btn-banks" onclick="switchTab('banks')" class="text-sky-100 hover:text-white pb-1 font-semibold">Rekening</button>
-            <button id="tab-btn-settings" onclick="switchTab('settings')" class="text-sky-100 hover:text-white pb-1 font-semibold">Pengaturan</button>
-        </div>
-    </header>
+            setInterval(renderAdminOrders, 4000);
+        }
 
-    <!-- MAIN CONTENT CONTAINER -->
-    <main class="max-w-7xl mx-auto p-4 space-y-4">
+        function rupiah(value) {
+            return new Intl.NumberFormat("id-ID", {
+                style: "currency",
+                currency: "IDR",
+                maximumFractionDigits: 0
+            }).format(Number(value) || 0);
+        }
 
-        <!-- TAB 1: PESANAN -->
-        <section id="section-orders" class="space-y-4">
-            <div class="bg-white p-4 rounded-xl shadow border border-sky-100 space-y-3">
-                <div class="flex justify-between items-center">
-                    <h3 class="font-bold text-sm text-sky-950">Daftar Pesanan Masuk & Riwayat</h3>
-                    <button onclick="clearOrders()" class="bg-red-100 hover:bg-red-200 text-red-700 text-xs px-3 py-1.5 rounded-lg font-bold">Hapus Semua Riwayat</button>
-                </div>
+        async function apiRequest(url, options = {}) {
+            const response = await fetch(url, {
+                ...options,
+                headers: {
+                    "Content-Type": "application/json",
+                    ...(options.headers || {})
+                }
+            });
+            let result;
+            try { result = await response.json(); } catch { throw new Error("Respons gagal."); }
+            if (!response.ok) { throw new Error(result?.error || "Gagal."); }
+            return result;
+        }
 
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                    <div class="flex flex-wrap gap-2 text-xs">
-                        <button onclick="filterOrders('Semua Pesanan')" class="bg-sky-600 text-white hover:bg-sky-700 px-3 py-1.5 rounded-lg font-bold shadow">Semua Pesanan</button>
-                        <button onclick="filterOrders('Menunggu Verifikasi Resto')" class="bg-sky-100 text-sky-800 hover:bg-sky-200 px-3 py-1.5 rounded-lg font-bold">Menunggu Verifikasi Resto</button>
-                        <button onclick="filterOrders('Diproses')" class="bg-sky-100 text-sky-800 hover:bg-sky-200 px-3 py-1.5 rounded-lg font-bold">Diproses</button>
-                        <button onclick="filterOrders('Selesai')" class="bg-green-100 text-green-800 hover:bg-green-200 px-3 py-1.5 rounded-lg font-bold">Selesai</button>
-                    </div>
-                    <button onclick="renderOrders()" class="bg-white text-sky-700 border border-sky-300 hover:bg-sky-50 text-xs px-3 py-1.5 rounded-lg font-bold shadow"><i class="fa-solid fa-rotate mr-1"></i> Refresh</button>
-                </div>
-            </div>
+        async function renderAdminOrders() {
+            const container = document.getElementById('admin-orders-container');
+            if(!container) return;
 
-            <div id="orders-list-container">
-                <div class="bg-white p-6 rounded-xl shadow text-center text-gray-500">Memuat pesanan...</div>
-            </div>
-        </section>
+            let orders = [];
+            try { orders = JSON.parse(safeGet('mb_orders') || '[]'); } catch(e) { orders = []; }
 
-        <!-- TAB 2: KELOLA MENU -->
-        <section id="section-menus" class="space-y-4 hidden">
-            <div class="bg-white p-4 rounded-xl shadow border border-sky-100">
-                <h3 class="font-bold text-sm mb-3 text-sky-950">Tambah Menu Baru</h3>
-                <form id="form-add-menu" onsubmit="addMenu(event)" class="space-y-3">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            try {
+                const cloudData = await apiRequest(SHEETDB_API);
+                if (Array.isArray(cloudData)) {
+                    let map = new Map();
+                    orders.forEach(o => map.set(o.id, o));
+                    cloudData.forEach(c => {
+                        if (c.id) {
+                            let itemsParsed = [];
+                            try { itemsParsed = typeof c.items === 'string' ? JSON.parse(c.items) : (c.items || []); } catch(e) { itemsParsed = []; }
+                            map.set(c.id, {
+                                id: c.id,
+                                createdAt: Number(c.createdAt) || Date.now(),
+                                created_at: c.created_at || c.date || '-',
+                                name: c.name || '-',
+                                phone: c.phone || '-',
+                                address: c.address || '-',
+                                items: itemsParsed,
+                                total: c.total || '0',
+                                payment: c.payment || '-',
+                                status: c.status || 'Menunggu'
+                            });
+                        }
+                    });
+                    orders = Array.from(map.values());
+                }
+            } catch(err) {
+                console.log("Cloud load orders note:", err);
+            }
+
+            orders.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+            container.innerHTML = '';
+            if (orders.length === 0) {
+                container.innerHTML = `<p class="col-span-full text-center text-gray-500 py-8">Belum ada pesanan masuk.</p>`;
+                return;
+            }
+
+            orders.forEach(o => {
+                let itemsHtml = '';
+                if (Array.isArray(o.items)) {
+                    o.items.forEach(i => {
+                        itemsHtml += `<div class="text-xs text-slate-600">- ${i.name} (${i.qty}x) ${rupiah(i.price * i.qty)}</div>`;
+                    });
+                }
+
+                let badge = "bg-yellow-100 text-yellow-800";
+                if(o.status === 'Diproses') badge = "bg-blue-100 text-blue-800";
+                if(o.status === 'Selesai') badge = "bg-green-100 text-green-800";
+                if(o.status === 'Dibatalkan') badge = "bg-red-100 text-red-800";
+
+                container.innerHTML += `
+                    <div class="bg-white rounded-2xl p-5 shadow-md border border-sky-100 flex flex-col justify-between gap-4">
                         <div>
-                            <label class="text-xs font-bold text-gray-600">Nama Menu</label>
-                            <input type="text" id="menu-name" required class="w-full p-2 border rounded text-xs mt-1 focus:ring-2 focus:ring-sky-500 outline-none">
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="font-extrabold text-sky-950 text-sm">${o.id}</span>
+                                <span class="px-2.5 py-0.5 rounded-full text-xs font-bold ${badge}">${o.status || 'Menunggu'}</span>
+                            </div>
+                            <div class="text-xs text-slate-500 mb-2">${o.created_at || '-'}</div>
+                            <div class="text-sm font-bold text-slate-800">${o.name} (${o.phone})</div>
+                            <div class="text-xs text-sky-700 font-semibold mb-3">Tempat/Meja: ${o.address}</div>
+                            <div class="bg-sky-50 p-2.5 rounded-xl space-y-1 mb-3 border border-sky-100">${itemsHtml}</div>
+                            <div class="text-xs font-extrabold text-slate-800">Total: ${rupiah(o.total)} (Pembayaran: ${o.payment || '-'})</div>
                         </div>
+
+                        <div class="flex flex-wrap gap-2 pt-3 border-t border-slate-100">
+                            <button onclick="updateOrderStatus('${o.id}', 'Diproses')" class="flex-1 bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold py-2 px-3 rounded-xl shadow transition">Proses</button>
+                            <button onclick="updateOrderStatus('${o.id}', 'Selesai')" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2 px-3 rounded-xl shadow transition">Selesai</button>
+                            <button onclick="openEditOrderModal('${o.id}')" class="bg-white text-sky-700 border border-sky-300 hover:bg-sky-50 text-xs font-bold py-2 px-3 rounded-xl shadow transition"><i class="fa-solid fa-pen"></i> Edit</button>
+                            <button onclick="printOrder('${o.id}')" class="bg-white text-sky-700 border border-sky-300 hover:bg-sky-50 text-xs font-bold py-2 px-3 rounded-xl shadow transition"><i class="fa-solid fa-print"></i> Cetak</button>
+                            <button onclick="updateOrderStatus('${o.id}', 'Dibatalkan')" class="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold py-2 px-3 rounded-xl shadow transition">Tolak</button>
+                            <button onclick="deleteOrder('${o.id}')" class="bg-red-600 hover:bg-red-700 text-white text-xs font-bold py-2 px-3 rounded-xl shadow transition">Hapus</button>
+                        </div>
+                    </div>`;
+            });
+        }
+
+        async function updateOrderStatus(orderId, newStatus) {
+            let orders = [];
+            try { orders = JSON.parse(safeGet('mb_orders') || '[]'); } catch(e) { orders = []; }
+            let found = orders.find(o => o.id === orderId);
+            if (found) {
+                found.status = newStatus;
+                safeSet('mb_orders', JSON.stringify(orders));
+            }
+
+            try {
+                await apiRequest(SHEETDB_API + "/id/" + encodeURIComponent(orderId), {
+                    method: "PUT",
+                    body: JSON.stringify({ data: { status: newStatus } })
+                });
+            } catch(err) {
+                console.log("Cloud update status note:", err);
+            }
+
+            renderAdminOrders();
+        }
+
+        async function deleteOrder(orderId) {
+            if(!confirm("Yakin ingin menghapus pesanan ini?")) return;
+            let orders = [];
+            try { orders = JSON.parse(safeGet('mb_orders') || '[]'); } catch(e) { orders = []; }
+            orders = orders.filter(o => o.id !== orderId);
+            safeSet('mb_orders', JSON.stringify(orders));
+
+            try {
+                await apiRequest(SHEETDB_API + "/id/" + encodeURIComponent(orderId), { method: "DELETE" });
+            } catch(err) {
+                console.log("Cloud delete note:", err);
+            }
+
+            renderAdminOrders();
+        }
+
+        async function clearAllOrders() {
+            if(!confirm("Yakin ingin menghapus seluruh riwayat pesanan?")) return;
+            safeSet('mb_orders', JSON.stringify([]));
+            try {
+                await apiRequest(SHEETDB_API + "/all", { method: "DELETE" });
+            } catch(e) {}
+            renderAdminOrders();
+        }
+
+        function openEditOrderModal(orderId) {
+            let orders = [];
+            try { orders = JSON.parse(safeGet('mb_orders') || '[]'); } catch(e) { orders = []; }
+            let o = orders.find(item => item.id === orderId);
+            if (!o) return;
+
+            document.getElementById('edit-order-id-input').value = o.id;
+            document.getElementById('edit-buyer-name').value = o.name;
+            document.getElementById('edit-buyer-phone').value = o.phone;
+            document.getElementById('edit-buyer-address').value = o.address;
+            document.getElementById('edit-order-total').value = o.total;
+
+            document.getElementById('edit-order-modal').classList.remove('modal-hidden');
+        }
+
+        function closeEditModal() {
+            document.getElementById('edit-order-modal').classList.add('modal-hidden');
+        }
+
+        async function saveEditedOrder(event) {
+            event.preventDefault();
+            const id = document.getElementById('edit-order-id-input').value;
+            const name = document.getElementById('edit-buyer-name').value.trim();
+            const phone = document.getElementById('edit-buyer-phone').value.trim();
+            const address = document.getElementById('edit-buyer-address').value.trim();
+            const total = document.getElementById('edit-order-total').value.trim();
+
+            let orders = [];
+            try { orders = JSON.parse(safeGet('mb_orders') || '[]'); } catch(e) { orders = []; }
+            let o = orders.find(item => item.id === id);
+            if (o) {
+                o.name = name;
+                o.phone = phone;
+                o.address = address;
+                o.total = total;
+                safeSet('mb_orders', JSON.stringify(orders));
+            }
+
+            try {
+                await apiRequest(SHEETDB_API + "/id/" + encodeURIComponent(id), {
+                    method: "PUT",
+                    body: JSON.stringify({ data: { name: name, phone: phone, address: address, total: total } })
+                });
+            } catch(err) {}
+
+            closeEditModal();
+            renderAdminOrders();
+        }
+
+        function printOrder(orderId) {
+            let orders = [];
+            try { orders = JSON.parse(safeGet('mb_orders') || '[]'); } catch(e) { orders = []; }
+            let o = orders.find(item => item.id === orderId);
+            if (!o) return;
+
+            let w = window.open('', '_blank', 'width=400,height=600');
+            let itemsText = '';
+            if (Array.isArray(o.items)) {
+                o.items.forEach(i => {
+                    itemsText += `<div>- ${i.name} (${i.qty}x) @${rupiah(i.price)}</div>`;
+                });
+            }
+            w.document.write(`
+                <html><head><title>Struk - ${o.id}</title><style>body{font-family:monospace;font-size:12px;padding:10px;}</style></head>
+                <body>
+                    <h3 style="text-align:center;margin:0;">Mie Bangka Teladan</h3>
+                    <p style="text-align:center;margin:0 0 10px 0;">Jalan Batu 8 Atas, Tanjungpinang</p>
+                    <hr>
+                    <div><b>ID:</b> ${o.id}</div>
+                    <div><b>Waktu:</b> ${o.created_at || '-'}</div>
+                    <div><b>Nama:</b> ${o.name}</div>
+                    <div><b>Meja:</b> ${o.address}</div>
+                    <hr>
+                    <div><b>Menu Pesanan:</b></div>
+                    ${itemsText}
+                    <hr>
+                    <div><b>Total:</b> ${rupiah(o.total)}</div>
+                    <div><b>Pembayaran:</b> ${o.payment || '-'}</div>
+                    <div><b>Status:</b> ${o.status}</div>
+                    <hr>
+                    <p style="text-align:center;margin:10px 0 0 0;">Terima Kasih</p>
+                </body></html>`);
+            w.document.close();
+            w.print();
+        }
+
+        const defaultMenu = [
+            { id: "menu-001", name: "Mie Bangka Spesial (Topping B2)", category: "Makanan", price: 25000, description: "Mie kenyal khas Bangka dengan topping cincang B2 gurih dan pangsit.", image: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=700&q=80" },
+            { id: "menu-002", name: "Mie Bangka Pangsit Kuah", category: "Makanan", price: 22000, description: "Mie hangat dengan kuah kaldu lezat dan pangsit rebus.", image: "https://images.unsplash.com/photo-1612929633738-8fe44f7ec841?auto=format&fit=crop&w=700&q=80" },
+            { id: "menu-003", name: "Es Jeruk Kunci Bangka", category: "Minuman", price: 8000, description: "Minuman segar dengan jeruk kunci khas Bangka.", image: "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=700&q=80" }
+        ];
+
+        function renderAdminMenu() {
+            let menuList = [];
+            try { menuList = JSON.parse(safeGet('mb_menus')) || defaultMenu; } catch(e) { menuList = defaultMenu; }
+            const listDiv = document.getElementById('admin-menu-list');
+            if(!listDiv) return;
+            listDiv.innerHTML = '';
+
+            menuList.forEach(m => {
+                listDiv.innerHTML += `
+                    <div class="border border-sky-100 rounded-2xl p-4 flex flex-col justify-between bg-sky-50/50">
                         <div>
-                            <label class="text-xs font-bold text-gray-600">Harga (Rp)</label>
-                            <input type="number" id="menu-price" required class="w-full p-2 border rounded text-xs mt-1 focus:ring-2 focus:ring-sky-500 outline-none">
+                            <div class="font-extrabold text-sky-950">${m.name}</div>
+                            <div class="text-xs text-sky-700 font-bold mb-1">${m.category} - ${rupiah(m.price)}</div>
+                            <p class="text-xs text-slate-600 line-clamp-2">${m.description || '-'}</p>
                         </div>
-                    </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div>
-                            <label class="text-xs font-bold text-gray-600">Kategori</label>
-                            <select id="menu-category" class="w-full p-2 border rounded text-xs mt-1 focus:ring-2 focus:ring-sky-500 outline-none">
-                                <option value="Makanan">Makanan</option>
-                                <option value="Minuman">Minuman</option>
-                                <option value="Topping Tambahan">Topping Tambahan</option>
-                            </select>
+                        <div class="flex gap-2 mt-4 pt-3 border-t border-sky-200">
+                            <button onclick="editMenu('${m.id}')" class="flex-1 bg-white text-sky-700 border border-sky-300 py-1.5 rounded-xl text-xs font-bold hover:bg-sky-50">Edit</button>
+                            <button onclick="deleteMenu('${m.id}')" class="flex-1 bg-red-600 text-white py-1.5 rounded-xl text-xs font-bold hover:bg-red-700">Hapus</button>
                         </div>
-                        <div>
-                            <label class="text-xs font-bold text-gray-600">Unggah Gambar Menu</label>
-                            <input type="file" id="menu-image-file" accept="image/*" onchange="previewMenuImageFile(event)" class="w-full p-1 border rounded text-xs mt-1">
-                        </div>
-                    </div>
-                    <div id="menu-img-preview-container" class="mt-2 hidden">
-                        <img id="menu-img-preview" class="w-24 h-24 object-cover rounded border">
-                    </div>
-                    <div>
-                        <label class="text-xs font-bold text-gray-600">Deskripsi Menu</label>
-                        <textarea id="menu-desc" class="w-full p-2 border rounded text-xs mt-1 focus:ring-2 focus:ring-sky-500 outline-none" rows="2"></textarea>
-                    </div>
-                    <button type="submit" class="bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs px-4 py-2 rounded shadow">Simpan Menu</button>
-                </form>
-            </div>
+                    </div>`;
+            });
+        }
 
-            <div id="menu-list-container">
-                <div class="bg-white p-6 rounded-xl shadow text-center text-gray-500">Memuat daftar menu...</div>
-            </div>
-        </section>
+        function saveMenu(event) {
+            event.preventDefault();
+            const id = document.getElementById('edit-menu-id').value || ("menu-" + Date.now());
+            const name = document.getElementById('menu-name').value.trim();
+            const category = document.getElementById('menu-category').value;
+            const price = parseFloat(document.getElementById('menu-price').value) || 0;
+            const image = document.getElementById('menu-image').value.trim();
+            const description = document.getElementById('menu-desc').value.trim();
 
-        <!-- TAB 3: BANNER -->
-        <section id="section-banners" class="space-y-4 hidden">
-            <div class="bg-white p-4 rounded-xl shadow border border-sky-100">
-                <h3 class="font-bold text-sm mb-3 text-sky-950">Unggah Banner Promo / Logo</h3>
-                <form id="form-add-banner" onsubmit="addBanner(event)" class="space-y-3">
-                    <div>
-                        <label class="text-xs font-bold text-gray-600">Judul Banner</label>
-                        <input type="text" id="banner-title" required class="w-full p-2 border rounded text-xs mt-1 focus:ring-2 focus:ring-sky-500 outline-none">
-                    </div>
-                    <div>
-                        <label class="text-xs font-bold text-gray-600">Pilih File Gambar / PNG Banner</label>
-                        <input type="file" id="banner-image-file" accept="image/*" required onchange="previewBannerImageFile(event)" class="w-full p-1 border rounded text-xs mt-1">
-                    </div>
-                    <div id="banner-img-preview-container" class="mt-2 hidden">
-                        <img id="banner-img-preview" class="w-32 h-20 object-cover rounded border">
-                    </div>
-                    <button type="submit" class="bg-sky-600 text-white font-bold text-xs px-4 py-2 rounded shadow">Unggah Banner</button>
-                </form>
-            </div>
-            <div id="banner-list-container"></div>
-        </section>
+            let menuList = [];
+            try { menuList = JSON.parse(safeGet('mb_menus')) || defaultMenu; } catch(e) { menuList = defaultMenu; }
 
-        <!-- TAB 4: REKENING -->
-        <section id="section-banks" class="space-y-4 hidden">
-            <div class="bg-white p-4 rounded-xl shadow border border-sky-100">
-                <h3 class="font-bold text-sm mb-3 text-sky-950">Tambah Rekening Pembayaran</h3>
-                <form id="form-add-bank" onsubmit="addBank(event)" class="space-y-3">
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <input type="text" id="bank-name" placeholder="Nama Bank / E-Wallet (BCA, DANA, dll)" required class="p-2 border rounded text-xs focus:ring-2 focus:ring-sky-500 outline-none">
-                        <input type="text" id="bank-accnum" placeholder="Nomor Rekening" required class="p-2 border rounded text-xs focus:ring-2 focus:ring-sky-500 outline-none">
-                        <input type="text" id="bank-accname" placeholder="Atas Nama" required class="p-2 border rounded text-xs focus:ring-2 focus:ring-sky-500 outline-none">
-                    </div>
-                    <button type="submit" class="bg-sky-600 text-white font-bold text-xs px-4 py-2 rounded shadow">Tambah Rekening</button>
-                </form>
-            </div>
-            <div id="bank-list-container"></div>
-        </section>
+            const idx = menuList.findIndex(m => String(m.id) === String(id));
+            if (idx >= 0) {
+                menuList[idx] = { id, name, category, price, image, description };
+            } else {
+                menuList.push({ id, name, category, price, image, description });
+            }
 
-        <!-- TAB 5: PENGATURAN -->
-        <section id="section-settings" class="space-y-4 hidden">
-            <div class="bg-white p-4 rounded-xl shadow border border-sky-100">
-                <h3 class="font-bold text-sm mb-3 text-sky-950">Pengaturan Resto & Suara Notifikasi</h3>
-                <form onsubmit="saveSettings(event)" class="space-y-3">
-                    <div>
-                        <label class="text-xs font-bold text-gray-600">Nomor WhatsApp Admin / Resto</label>
-                        <input type="text" id="setting-wa" class="w-full p-2 border rounded text-xs mt-1 focus:ring-2 focus:ring-sky-500 outline-none">
-                    </div>
-                    <div>
-                        <label class="text-xs font-bold text-gray-600">Biaya Ongkir Default (Rp)</label>
-                        <input type="number" id="setting-fee" class="w-full p-2 border rounded text-xs mt-1 focus:ring-2 focus:ring-sky-500 outline-none">
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <input type="checkbox" id="setting-sound" class="h-4 w-4 text-sky-600 rounded">
-                        <label class="text-xs font-bold text-gray-600">Aktifkan Suara Notifikasi Pesanan Masuk</label>
-                    </div>
-                    <button type="submit" class="bg-sky-600 text-white font-bold text-xs px-4 py-2 rounded shadow">Simpan Pengaturan</button>
-                </form>
-            </div>
-        </section>
+            safeSet('mb_menus', JSON.stringify(menuList));
+            resetMenuForm();
+            renderAdminMenu();
+        }
 
-    </main>
+        function editMenu(menuId) {
+            let menuList = [];
+            try { menuList = JSON.parse(safeGet('mb_menus')) || defaultMenu; } catch(e) { menuList = defaultMenu; }
+            const m = menuList.find(item => String(item.id) === String(menuId));
+            if (!m) return;
+
+            document.getElementById('edit-menu-id').value = m.id;
+            document.getElementById('menu-name').value = m.name;
+            document.getElementById('menu-category').value = m.category || 'Makanan';
+            document.getElementById('menu-price').value = m.price;
+            document.getElementById('menu-image').value = m.image || '';
+            document.getElementById('menu-desc').value = m.description || '';
+
+            document.getElementById('menu-form-title').textContent = "Edit Menu";
+            document.getElementById('cancel-edit-btn').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function resetMenuForm() {
+            document.getElementById('menu-form').reset();
+            document.getElementById('edit-menu-id').value = '';
+            document.getElementById('menu-form-title').textContent = "Tambah Menu Baru";
+            document.getElementById('cancel-edit-btn').classList.add('hidden');
+        }
+
+        function deleteMenu(menuId) {
+            if(!confirm("Yakin ingin menghapus menu ini?")) return;
+            let menuList = [];
+            try { menuList = JSON.parse(safeGet('mb_menus')) || defaultMenu; } catch(e) { menuList = defaultMenu; }
+            menuList = menuList.filter(m => String(m.id) !== String(menuId));
+            safeSet('mb_menus', JSON.stringify(menuList));
+            renderAdminMenu();
+        }
+
+        function renderAdminBanners() {
+            let banners = [];
+            try { banners = JSON.parse(safeGet('mb_banners')) || []; } catch(e) { banners = []; }
+            const listDiv = document.getElementById('admin-banner-list');
+            if(!listDiv) return;
+            listDiv.innerHTML = '';
+
+            banners.forEach((b, idx) => {
+                let img = typeof b === 'object' ? b.image : b;
+                listDiv.innerHTML += `
+                    <div class="border border-sky-100 rounded-2xl p-3 flex items-center gap-3 bg-sky-50/50">
+                        <img src="${img}" class="w-20 h-14 object-cover rounded-xl bg-sky-100">
+                        <div class="flex-1 truncate text-xs text-slate-700">${img}</div>
+                        <button onclick="deleteBanner(${idx})" class="bg-red-600 text-white px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-red-700">Hapus</button>
+                    </div>`;
+            });
+        }
+
+        function addBanner(event) {
+            event.preventDefault();
+            const url = document.getElementById('banner-url-input').value.trim();
+            if(!url) return;
+            let banners = [];
+            try { banners = JSON.parse(safeGet('mb_banners')) || []; } catch(e) { banners = []; }
+            banners.push(url);
+            safeSet('mb_banners', JSON.stringify(banners));
+            document.getElementById('banner-url-input').value = '';
+            renderAdminBanners();
+        }
+
+        function deleteBanner(idx) {
+            if(!confirm("Yakin ingin menghapus banner ini?")) return;
+            let banners = [];
+            try { banners = JSON.parse(safeGet('mb_banners')) || []; } catch(e) { banners = []; }
+            banners.splice(idx, 1);
+            safeSet('mb_banners', JSON.stringify(banners));
+            renderAdminBanners();
+        }
+
+        function loadPaymentMethodsSettings() {
+            const textarea = document.getElementById('payment-methods-textarea');
+            if(!textarea) return;
+            let defaultMethods = "BCA - 1234567890 (a.n. Mie Bangka Teladan)\nDANA - 081267166886 (a.n. Mie Bangka Teladan)\nKasir (Tunai)";
+            textarea.value = safeGet('mb_payment_methods') || defaultMethods;
+        }
+
+        function savePaymentMethods(event) {
+            event.preventDefault();
+            const val = document.getElementById('payment-methods-textarea').value.trim();
+            safeSet('mb_payment_methods', val);
+            alert("Rekening berhasil disimpan!");
+        }
+
+        function saveAdminCredentials(event) {
+            event.preventDefault();
+            const u = document.getElementById('new-admin-user').value.trim();
+            const p = document.getElementById('new-admin-pass').value.trim();
+            safeSet('mb_admin_user', u);
+            safeSet('mb_admin_pass', p);
+            alert("Akun admin berhasil diperbarui!");
+        }
+
+        window.onload = checkLoginState;
+    </script>
 </body>
 </html>
