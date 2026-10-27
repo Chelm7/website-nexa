@@ -129,15 +129,16 @@
                             </div>
                         </div>
                         <div>
-                            <label class="block text-sm font-bold text-gray-700 mb-1">URL Gambar / Foto Menu</label>
-                            <input id="menu-image" type="url" placeholder="https://images.unsplash.com/..." class="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-sky-500">
+                            <label class="block text-sm font-bold text-gray-700 mb-1">Upload Foto Menu (Pilih File) atau Masukkan URL</label>
+                            <input id="menu-file-input" type="file" accept="image/*" class="w-full text-xs text-slate-500 mb-2 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100 cursor-pointer">
+                            <input id="menu-image" type="url" placeholder="https://images.unsplash.com/... (otomatis terisi jika upload file)" class="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-sky-500">
                         </div>
                         <div>
                             <label class="block text-sm font-bold text-gray-700 mb-1">Deskripsi Singkat</label>
                             <textarea id="menu-desc" rows="2" placeholder="Deskripsi menu..." class="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-sky-500"></textarea>
                         </div>
                         <div class="flex gap-3">
-                            <button type="submit" class="flex-1 bg-sky-600 text-white font-bold py-2.5 rounded-xl hover:bg-sky-700 transition shadow text-sm">Simpan Menu</button>
+                            <button type="submit" id="menu-submit-btn" class="flex-1 bg-sky-600 text-white font-bold py-2.5 rounded-xl hover:bg-sky-700 transition shadow text-sm">Simpan Menu</button>
                             <button type="button" onclick="resetMenuForm()" id="cancel-edit-btn" class="hidden bg-slate-200 text-slate-700 font-bold py-2.5 px-4 rounded-xl hover:bg-slate-300 transition text-sm">Batal</button>
                         </div>
                     </form>
@@ -155,10 +156,11 @@
                     <h2 class="text-lg font-extrabold text-sky-950 mb-3">Tambah Banner Promosi</h2>
                     <form onsubmit="addBanner(event)" class="space-y-4">
                         <div>
-                            <label class="block text-sm font-bold text-gray-700 mb-1">URL Gambar Banner</label>
-                            <input id="banner-url-input" type="url" required placeholder="https://images.unsplash.com/..." class="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-sky-500">
+                            <label class="block text-sm font-bold text-gray-700 mb-1">Upload Banner (Pilih File) atau URL Gambar</label>
+                            <input id="banner-file-input" type="file" accept="image/*" class="w-full text-xs text-slate-500 mb-2 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100 cursor-pointer">
+                            <input id="banner-url-input" type="url" placeholder="https://images.unsplash.com/... (otomatis terisi jika upload file)" class="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-sky-500">
                         </div>
-                        <button type="submit" class="w-full bg-sky-600 text-white font-bold py-2.5 rounded-xl hover:bg-sky-700 transition shadow text-sm">Tambah Banner</button>
+                        <button type="submit" id="banner-submit-btn" class="w-full bg-sky-600 text-white font-bold py-2.5 rounded-xl hover:bg-sky-700 transition shadow text-sm">Tambah Banner</button>
                     </form>
                 </div>
 
@@ -242,6 +244,34 @@
 
         const SHEETDB_API = "https://sheetdb.io/api/v1/2ij5jepgf1fdy";
 
+        // Konfigurasi Cloudinary Anda
+        const CLOUD_NAME = "fyrwtkl8";
+        const UPLOAD_PRESET = "ml_default";
+
+        async function uploadFileToCloudinary(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('upload_preset', UPLOAD_PRESET);
+
+            try {
+                const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                if (data.secure_url) {
+                    return data.secure_url;
+                } else {
+                    alert("Gagal mengunggah gambar ke Cloudinary.");
+                    return null;
+                }
+            } catch (error) {
+                console.error("Cloudinary error:", error);
+                alert("Terjadi kesalahan jaringan saat mengunggah gambar.");
+                return null;
+            }
+        }
+
         const memoryStorage = {};
         function safeGet(key) {
             try { return localStorage.getItem(key); } catch (e) { return memoryStorage[key] !== undefined ? memoryStorage[key] : null; }
@@ -255,7 +285,6 @@
         function playNotificationSound() {
             try {
                 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                // Bunyi dering ganda (beep-beep)
                 [0, 200].forEach(delay => {
                     setTimeout(() => {
                         const oscillator = audioCtx.createOscillator();
@@ -353,7 +382,6 @@
             document.getElementById('new-admin-user').value = u;
             document.getElementById('new-admin-pass').value = p;
 
-            // Pengecekan pesanan masuk setiap 2 detik sekali di admin.html
             setInterval(renderAdminOrders, 2000);
         }
 
@@ -421,7 +449,6 @@
                 console.log("Cloud load orders note:", err);
             }
 
-            // Deteksi pesanan baru untuk membunyikan alarm/dering
             let hasNewPending = false;
             orders.forEach(o => {
                 if (!knownOrderIds.has(o.id)) {
@@ -650,13 +677,32 @@
             });
         }
 
-        function saveMenu(event) {
+        async function saveMenu(event) {
             event.preventDefault();
+            const submitBtn = document.getElementById('menu-submit-btn');
+            
+            // Cek apakah ada file yang dipilih untuk di-upload ke Cloudinary
+            const fileInput = document.getElementById('menu-file-input');
+            let imageUrl = document.getElementById('menu-image').value.trim();
+
+            if (fileInput && fileInput.files && fileInput.files[0]) {
+                submitBtn.disabled = true;
+                submitBtn.textContent = "Mengunggah Gambar...";
+                const uploadedUrl = await uploadFileToCloudinary(fileInput.files[0]);
+                submitBtn.disabled = false;
+                submitBtn.textContent = "Simpan Menu";
+                
+                if (uploadedUrl) {
+                    imageUrl = uploadedUrl;
+                } else {
+                    return; // Batalkan jika upload gagal
+                }
+            }
+
             const id = document.getElementById('edit-menu-id').value || ("menu-" + Date.now());
             const name = document.getElementById('menu-name').value.trim();
             const category = document.getElementById('menu-category').value;
             const price = parseFloat(document.getElementById('menu-price').value) || 0;
-            const image = document.getElementById('menu-image').value.trim();
             const description = document.getElementById('menu-desc').value.trim();
 
             let menuList = [];
@@ -664,9 +710,9 @@
 
             const idx = menuList.findIndex(m => String(m.id) === String(id));
             if (idx >= 0) {
-                menuList[idx] = { id, name, category, price, image, description };
+                menuList[idx] = { id, name, category, price, image: imageUrl, description };
             } else {
-                menuList.push({ id, name, category, price, image, description });
+                menuList.push({ id, name, category, price, image: imageUrl, description });
             }
 
             safeSet('mb_menus', JSON.stringify(menuList));
@@ -686,6 +732,7 @@
             document.getElementById('menu-price').value = m.price;
             document.getElementById('menu-image').value = m.image || '';
             document.getElementById('menu-desc').value = m.description || '';
+            if(document.getElementById('menu-file-input')) document.getElementById('menu-file-input').value = '';
 
             document.getElementById('menu-form-title').textContent = "Edit Menu";
             document.getElementById('cancel-edit-btn').classList.remove('hidden');
@@ -726,15 +773,39 @@
             });
         }
 
-        function addBanner(event) {
+        async function addBanner(event) {
             event.preventDefault();
-            const url = document.getElementById('banner-url-input').value.trim();
-            if(!url) return;
+            const submitBtn = document.getElementById('banner-submit-btn');
+            
+            const fileInput = document.getElementById('banner-file-input');
+            let url = document.getElementById('banner-url-input').value.trim();
+
+            if (fileInput && fileInput.files && fileInput.files[0]) {
+                submitBtn.disabled = true;
+                submitBtn.textContent = "Mengunggah Banner...";
+                const uploadedUrl = await uploadFileToCloudinary(fileInput.files[0]);
+                submitBtn.disabled = false;
+                submitBtn.textContent = "Tambah Banner";
+
+                if (uploadedUrl) {
+                    url = uploadedUrl;
+                } else {
+                    return; // Batalkan jika upload gagal
+                }
+            }
+
+            if(!url) {
+                alert("Pilih file gambar atau masukkan URL banner terlebih dahulu!");
+                return;
+            }
+
             let banners = [];
             try { banners = JSON.parse(safeGet('mb_banners')) || []; } catch(e) { banners = []; }
             banners.push(url);
             safeSet('mb_banners', JSON.stringify(banners));
+            
             document.getElementById('banner-url-input').value = '';
+            if(fileInput) fileInput.value = '';
             renderAdminBanners();
         }
 
