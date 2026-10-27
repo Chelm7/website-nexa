@@ -307,13 +307,11 @@
                 status: 'Menunggu'
             };
 
-            // Simpan lokal
             let orders = [];
             try { orders = JSON.parse(localStorage.getItem('mb_orders') || '[]'); } catch(e) {}
             orders.unshift(newOrder);
             localStorage.setItem('mb_orders', JSON.stringify(orders));
 
-            // Hantar ke SheetDB
             try {
                 await fetch(SHEETDB_API, {
                     method: "POST",
