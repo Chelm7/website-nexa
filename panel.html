@@ -93,7 +93,7 @@
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white p-4 rounded-2xl shadow-sm border border-sky-100">
                     <div>
                         <h2 class="text-lg font-extrabold text-sky-950">Daftar Pesanan Masuk & Riwayat</h2>
-                        <p class="text-xs text-slate-500">Kelola dan update status pesanan pelanggan secara real-time.</p>
+                        <p class="text-xs text-slate-500">Kelola dan update status pesanan pelanggan secara real-time (Cek otomatis setiap 2 detik).</p>
                     </div>
                     <button onclick="clearAllOrders()" class="bg-white text-red-600 border border-red-300 hover:bg-red-50 text-xs font-bold px-3 py-2 rounded-xl transition shadow">
                         <i class="fa-solid fa-trash mr-1.5"></i> Hapus Semua Riwayat
@@ -251,6 +251,35 @@
             memoryStorage[key] = val;
         }
 
+        // Fungsi Suara Dering Notifikasi Pesanan Masuk di Admin
+        function playNotificationSound() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                // Bunyi dering ganda (beep-beep)
+                [0, 200].forEach(delay => {
+                    setTimeout(() => {
+                        const oscillator = audioCtx.createOscillator();
+                        const gainNode = audioCtx.createGain();
+                        
+                        oscillator.type = 'sine';
+                        oscillator.frequency.setValueAtTime(880, audioCtx.currentTime);
+                        gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                        
+                        oscillator.connect(gainNode);
+                        gainNode.connect(audioCtx.destination);
+                        
+                        oscillator.start();
+                        oscillator.stop(audioCtx.currentTime + 0.3);
+                    }, delay);
+                });
+            } catch (e) {
+                console.log("Audio tidak didukung.");
+            }
+        }
+
+        let knownOrderIds = new Set();
+        let isFirstLoad = true;
+
         function checkLoginState() {
             if (safeGet('mb_admin_logged') === 'true') {
                 document.getElementById('login-section').classList.add('hidden');
@@ -324,7 +353,8 @@
             document.getElementById('new-admin-user').value = u;
             document.getElementById('new-admin-pass').value = p;
 
-            setInterval(renderAdminOrders, 6000);
+            // Pengecekan pesanan masuk setiap 2 detik sekali di admin.html
+            setInterval(renderAdminOrders, 2000);
         }
 
         function rupiah(value) {
@@ -389,6 +419,25 @@
                 }
             } catch(err) {
                 console.log("Cloud load orders note:", err);
+            }
+
+            // Deteksi pesanan baru untuk membunyikan alarm/dering
+            let hasNewPending = false;
+            orders.forEach(o => {
+                if (!knownOrderIds.has(o.id)) {
+                    knownOrderIds.add(o.id);
+                    if (!isFirstLoad && (o.status === 'Menunggu' || !o.status)) {
+                        hasNewPending = true;
+                    }
+                }
+            });
+
+            if (isFirstLoad) {
+                isFirstLoad = false;
+            }
+
+            if (hasNewPending) {
+                playNotificationSound();
             }
 
             orders.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
