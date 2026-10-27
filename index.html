@@ -48,9 +48,9 @@
         <!-- Cek Status Pesanan -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-sky-100 space-y-4">
             <h2 class="text-base font-extrabold text-sky-950">Status Pesanan</h2>
-            <p class="text-xs text-slate-500">Masukkan kode pesanan untuk melihat status terkini dari resto.</p>
+            <p class="text-xs text-slate-500">Masukkan urutan kode pesan untuk melihat status pesanan dari resto yang sedang dikerjakan.</p>
             <div class="flex gap-2">
-                <input id="check-order-input" type="text" placeholder="Contoh: ORD-XXXXXXXX" class="flex-1 rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-sky-500 uppercase">
+                <input id="check-order-input" type="text" placeholder="ORD-XXXXXXXX" class="flex-1 rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-sky-500 uppercase">
                 <button onclick="checkOrderStatus()" class="bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold px-4 py-2 rounded-xl transition shadow">Cek Pesanan</button>
             </div>
             <div id="order-result-box" class="hidden mt-4 pt-4 border-t space-y-2 text-xs sm:text-sm"></div>
@@ -194,13 +194,6 @@
             if(statusText === 'Selesai') statusBadge = "bg-green-100 text-green-800";
             if(statusText === 'Dibatalkan') statusBadge = "bg-red-100 text-red-800";
 
-            let infoKeterangan = "Pesanan sedang dikerjakan / diproses oleh resto Mie Bangka Teladan.";
-            if(statusText === 'Selesai') {
-                infoKeterangan = "Pesanan telah selesai. Terima kasih telah memesan di Mie Bangka Teladan!";
-            } else if(statusText === 'Dibatalkan') {
-                infoKeterangan = "Pesanan telah dibatalkan oleh resto.";
-            }
-
             box.classList.remove('hidden');
             box.innerHTML = `
                 <div class="bg-sky-50 p-4 rounded-2xl border border-sky-100 space-y-1">
@@ -211,7 +204,7 @@
                     <div><b>Total:</b> ${rupiah(found.total || 0)}</div>
                     <div><b>Pembayaran:</b> ${found.payment || '-'}</div>
                     <div><b>Waktu:</b> ${found.created_at || '-'}</div>
-                    <div class="mt-3 p-3 bg-white rounded-xl border text-slate-700 font-medium">${infoKeterangan}</div>
+                    <div class="mt-3 p-3 bg-white rounded-xl border text-slate-700 font-medium">Pesanan sedang dikerjakan / diproses oleh resto Mie Bangka Teladan.</div>
                 </div>`;
         }
 
