@@ -196,7 +196,7 @@
         }
 
         .info-label {
-            width: 100px;
+            width: 110px;
             flex-shrink: 0;
             font-weight: 600;
         }
@@ -215,6 +215,38 @@
             display: inline-block;
         }
 
+        .divider {
+            height: 1px;
+            background-color: #eaecf0;
+            margin: 12px 0;
+        }
+
+        /* Detail Pesanan / Items */
+        .order-items {
+            background-color: #f9fafb;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13.5px;
+            color: #344054;
+            margin-bottom: 6px;
+        }
+
+        .order-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .item-detail {
+            font-size: 12px;
+            color: #667085;
+            margin-top: 2px;
+        }
+
         /* Info Alert Box */
         .alert-box {
             background-color: #f0f8ff;
@@ -227,15 +259,16 @@
             line-height: 1.4;
         }
 
-        /* Ucapan Terima Kasih (Tambahan) */
+        /* Ucapan Terima Kasih */
         .thank-you-box {
-            margin-top: 12px;
+            margin-top: 14px;
             text-align: center;
-            font-size: 13.5px;
+            font-size: 14px;
             font-weight: 600;
             color: #101828;
-            padding-top: 8px;
+            padding-top: 12px;
             border-top: 1px dashed #eaecf0;
+            line-height: 1.5;
         }
     </style>
 </head>
@@ -293,14 +326,31 @@
                     <span class="info-value"><span class="status-badge">Selesai</span></span>
                 </div>
 
+                <!-- Detail Pesanan / Menu -->
+                <div class="divider"></div>
+                <div class="order-items">
+                    <div class="order-item">
+                        <div>
+                            <strong>1x Mie Bangka Special</strong>
+                            <div class="item-detail">Topping: B2</div>
+                        </div>
+                        <div>Rp 30.000</div>
+                    </div>
+                </div>
+
                 <div class="info-row">
                     <span class="info-label">Total:</span>
-                    <span class="info-value">Rp 30.000</span>
+                    <span class="info-value"><strong>Rp 30.000</strong></span>
                 </div>
 
                 <div class="info-row">
                     <span class="info-label">Pembayaran:</span>
                     <span class="info-value">BCA - 1234567890 (a.n. Mie Bangka Teladan)</span>
+                </div>
+
+                <div class="info-row">
+                    <span class="info-label">Lokasi Resto:</span>
+                    <span class="info-value">Jalan Batu 8 Atas, Kota Tanjungpinang</span>
                 </div>
 
                 <div class="info-row">
@@ -312,9 +362,10 @@
                     Pesanan sedang dikerjakan / diproses oleh resto Mie Bangka Teladan.
                 </div>
 
-                <!-- Kata-kata Terima Kasih yang Ditambahkan -->
+                <!-- Ucapan Terima Kasih -->
                 <div class="thank-you-box">
-                    Terima kasih telah memesan di Mie Bangka Teladan! 🙏
+                    Terima kasih telah memesan di Resto Mie Bangka Teladan! 🙏<br>
+                    <small style="font-weight: normal; color: #667085;">Selamat menikmati hidangan Anda.</small>
                 </div>
             </div>
         </div>
