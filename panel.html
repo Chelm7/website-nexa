@@ -1,4 +1,4 @@
-<meta name='viewport' content='width=device-width, initial-scale=1'/><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -281,299 +281,216 @@
             memoryStorage[key] = val;
         }
 
-        // Fungsi Suara Dering Notifikasi Pesanan Masuk di Admin
-        function playNotificationSound() {
-            try {
-                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                [0, 200].forEach(delay => {
-                    setTimeout(() => {
-                        const oscillator = audioCtx.createOscillator();
-                        const gainNode = audioCtx.createGain();
-                        
-                        oscillator.type = 'sine';
-                        oscillator.frequency.setValueAtTime(880, audioCtx.currentTime);
-                        gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
-                        
-                        oscillator.connect(gainNode);
-                        gainNode.connect(audioCtx.destination);
-                        
-                        oscillator.start();
-                        oscillator.stop(audioCtx.currentTime + 0.3);
-                    }, delay);
-                });
-            } catch (e) {
-                console.log("Audio tidak didukung.");
-            }
+        // KREDENSIAL LOGIN PATEN ADMIN (DIATUR DI SINI)
+        // Username: admin
+        // Password: tanjungpinang123
+        function getValidAdminUser() {
+            return safeGet('admin_username') || 'admin';
         }
-
-        let knownOrderIds = new Set();
-        let isFirstLoad = true;
-
-        function checkLoginState() {
-            if (safeGet('mb_admin_logged') === 'true') {
-                document.getElementById('login-section').classList.add('hidden');
-                document.getElementById('admin-panel').classList.remove('hidden');
-                initAdminPanel();
-            } else {
-                document.getElementById('login-section').classList.remove('hidden');
-                document.getElementById('admin-panel').classList.add('hidden');
-            }
+        function getValidAdminPass() {
+            return safeGet('admin_password') || 'tanjungpinang123';
         }
 
         function handleLogin(event) {
             event.preventDefault();
-            const u = document.getElementById('admin-user').value.trim();
-            const p = document.getElementById('admin-pass').value.trim();
+            const user = document.getElementById('admin-user').value.trim();
+            const pass = document.getElementById('admin-pass').value.trim();
+            const errorEl = document.getElementById('login-error');
 
-            let savedUser = safeGet('mb_admin_user') || 'admin';
-            let savedPass = safeGet('mb_admin_pass') || 'admin123';
-
-            if ((u === savedUser && p === savedPass) || (u === 'admin' && p === 'admin123')) {
-                safeSet('mb_admin_logged', 'true');
-                checkLoginState();
+            if (user === getValidAdminUser() && pass === getValidAdminPass()) {
+                safeSet('is_admin_logged_in', 'true');
+                checkAuth();
             } else {
-                document.getElementById('login-error').textContent = 'Username atau Password salah!';
+                errorEl.textContent = "Username atau Password salah!";
             }
         }
 
         function handleLogout() {
-            safeSet('mb_admin_logged', 'false');
-            checkLoginState();
+            safeSet('is_admin_logged_in', 'false');
+            checkAuth();
         }
 
-        function switchTab(tabName) {
+        function checkAuth() {
+            const isLoggedIn = safeGet('is_admin_logged_in') === 'true';
+            const loginSec = document.getElementById('login-section');
+            const adminPanel = document.getElementById('admin-panel');
+
+            if (isLoggedIn) {
+                loginSec.classList.add('hidden');
+                adminPanel.classList.remove('hidden');
+                initAdminDashboard();
+            } else {
+                loginSec.classList.remove('hidden');
+                adminPanel.classList.add('hidden');
+                document.getElementById('admin-user').value = '';
+                document.getElementById('admin-pass').value = '';
+                document.getElementById('login-error').textContent = '';
+            }
+        }
+
+        function saveAdminCredentials(event) {
+            event.preventDefault();
+            const newUser = document.getElementById('new-admin-user').value.trim();
+            const newPass = document.getElementById('new-admin-pass').value.trim();
+
+            if (newUser && newPass) {
+                safeSet('admin_username', newUser);
+                safeSet('admin_password', newPass);
+                alert("Akun admin berhasil diperbarui! Gunakan password baru ini untuk login selanjutnya.");
+                document.getElementById('new-admin-user').value = '';
+                document.getElementById('new-admin-pass').value = '';
+            }
+        }
+
+        // Tab Switching
+        function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(el => {
-                el.classList.remove('border-b-2', 'border-white', 'text-white');
-                el.classList.add('text-sky-200');
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('text-white', 'border-b-2', 'border-white');
+                btn.classList.add('text-sky-200');
             });
 
-            document.getElementById('tab-' + tabName).classList.add('active');
-            const btn = document.getElementById('tab-btn-' + tabName);
-            if(btn) {
-                btn.classList.add('border-b-2', 'border-white', 'text-white');
-                btn.classList.remove('text-sky-200');
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+            const activeBtn = document.getElementById(`tab-btn-${tabId}`);
+            if (activeBtn) {
+                activeBtn.classList.remove('text-sky-200');
+                activeBtn.classList.add('text-white', 'border-b-2', 'border-white');
             }
         }
 
-        function toggleRestoStatus(val) {
-            safeSet('mb_resto_status', val);
-            const toggle = document.getElementById('resto-status-toggle');
-            if(toggle) {
-                toggle.value = val;
-                if(val === 'Buka') {
-                    toggle.className = "rounded-xl border border-sky-400 bg-sky-700 text-white px-3 py-2 text-xs font-bold outline-none focus:ring-2 focus:ring-white shadow-sm cursor-pointer";
-                } else {
-                    toggle.className = "rounded-xl border border-red-400 bg-red-700 text-white px-3 py-2 text-xs font-bold outline-none focus:ring-2 focus:ring-white shadow-sm cursor-pointer";
-                }
-            }
+        // Inisialisasi Dashboard Admin & Auto-refresh pesanan
+        let ordersInterval = null;
+        function initAdminDashboard() {
+            loadAdminOrders();
+            loadAdminMenus();
+            loadAdminBanners();
+            loadPaymentConfig();
+            loadRestoStatus();
+
+            if (ordersInterval) clearInterval(ordersInterval);
+            ordersInterval = setInterval(loadAdminOrders, 2000);
         }
 
-        function initAdminPanel() {
-            const status = safeGet('mb_resto_status') || 'Buka';
-            toggleRestoStatus(status);
-            renderAdminOrders();
-            renderAdminMenu();
-            renderAdminBanners();
-            loadPaymentMethodsSettings();
-            
-            const u = safeGet('mb_admin_user') || 'admin';
-            const p = safeGet('mb_admin_pass') || 'admin123';
-            document.getElementById('new-admin-user').value = u;
-            document.getElementById('new-admin-pass').value = p;
-
-            setInterval(renderAdminOrders, 2000);
-        }
-
-        function rupiah(value) {
-            return new Intl.NumberFormat("id-ID", {
-                style: "currency",
-                currency: "IDR",
-                maximumFractionDigits: 0
-            }).format(Number(value) || 0);
-        }
-
-        async function apiRequest(url, options = {}) {
+        // Resto Status Control
+        async function loadRestoStatus() {
             try {
-                const response = await fetch(url, {
-                    ...options,
-                    headers: {
-                        "Content-Type": "application/json",
-                        ...(options.headers || {})
-                    }
-                });
-                let result;
-                try { result = await response.json(); } catch { result = null; }
-                if (!response.ok) { return null; }
-                return result;
+                const res = await fetch(`${SHEETDB_API}/search?type=status`);
+                const data = await res.json();
+                const select = document.getElementById('resto-status-toggle');
+                if (data && data.length > 0) {
+                    select.value = data[0].value || 'Buka';
+                }
             } catch (e) {
-                return null;
+                console.error("Gagal memuat status resto", e);
             }
         }
 
-        async function renderAdminOrders() {
-            const container = document.getElementById('admin-orders-container');
-            if(!container) return;
-
-            let orders = [];
-            try { orders = JSON.parse(safeGet('mb_orders') || '[]'); } catch(e) { orders = []; }
-
+        async function toggleRestoStatus(statusVal) {
             try {
-                const cloudData = await apiRequest(SHEETDB_API);
-                if (Array.isArray(cloudData)) {
-                    let map = new Map();
-                    orders.forEach(o => map.set(o.id, o));
-                    cloudData.forEach(c => {
-                        if (c.id) {
-                            if (!map.has(c.id)) {
-                                let itemsParsed = [];
-                                try { itemsParsed = typeof c.items === 'string' ? JSON.parse(c.items) : (c.items || []); } catch(e) { itemsParsed = []; }
-                                map.set(c.id, {
-                                    id: c.id,
-                                    createdAt: Number(c.createdAt) || Date.now(),
-                                    created_at: c.created_at || c.date || '-',
-                                    name: c.name || '-',
-                                    phone: c.phone || '-',
-                                    address: c.address || '-',
-                                    items: itemsParsed,
-                                    total: c.total || '0',
-                                    payment: c.payment || '-',
-                                    status: c.status || 'Menunggu'
-                                });
-                            }
-                        }
-                    });
-                    orders = Array.from(map.values());
-                }
-            } catch(err) {
-                console.log("Cloud load orders note:", err);
+                await fetch(`${SHEETDB_API}/type/status`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ data: { value: statusVal } })
+                });
+                alert(`Status resto berhasil diubah menjadi: ${statusVal}`);
+            } catch (e) {
+                console.error("Gagal update status", e);
+                alert("Gagal memperbarui status resto.");
             }
+        }
 
-            let hasNewPending = false;
-            orders.forEach(o => {
-                if (!knownOrderIds.has(o.id)) {
-                    knownOrderIds.add(o.id);
-                    if (!isFirstLoad && (o.status === 'Menunggu' || !o.status)) {
-                        hasNewPending = true;
-                    }
-                }
-            });
-
-            if (isFirstLoad) {
-                isFirstLoad = false;
-            }
-
-            if (hasNewPending) {
-                playNotificationSound();
-            }
-
-            orders.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-
-            container.innerHTML = '';
-            if (orders.length === 0) {
-                container.innerHTML = `<p class="col-span-full text-center text-gray-500 py-8">Belum ada pesanan masuk.</p>`;
-                return;
-            }
-
-            orders.forEach(o => {
-                let itemsHtml = '';
-                if (Array.isArray(o.items)) {
-                    o.items.forEach(i => {
-                        itemsHtml += `<div class="text-xs text-slate-600">- ${i.name} (${i.qty}x) ${rupiah(i.price * i.qty)}</div>`;
-                    });
+        // Orders Management
+        async function loadAdminOrders() {
+            try {
+                const res = await fetch(`${SHEETDB_API}/search?type=order`);
+                const orders = await res.json();
+                const container = document.getElementById('admin-orders-container');
+                
+                if (!orders || orders.length === 0) {
+                    container.innerHTML = `<div class="col-span-full text-center py-8 text-slate-400 text-xs">Belum ada pesanan masuk.</div>`;
+                    return;
                 }
 
-                let badge = "bg-yellow-100 text-yellow-800";
-                if(o.status === 'Diproses') badge = "bg-blue-100 text-blue-800";
-                if(o.status === 'Selesai') badge = "bg-green-100 text-green-800";
-                if(o.status === 'Dibatalkan') badge = "bg-red-100 text-red-800";
+                container.innerHTML = orders.reverse().map(ord => {
+                    let itemsParsed = [];
+                    try { itemsParsed = JSON.parse(ord.items || '[]'); } catch(e){}
+                    const itemsHtml = itemsParsed.map(i => `<li class="text-xs text-slate-600">• ${i.name} (${i.qty}x) - Rp ${(i.price * i.qty).toLocaleString()}</li>`).join('');
+                    
+                    const isCompleted = ord.status === 'Selesai';
 
-                container.innerHTML += `
-                    <div class="bg-white rounded-2xl p-5 shadow-md border border-sky-100 flex flex-col justify-between gap-4">
-                        <div>
-                            <div class="flex justify-between items-start mb-2">
-                                <span class="font-extrabold text-sky-950 text-sm">${o.id}</span>
-                                <span class="px-2.5 py-0.5 rounded-full text-xs font-bold ${badge}">${o.status || 'Menunggu'}</span>
+                    return `
+                        <div class="bg-white rounded-2xl p-4 shadow-sm border ${isCompleted ? 'border-emerald-200 bg-emerald-50/20' : 'border-sky-100'} flex flex-col justify-between space-y-3">
+                            <div>
+                                <div class="flex justify-between items-start">
+                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${isCompleted ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">${ord.status || 'Baru'}</span>
+                                    <span class="text-[10px] text-slate-400 font-mono">${ord.id || ''}</span>
+                                </div>
+                                <h3 class="font-extrabold text-sky-950 text-sm mt-2">${ord.name}</h3>
+                                <p class="text-xs text-slate-500"><i class="fa-solid fa-phone mr-1"></i>${ord.phone}</p>
+                                <p class="text-xs text-slate-500"><i class="fa-solid fa-location-dot mr-1"></i>${ord.address}</p>
+                                <hr class="my-2 border-slate-100">
+                                <ul class="space-y-1 mb-2">${itemsHtml}</ul>
+                                <p class="text-xs font-bold text-sky-900">Total: Rp ${Number(ord.total || 0).toLocaleString()}</p>
+                                <p class="text-[11px] text-slate-500 mt-1"><b>Pembayaran:</b> ${ord.payment || '-'}</p>
                             </div>
-                            <div class="text-xs text-slate-500 mb-2">${o.created_at || '-'}</div>
-                            <div class="text-sm font-bold text-slate-800">${o.name} (${o.phone})</div>
-                            <div class="text-xs text-sky-700 font-semibold mb-3">Tempat/Meja: ${o.address}</div>
-                            <div class="bg-sky-50 p-2.5 rounded-xl space-y-1 mb-3 border border-sky-100">${itemsHtml}</div>
-                            <div class="text-xs font-extrabold text-slate-800">Total: ${rupiah(o.total)} (Pembayaran: ${o.payment || '-'})</div>
+                            <div class="flex flex-wrap gap-2 pt-2 border-t border-slate-100">
+                                <button onclick="updateOrderStatus('${ord.id}', 'Diproses')" class="flex-1 bg-amber-500 text-white text-[11px] font-bold py-1.5 px-2 rounded-xl hover:bg-amber-600 transition">Proses</button>
+                                <button onclick="updateOrderStatus('${ord.id}', 'Selesai')" class="flex-1 bg-emerald-600 text-white text-[11px] font-bold py-1.5 px-2 rounded-xl hover:bg-emerald-700 transition">Selesai</button>
+                                <button onclick="openEditOrderModal('${ord.id}', '${ord.name}', '${ord.phone}', '${ord.address}', '${ord.total}')" class="bg-slate-200 text-slate-700 text-[11px] font-bold py-1.5 px-2 rounded-xl hover:bg-slate-300 transition" title="Edit"><i class="fa-solid fa-pen"></i></button>
+                                <button onclick="deleteOrder('${ord.id}')" class="bg-red-100 text-red-600 text-[11px] font-bold py-1.5 px-2 rounded-xl hover:bg-red-200 transition" title="Hapus"><i class="fa-solid fa-trash"></i></button>
+                            </div>
                         </div>
-
-                        <div class="flex flex-wrap gap-2 pt-3 border-t border-slate-100">
-                            <button type="button" onclick="updateOrderStatus('${o.id}', 'Diproses')" class="flex-1 bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold py-2 px-3 rounded-xl shadow transition">Proses</button>
-                            <button type="button" onclick="updateOrderStatus('${o.id}', 'Selesai')" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2 px-3 rounded-xl shadow transition">Selesai</button>
-                            <button type="button" onclick="openEditOrderModal('${o.id}')" class="bg-white text-sky-700 border border-sky-300 hover:bg-sky-50 text-xs font-bold py-2 px-3 rounded-xl shadow transition"><i class="fa-solid fa-pen"></i> Edit</button>
-                            <button type="button" onclick="printOrder('${o.id}')" class="bg-white text-sky-700 border border-sky-300 hover:bg-sky-50 text-xs font-bold py-2 px-3 rounded-xl shadow transition"><i class="fa-solid fa-print"></i> Cetak</button>
-                            <button type="button" onclick="updateOrderStatus('${o.id}', 'Dibatalkan')" class="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold py-2 px-3 rounded-xl shadow transition">Tolak</button>
-                            <button type="button" onclick="deleteOrder('${o.id}')" class="bg-red-600 hover:bg-red-700 text-white text-xs font-bold py-2 px-3 rounded-xl shadow transition">Hapus</button>
-                        </div>
-                    </div>`;
-            });
+                    `;
+                }).join('');
+            } catch (e) {
+                console.error("Gagal memuat pesanan", e);
+            }
         }
 
         async function updateOrderStatus(orderId, newStatus) {
-            let orders = [];
-            try { orders = JSON.parse(safeGet('mb_orders') || '[]'); } catch(e) { orders = []; }
-            let found = orders.find(o => o.id === orderId);
-            if (found) {
-                found.status = newStatus;
-                safeSet('mb_orders', JSON.stringify(orders));
-            } else {
-                orders.push({ id: orderId, status: newStatus, createdAt: Date.now() });
-                safeSet('mb_orders', JSON.stringify(orders));
-            }
-
-            renderAdminOrders();
-
             try {
-                await apiRequest(SHEETDB_API + "/id/" + encodeURIComponent(orderId), {
-                    method: "PUT",
+                await fetch(`${SHEETDB_API}/id/${orderId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ data: { status: newStatus } })
                 });
-            } catch(err) {
-                console.log("Cloud update status note:", err);
+                loadAdminOrders();
+            } catch (e) {
+                alert("Gagal mengubah status pesanan.");
             }
         }
 
         async function deleteOrder(orderId) {
-            if(!confirm("Yakin ingin menghapus pesanan ini?")) return;
-            let orders = [];
-            try { orders = JSON.parse(safeGet('mb_orders') || '[]'); } catch(e) { orders = []; }
-            orders = orders.filter(o => o.id !== orderId);
-            safeSet('mb_orders', JSON.stringify(orders));
-            renderAdminOrders();
-
+            if (!confirm("Hapus pesanan ini dari riwayat?")) return;
             try {
-                await apiRequest(SHEETDB_API + "/id/" + encodeURIComponent(orderId), { method: "DELETE" });
-            } catch(err) {
-                console.log("Cloud delete note:", err);
+                await fetch(`${SHEETDB_API}/id/${orderId}`, { method: 'DELETE' });
+                loadAdminOrders();
+            } catch (e) {
+                alert("Gagal menghapus pesanan.");
             }
         }
 
         async function clearAllOrders() {
-            if(!confirm("Yakin ingin menghapus seluruh riwayat pesanan?")) return;
-            safeSet('mb_orders', JSON.stringify([]));
-            renderAdminOrders();
+            if (!confirm("Yakin ingin menghapus SEMUA riwayat pesanan?")) return;
             try {
-                await apiRequest(SHEETDB_API + "/all", { method: "DELETE" });
-            } catch(e) {}
+                const res = await fetch(`${SHEETDB_API}/search?type=order`);
+                const orders = await res.json();
+                for (let o of orders) {
+                    await fetch(`${SHEETDB_API}/id/${o.id}`, { method: 'DELETE' });
+                }
+                loadAdminOrders();
+            } catch (e) {
+                alert("Gagal membersihkan riwayat pesanan.");
+            }
         }
 
-        function openEditOrderModal(orderId) {
-            let orders = [];
-            try { orders = JSON.parse(safeGet('mb_orders') || '[]'); } catch(e) { orders = []; }
-            let o = orders.find(item => item.id === orderId);
-            if (!o) return;
-
-            document.getElementById('edit-order-id-input').value = o.id;
-            document.getElementById('edit-buyer-name').value = o.name || '';
-            document.getElementById('edit-buyer-phone').value = o.phone || '';
-            document.getElementById('edit-buyer-address').value = o.address || '';
-            document.getElementById('edit-order-total').value = o.total || '';
-
+        // Modal Edit Pesanan
+        function openEditOrderModal(id, name, phone, address, total) {
+            document.getElementById('edit-order-id-input').value = id;
+            document.getElementById('edit-buyer-name').value = name;
+            document.getElementById('edit-buyer-phone').value = phone;
+            document.getElementById('edit-buyer-address').value = address;
+            document.getElementById('edit-order-total').value = total;
             document.getElementById('edit-order-modal').classList.remove('modal-hidden');
         }
 
@@ -584,157 +501,115 @@
         async function saveEditedOrder(event) {
             event.preventDefault();
             const id = document.getElementById('edit-order-id-input').value;
-            const name = document.getElementById('edit-buyer-name').value.trim();
-            const phone = document.getElementById('edit-buyer-phone').value.trim();
-            const address = document.getElementById('edit-buyer-address').value.trim();
-            const total = document.getElementById('edit-order-total').value.trim();
-
-            let orders = [];
-            try { orders = JSON.parse(safeGet('mb_orders') || '[]'); } catch(e) { orders = []; }
-            let o = orders.find(item => item.id === id);
-            if (o) {
-                o.name = name;
-                o.phone = phone;
-                o.address = address;
-                o.total = total;
-                safeSet('mb_orders', JSON.stringify(orders));
-            }
-
-            closeEditModal();
-            renderAdminOrders();
+            const data = {
+                name: document.getElementById('edit-buyer-name').value,
+                phone: document.getElementById('edit-buyer-phone').value,
+                address: document.getElementById('edit-buyer-address').value,
+                total: document.getElementById('edit-order-total').value
+            };
 
             try {
-                await apiRequest(SHEETDB_API + "/id/" + encodeURIComponent(id), {
-                    method: "PUT",
-                    body: JSON.stringify({ data: { name: name, phone: phone, address: address, total: total } })
+                await fetch(`${SHEETDB_API}/id/${id}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ data })
                 });
-            } catch(err) {}
-        }
-
-        function printOrder(orderId) {
-            let orders = [];
-            try { orders = JSON.parse(safeGet('mb_orders') || '[]'); } catch(e) { orders = []; }
-            let o = orders.find(item => item.id === orderId);
-            if (!o) return;
-
-            let w = window.open('', '_blank', 'width=400,height=600');
-            let itemsText = '';
-            if (Array.isArray(o.items)) {
-                o.items.forEach(i => {
-                    itemsText += `<div>- ${i.name} (${i.qty}x) @${rupiah(i.price)}</div>`;
-                });
+                closeEditModal();
+                loadAdminOrders();
+            } catch (e) {
+                alert("Gagal menyimpan perubahan pesanan.");
             }
-            w.document.write(`
-                <html><head><title>Struk - ${o.id}</title><style>body{font-family:monospace;font-size:12px;padding:10px;}</style></head>
-                <body>
-                    <h3 style="text-align:center;margin:0;">Mie Bangka Teladan</h3>
-                    <p style="text-align:center;margin:0 0 10px 0;">Jalan Batu 8 Atas, Tanjungpinang</p>
-                    <hr>
-                    <div><b>ID:</b> ${o.id}</div>
-                    <div><b>Waktu:</b> ${o.created_at || '-'}</div>
-                    <div><b>Nama:</b> ${o.name}</div>
-                    <div><b>Meja:</b> ${o.address}</div>
-                    <hr>
-                    <div><b>Menu Pesanan:</b></div>
-                    ${itemsText}
-                    <hr>
-                    <div><b>Total:</b> ${rupiah(o.total)}</div>
-                    <div><b>Pembayaran:</b> ${o.payment || '-'}</div>
-                    <div><b>Status:</b> ${o.status}</div>
-                    <hr>
-                    <p style="text-align:center;margin:10px 0 0 0;">Terima Kasih</p>
-                </body></html>`);
-            w.document.close();
-            w.print();
         }
 
-        const defaultMenu = [
-            { id: "menu-001", name: "Mie Bangka Spesial (Topping B2)", category: "Makanan", price: 25000, description: "Mie kenyal khas Bangka dengan topping cincang B2 gurih dan pangsit.", image: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=700&q=80" },
-            { id: "menu-002", name: "Mie Bangka Pangsit Kuah", category: "Makanan", price: 22000, description: "Mie hangat dengan kuah kaldu lezat dan pangsit rebus.", image: "https://images.unsplash.com/photo-1612929633738-8fe44f7ec841?auto=format&fit=crop&w=700&q=80" },
-            { id: "menu-003", name: "Es Jeruk Kunci Bangka", category: "Minuman", price: 8000, description: "Minuman segar dengan jeruk kunci khas Bangka.", image: "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=700&q=80" }
-        ];
+        // Menu Management
+        document.getElementById('menu-file-input').addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const url = await uploadFileToCloudinary(file);
+                if (url) {
+                    document.getElementById('menu-image').value = url;
+                }
+            }
+        });
 
-        function renderAdminMenu() {
-            let menuList = [];
-            try { menuList = JSON.parse(safeGet('mb_menus')) || defaultMenu; } catch(e) { menuList = defaultMenu; }
-            const listDiv = document.getElementById('admin-menu-list');
-            if(!listDiv) return;
-            listDiv.innerHTML = '';
+        async function loadAdminMenus() {
+            try {
+                const res = await fetch(`${SHEETDB_API}/search?type=menu`);
+                const menus = await res.json();
+                const container = document.getElementById('admin-menu-list');
 
-            menuList.forEach(m => {
-                listDiv.innerHTML += `
-                    <div class="border border-sky-100 rounded-2xl p-4 flex flex-col justify-between bg-sky-50/50">
-                        <div>
-                            <div class="font-extrabold text-sky-950">${m.name}</div>
-                            <div class="text-xs text-sky-700 font-bold mb-1">${m.category} - ${rupiah(m.price)}</div>
-                            <p class="text-xs text-slate-600 line-clamp-2">${m.description || '-'}</p>
+                if (!menus || menus.length === 0) {
+                    container.innerHTML = `<div class="col-span-full text-center py-6 text-slate-400 text-xs">Belum ada menu tersimpan.</div>`;
+                    return;
+                }
+
+                container.innerHTML = menus.map(m => `
+                    <div class="bg-white rounded-2xl p-3 border border-sky-100 flex gap-3 items-center shadow-sm">
+                        <img src="${m.image || 'https://via.placeholder.com/150'}" class="w-16 h-16 object-cover rounded-xl flex-shrink-0">
+                        <div class="flex-1 min-w-0">
+                            <span class="text-[10px] font-bold text-sky-600 bg-sky-50 px-2 py-0.5 rounded-full">${m.category}</span>
+                            <h4 class="font-extrabold text-sky-950 text-xs truncate mt-1">${m.name}</h4>
+                            <p class="text-xs text-slate-500 font-semibold">Rp ${Number(m.price || 0).toLocaleString()}</p>
                         </div>
-                        <div class="flex gap-2 mt-4 pt-3 border-t border-sky-200">
-                            <button type="button" onclick="editMenu('${m.id}')" class="flex-1 bg-white text-sky-700 border border-sky-300 py-1.5 rounded-xl text-xs font-bold hover:bg-sky-50">Edit</button>
-                            <button type="button" onclick="deleteMenu('${m.id}')" class="flex-1 bg-red-600 text-white py-1.5 rounded-xl text-xs font-bold hover:bg-red-700">Hapus</button>
+                        <div class="flex flex-col gap-1">
+                            <button onclick='editMenuData(${JSON.stringify(m)})' class="bg-sky-50 text-sky-600 p-2 rounded-xl hover:bg-sky-100 text-xs"><i class="fa-solid fa-pen"></i></button>
+                            <button onclick="deleteMenu('${m.id}')" class="bg-red-50 text-red-600 p-2 rounded-xl hover:bg-red-100 text-xs"><i class="fa-solid fa-trash"></i></button>
                         </div>
-                    </div>`;
-            });
+                    </div>
+                `).join('');
+            } catch (e) {
+                console.error("Gagal memuat menu", e);
+            }
         }
 
         async function saveMenu(event) {
             event.preventDefault();
-            const submitBtn = document.getElementById('menu-submit-btn');
-            
-            // Cek apakah ada file yang dipilih untuk di-upload ke Cloudinary
-            const fileInput = document.getElementById('menu-file-input');
-            let imageUrl = document.getElementById('menu-image').value.trim();
+            const id = document.getElementById('edit-menu-id').value;
+            const data = {
+                type: 'menu',
+                name: document.getElementById('menu-name').value,
+                category: document.getElementById('menu-category').value,
+                price: document.getElementById('menu-price').value,
+                image: document.getElementById('menu-image').value,
+                desc: document.getElementById('menu-desc').value
+            };
 
-            if (fileInput && fileInput.files && fileInput.files[0]) {
-                submitBtn.disabled = true;
-                submitBtn.textContent = "Mengunggah Gambar...";
-                const uploadedUrl = await uploadFileToCloudinary(fileInput.files[0]);
-                submitBtn.disabled = false;
-                submitBtn.textContent = "Simpan Menu";
-                
-                if (uploadedUrl) {
-                    imageUrl = uploadedUrl;
+            if (!data.image) {
+                alert("Harap masukkan URL foto atau upload foto menu terlebih dahulu.");
+                return;
+            }
+
+            try {
+                if (id) {
+                    await fetch(`${SHEETDB_API}/id/${id}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ data })
+                    });
                 } else {
-                    return; // Batalkan jika upload gagal
+                    data.id = 'MENU-' + Date.now();
+                    await fetch(SHEETDB_API, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ data })
+                    });
                 }
+                resetMenuForm();
+                loadAdminMenus();
+            } catch (e) {
+                alert("Gagal menyimpan menu.");
             }
-
-            const id = document.getElementById('edit-menu-id').value || ("menu-" + Date.now());
-            const name = document.getElementById('menu-name').value.trim();
-            const category = document.getElementById('menu-category').value;
-            const price = parseFloat(document.getElementById('menu-price').value) || 0;
-            const description = document.getElementById('menu-desc').value.trim();
-
-            let menuList = [];
-            try { menuList = JSON.parse(safeGet('mb_menus')) || defaultMenu; } catch(e) { menuList = defaultMenu; }
-
-            const idx = menuList.findIndex(m => String(m.id) === String(id));
-            if (idx >= 0) {
-                menuList[idx] = { id, name, category, price, image: imageUrl, description };
-            } else {
-                menuList.push({ id, name, category, price, image: imageUrl, description });
-            }
-
-            safeSet('mb_menus', JSON.stringify(menuList));
-            resetMenuForm();
-            renderAdminMenu();
         }
 
-        function editMenu(menuId) {
-            let menuList = [];
-            try { menuList = JSON.parse(safeGet('mb_menus')) || defaultMenu; } catch(e) { menuList = defaultMenu; }
-            const m = menuList.find(item => String(item.id) === String(menuId));
-            if (!m) return;
-
+        function editMenuData(m) {
             document.getElementById('edit-menu-id').value = m.id;
             document.getElementById('menu-name').value = m.name;
-            document.getElementById('menu-category').value = m.category || 'Makanan';
+            document.getElementById('menu-category').value = m.category;
             document.getElementById('menu-price').value = m.price;
-            document.getElementById('menu-image').value = m.image || '';
-            document.getElementById('menu-desc').value = m.description || '';
-            if(document.getElementById('menu-file-input')) document.getElementById('menu-file-input').value = '';
-
+            document.getElementById('menu-image').value = m.image;
+            document.getElementById('menu-desc').value = m.desc || '';
             document.getElementById('menu-form-title').textContent = "Edit Menu";
+            document.getElementById('menu-submit-btn').textContent = "Update Menu";
             document.getElementById('cancel-edit-btn').classList.remove('hidden');
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
@@ -743,105 +618,143 @@
             document.getElementById('menu-form').reset();
             document.getElementById('edit-menu-id').value = '';
             document.getElementById('menu-form-title').textContent = "Tambah Menu Baru";
+            document.getElementById('menu-submit-btn').textContent = "Simpan Menu";
             document.getElementById('cancel-edit-btn').classList.add('hidden');
         }
 
-        function deleteMenu(menuId) {
-            if(!confirm("Yakin ingin menghapus menu ini?")) return;
-            let menuList = [];
-            try { menuList = JSON.parse(safeGet('mb_menus')) || defaultMenu; } catch(e) { menuList = defaultMenu; }
-            menuList = menuList.filter(m => String(m.id) !== String(menuId));
-            safeSet('mb_menus', JSON.stringify(menuList));
-            renderAdminMenu();
+        async function deleteMenu(id) {
+            if (!confirm("Hapus menu ini?")) return;
+            try {
+                await fetch(`${SHEETDB_API}/id/${id}`, { method: 'DELETE' });
+                loadAdminMenus();
+            } catch (e) {
+                alert("Gagal menghapus menu.");
+            }
         }
 
-        function renderAdminBanners() {
-            let banners = [];
-            try { banners = JSON.parse(safeGet('mb_banners')) || []; } catch(e) { banners = []; }
-            const listDiv = document.getElementById('admin-banner-list');
-            if(!listDiv) return;
-            listDiv.innerHTML = '';
+        // Banner Management
+        document.getElementById('banner-file-input').addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const url = await uploadFileToCloudinary(file);
+                if (url) {
+                    document.getElementById('banner-url-input').value = url;
+                }
+            }
+        });
 
-            banners.forEach((b, idx) => {
-                let img = typeof b === 'object' ? b.image : b;
-                listDiv.innerHTML += `
-                    <div class="border border-sky-100 rounded-2xl p-3 flex items-center gap-3 bg-sky-50/50">
-                        <img src="${img}" class="w-20 h-14 object-cover rounded-xl bg-sky-100">
-                        <div class="flex-1 truncate text-xs text-slate-700">${img}</div>
-                        <button type="button" onclick="deleteBanner(${idx})" class="bg-red-600 text-white px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-red-700">Hapus</button>
-                    </div>`;
-            });
+        async function loadAdminBanners() {
+            try {
+                const res = await fetch(`${SHEETDB_API}/search?type=banner`);
+                const banners = await res.json();
+                const container = document.getElementById('admin-banner-list');
+
+                if (!banners || banners.length === 0) {
+                    container.innerHTML = `<div class="col-span-full text-center py-6 text-slate-400 text-xs">Belum ada banner aktif.</div>`;
+                    return;
+                }
+
+                container.innerHTML = banners.map(b => `
+                    <div class="bg-white rounded-2xl p-3 border border-sky-100 flex gap-3 items-center shadow-sm">
+                        <img src="${b.url}" class="w-24 h-16 object-cover rounded-xl flex-shrink-0">
+                        <div class="flex-1 min-w-0 truncate">
+                            <p class="text-xs text-slate-500 truncate font-mono">${b.url}</p>
+                        </div>
+                        <button onclick="deleteBanner('${b.id}')" class="bg-red-50 text-red-600 p-2 rounded-xl hover:bg-red-100 text-xs"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                `).join('');
+            } catch (e) {
+                console.error("Gagal memuat banner", e);
+            }
         }
 
         async function addBanner(event) {
             event.preventDefault();
-            const submitBtn = document.getElementById('banner-submit-btn');
-            
-            const fileInput = document.getElementById('banner-file-input');
-            let url = document.getElementById('banner-url-input').value.trim();
-
-            if (fileInput && fileInput.files && fileInput.files[0]) {
-                submitBtn.disabled = true;
-                submitBtn.textContent = "Mengunggah Banner...";
-                const uploadedUrl = await uploadFileToCloudinary(fileInput.files[0]);
-                submitBtn.disabled = false;
-                submitBtn.textContent = "Tambah Banner";
-
-                if (uploadedUrl) {
-                    url = uploadedUrl;
-                } else {
-                    return; // Batalkan jika upload gagal
-                }
-            }
-
-            if(!url) {
-                alert("Pilih file gambar atau masukkan URL banner terlebih dahulu!");
+            const url = document.getElementById('banner-url-input').value;
+            if (!url) {
+                alert("Masukkan URL atau upload gambar banner terlebih dahulu.");
                 return;
             }
 
-            let banners = [];
-            try { banners = JSON.parse(safeGet('mb_banners')) || []; } catch(e) { banners = []; }
-            banners.push(url);
-            safeSet('mb_banners', JSON.stringify(banners));
-            
-            document.getElementById('banner-url-input').value = '';
-            if(fileInput) fileInput.value = '';
-            renderAdminBanners();
+            const data = {
+                type: 'banner',
+                id: 'BANNER-' + Date.now(),
+                url: url
+            };
+
+            try {
+                await fetch(SHEETDB_API, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ data })
+                });
+                document.getElementById('banner-url-input').value = '';
+                document.getElementById('banner-file-input').value = '';
+                loadAdminBanners();
+            } catch (e) {
+                alert("Gagal menambahkan banner.");
+            }
         }
 
-        function deleteBanner(idx) {
-            if(!confirm("Yakin ingin menghapus banner ini?")) return;
-            let banners = [];
-            try { banners = JSON.parse(safeGet('mb_banners')) || []; } catch(e) { banners = []; }
-            banners.splice(idx, 1);
-            safeSet('mb_banners', JSON.stringify(banners));
-            renderAdminBanners();
+        async function deleteBanner(id) {
+            if (!confirm("Hapus banner ini?")) return;
+            try {
+                await fetch(`${SHEETDB_API}/id/${id}`, { method: 'DELETE' });
+                loadAdminBanners();
+            } catch (e) {
+                alert("Gagal menghapus banner.");
+            }
         }
 
-        function loadPaymentMethodsSettings() {
-            const textarea = document.getElementById('payment-methods-textarea');
-            if(!textarea) return;
-            let defaultMethods = "BCA - 1234567890 (a.n. Mie Bangka Teladan)\nDANA - 081267166886 (a.n. Mie Bangka Teladan)\nKasir (Tunai)";
-            textarea.value = safeGet('mb_payment_methods') || defaultMethods;
+        // Payment Methods Management
+        async function loadPaymentConfig() {
+            try {
+                const res = await fetch(`${SHEETDB_API}/search?type=config_payment`);
+                const data = await res.json();
+                if (data && data.length > 0) {
+                    document.getElementById('payment-methods-textarea').value = data[0].methods || '';
+                }
+            } catch (e) {
+                console.error("Gagal memuat metode pembayaran", e);
+            }
         }
 
-        function savePaymentMethods(event) {
+        async function savePaymentMethods(event) {
             event.preventDefault();
-            const val = document.getElementById('payment-methods-textarea').value.trim();
-            safeSet('mb_payment_methods', val);
-            alert("Rekening berhasil disimpan!");
+            const methodsText = document.getElementById('payment-methods-textarea').value;
+            const data = {
+                type: 'config_payment',
+                methods: methodsText
+            };
+
+            try {
+                const res = await fetch(`${SHEETDB_API}/search?type=config_payment`);
+                const existing = await res.json();
+
+                if (existing && existing.length > 0) {
+                    await fetch(`${SHEETDB_API}/id/${existing[0].id}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ data })
+                    });
+                } else {
+                    data.id = 'CONFIG-PAYMENT';
+                    await fetch(SHEETDB_API, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ data })
+                    });
+                }
+                alert("Metode pembayaran berhasil disimpan!");
+            } catch (e) {
+                alert("Gagal menyimpan metode pembayaran.");
+            }
         }
 
-        function saveAdminCredentials(event) {
-            event.preventDefault();
-            const u = document.getElementById('new-admin-user').value.trim();
-            const p = document.getElementById('new-admin-pass').value.trim();
-            safeSet('mb_admin_user', u);
-            safeSet('mb_admin_pass', p);
-            alert("Akun admin berhasil diperbarui!");
-        }
-
-        window.onload = checkLoginState;
+        // Cek login saat pertama kali halaman dibuka
+        window.onload = function() {
+            checkAuth();
+        };
     </script>
 </body>
 </html>
