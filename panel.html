@@ -323,7 +323,7 @@
             document.getElementById('new-admin-user').value = u;
             document.getElementById('new-admin-pass').value = p;
 
-            setInterval(renderAdminOrders, 4000);
+            setInterval(renderAdminOrders, 6000);
         }
 
         function rupiah(value) {
@@ -363,23 +363,26 @@
                 const cloudData = await apiRequest(SHEETDB_API);
                 if (Array.isArray(cloudData)) {
                     let map = new Map();
+                    // Utamakan data tempatan (localStorage) yang dikemaskini oleh admin
                     orders.forEach(o => map.set(o.id, o));
                     cloudData.forEach(c => {
                         if (c.id) {
-                            let itemsParsed = [];
-                            try { itemsParsed = typeof c.items === 'string' ? JSON.parse(c.items) : (c.items || []); } catch(e) { itemsParsed = []; }
-                            map.set(c.id, {
-                                id: c.id,
-                                createdAt: Number(c.createdAt) || Date.now(),
-                                created_at: c.created_at || c.date || '-',
-                                name: c.name || '-',
-                                phone: c.phone || '-',
-                                address: c.address || '-',
-                                items: itemsParsed,
-                                total: c.total || '0',
-                                payment: c.payment || '-',
-                                status: c.status || 'Menunggu'
-                            });
+                            if (!map.has(c.id)) {
+                                let itemsParsed = [];
+                                try { itemsParsed = typeof c.items === 'string' ? JSON.parse(c.items) : (c.items || []); } catch(e) { itemsParsed = []; }
+                                map.set(c.id, {
+                                    id: c.id,
+                                    createdAt: Number(c.createdAt) || Date.now(),
+                                    created_at: c.created_at || c.date || '-',
+                                    name: c.name || '-',
+                                    phone: c.phone || '-',
+                                    address: c.address || '-',
+                                    items: itemsParsed,
+                                    total: c.total || '0',
+                                    payment: c.payment || '-',
+                                    status: c.status || 'Menunggu'
+                                });
+                            }
                         }
                     });
                     orders = Array.from(map.values());
@@ -442,8 +445,16 @@
             if (found) {
                 found.status = newStatus;
                 safeSet('mb_orders', JSON.stringify(orders));
+            } else {
+                // Jika pesanan tiada dalam senarai lokal, buat entri baharu supaya status segera bertukar
+                orders.push({ id: orderId, status: newStatus, createdAt: Date.now() });
+                safeSet('mb_orders', JSON.stringify(orders));
             }
 
+            // Kemaskini paparan dengan serta-merta
+            renderAdminOrders();
+
+            // Hantar ke cloud di latar belakang tanpa menyekat UI
             try {
                 await apiRequest(SHEETDB_API + "/id/" + encodeURIComponent(orderId), {
                     method: "PUT",
@@ -452,8 +463,6 @@
             } catch(err) {
                 console.log("Cloud update status note:", err);
             }
-
-            renderAdminOrders();
         }
 
         async function deleteOrder(orderId) {
@@ -462,23 +471,22 @@
             try { orders = JSON.parse(safeGet('mb_orders') || '[]'); } catch(e) { orders = []; }
             orders = orders.filter(o => o.id !== orderId);
             safeSet('mb_orders', JSON.stringify(orders));
+            renderAdminOrders();
 
             try {
                 await apiRequest(SHEETDB_API + "/id/" + encodeURIComponent(orderId), { method: "DELETE" });
             } catch(err) {
                 console.log("Cloud delete note:", err);
             }
-
-            renderAdminOrders();
         }
 
         async function clearAllOrders() {
             if(!confirm("Yakin ingin menghapus seluruh riwayat pesanan?")) return;
             safeSet('mb_orders', JSON.stringify([]));
+            renderAdminOrders();
             try {
                 await apiRequest(SHEETDB_API + "/all", { method: "DELETE" });
             } catch(e) {}
-            renderAdminOrders();
         }
 
         function openEditOrderModal(orderId) {
@@ -488,10 +496,10 @@
             if (!o) return;
 
             document.getElementById('edit-order-id-input').value = o.id;
-            document.getElementById('edit-buyer-name').value = o.name;
-            document.getElementById('edit-buyer-phone').value = o.phone;
-            document.getElementById('edit-buyer-address').value = o.address;
-            document.getElementById('edit-order-total').value = o.total;
+            document.getElementById('edit-buyer-name').value = o.name || '';
+            document.getElementById('edit-buyer-phone').value = o.phone || '';
+            document.getElementById('edit-buyer-address').value = o.address || '';
+            document.getElementById('edit-order-total').value = o.total || '';
 
             document.getElementById('edit-order-modal').classList.remove('modal-hidden');
         }
@@ -519,15 +527,15 @@
                 safeSet('mb_orders', JSON.stringify(orders));
             }
 
+            closeEditModal();
+            renderAdminOrders();
+
             try {
                 await apiRequest(SHEETDB_API + "/id/" + encodeURIComponent(id), {
                     method: "PUT",
                     body: JSON.stringify({ data: { name: name, phone: phone, address: address, total: total } })
                 });
             } catch(err) {}
-
-            closeEditModal();
-            renderAdminOrders();
         }
 
         function printOrder(orderId) {
