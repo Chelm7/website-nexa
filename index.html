@@ -305,7 +305,8 @@
             try { return localStorage.getItem(key); } catch (e) { return memoryStorage[key] !== undefined ? memoryStorage[key] : null; }
         }
         function safeSet(key, val) {
-            try { localStorage.setItem(key, val); } catch (e) { memoryStorage[key] = val; }
+            try { localStorage.setItem(key, val); } catch (e) { }
+            memoryStorage[key] = val;
         }
 
         let scrollTimeout;
@@ -374,7 +375,6 @@
             ]));
             if (!safeGet('mb_resto_status')) safeSet('mb_resto_status', 'Buka');
             
-            // Masukkan sampel pesanan default jika belum ada
             let localOrders = [];
             try { localOrders = JSON.parse(localStorage.getItem('mb_orders') || '[]'); } catch(e) { localOrders = []; }
             if (localOrders.length === 0) {
@@ -395,13 +395,13 @@
             loadBanners();
             renderMenu();
             
-            // Isi otomatis input ID Pesanan dengan sampel
             const lookupInput = document.getElementById('lookup-order-id');
             if (lookupInput && !lookupInput.value) {
                 lookupInput.value = "ORD-CBAY0975";
             }
             checkOrderStatusSubmit();
 
+            // Pengecekan status resto dan status pesanan setiap 2 detik sekali
             setInterval(checkRestoStatus, 2000);
             setInterval(checkCustomerOrdersExpiry, 1000);
             setInterval(autoCheckActiveOrderStatus, 2000);
@@ -710,7 +710,6 @@
                 submitButton.disabled = false;
                 checkoutMessage.textContent = "";
 
-                // Tampilkan Modal Timer
                 document.getElementById('pay-order-id').textContent = order.id;
                 document.getElementById('pay-buyer-name').textContent = order.name;
                 document.getElementById('pay-method-chosen').textContent = payment;
@@ -845,7 +844,6 @@
                     ? '<div class="mt-3 text-xs font-bold text-sky-700 bg-sky-50 p-2.5 rounded-lg border border-sky-100">Pesanan sedang dikerjakan / diproses oleh resto Mie Bangka Teladan.</div>' 
                     : '<div class="mt-3 text-xs font-bold text-amber-700 bg-amber-50 p-2.5 rounded-lg border border-amber-100">Menunggu verifikasi dan konfirmasi dari resto. Silakan lakukan pembayaran.</div>';
 
-                // Format daftar item jika ada
                 let itemsHtml = '';
                 if (foundOrder.items) {
                     let itemsList = typeof foundOrder.items === 'string' ? JSON.parse(foundOrder.items) : foundOrder.items;
