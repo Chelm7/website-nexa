@@ -305,8 +305,28 @@
             try { return localStorage.getItem(key); } catch (e) { return memoryStorage[key] !== undefined ? memoryStorage[key] : null; }
         }
         function safeSet(key, val) {
-            try { localStorage.setItem(key, val); } catch (e) { }
-            memoryStorage[key] = val;
+            try { localStorage.setItem(key, val); } catch (e) { memoryStorage[key] = val; }
+        }
+
+        // Fungsi Suara Notifikasi Pesanan Masuk (Beep / Lonceng)
+        function playNotificationSound() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(880, audioCtx.currentTime);
+                gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                
+                oscillator.start();
+                oscillator.stop(audioCtx.currentTime + 0.4);
+            } catch (e) {
+                console.log("Audio tidak didukung oleh browser ini.");
+            }
         }
 
         let scrollTimeout;
@@ -401,7 +421,6 @@
             }
             checkOrderStatusSubmit();
 
-            // Pengecekan status resto dan status pesanan setiap 2 detik sekali
             setInterval(checkRestoStatus, 2000);
             setInterval(checkCustomerOrdersExpiry, 1000);
             setInterval(autoCheckActiveOrderStatus, 2000);
@@ -513,7 +532,9 @@
             const item = menuList.find(m => String(m.id) === String(menuId));
             if (!item) return;
 
-            cart.set(item.id, (cart.get(item.id) || 0) + 1);
+            const key = String(menuId);
+            const currentQty = cart.get(key) || 0;
+            cart.set(key, currentQty + 1);
             renderCart();
             openCart();
         }
@@ -533,18 +554,21 @@
                 const item = menuList.find(m => String(m.id) === String(menuId));
                 if (!item) return;
 
-                totalItems += quantity;
-                totalPrice += item.price * quantity;
+                const itemPrice = Number(item.price) || 0;
+                const itemQty = Number(quantity) || 0;
+
+                totalItems += itemQty;
+                totalPrice += itemPrice * itemQty;
 
                 cartItems.innerHTML += `
                     <div class="flex items-center justify-between gap-3 p-2">
                         <div class="min-w-0 flex-1">
                             <p class="truncate font-bold text-slate-800 text-sm">${item.name}</p>
-                            <p class="text-xs text-slate-500">${quantity} × ${rupiah(item.price)}</p>
+                            <p class="text-xs text-slate-500">${itemQty} × ${rupiah(itemPrice)}</p>
                         </div>
                         <div class="flex items-center gap-2">
                             <button type="button" onclick="changeQuantity('${menuId}', -1)" class="rounded-lg bg-slate-100 px-2.5 py-1 font-bold hover:bg-slate-200 text-xs">-</button>
-                            <span class="min-w-5 text-center font-bold text-sm">${quantity}</span>
+                            <span class="min-w-5 text-center font-bold text-sm">${itemQty}</span>
                             <button type="button" onclick="changeQuantity('${menuId}', 1)" class="rounded-lg bg-slate-100 px-2.5 py-1 font-bold hover:bg-slate-200 text-xs">+</button>
                         </div>
                     </div>`;
@@ -559,12 +583,13 @@
         }
 
         function changeQuantity(menuId, delta) {
-            const qty = cart.get(menuId) || 0;
+            const key = String(menuId);
+            const qty = cart.get(key) || 0;
             const newQty = qty + delta;
             if (newQty <= 0) {
-                cart.delete(menuId);
+                cart.delete(key);
             } else {
-                cart.set(menuId, newQty);
+                cart.set(key, newQty);
             }
             renderCart();
         }
@@ -645,8 +670,10 @@
             cart.forEach((quantity, menuId) => {
                 const item = menuList.find(m => String(m.id) === String(menuId));
                 if (!item) return;
-                orderItems.push({ id: item.id, name: item.name, price: item.price, qty: quantity });
-                total += item.price * quantity;
+                const itemPrice = Number(item.price) || 0;
+                const itemQty = Number(quantity) || 0;
+                orderItems.push({ id: item.id, name: item.name, price: itemPrice, qty: itemQty });
+                total += itemPrice * itemQty;
             });
 
             const orderId = createOrderId();
@@ -698,6 +725,8 @@
                 } catch(err) {
                     console.log("SheetDB cloud sync note:", err);
                 }
+
+                playNotificationSound();
 
                 localStorage.setItem("last_order_id", order.id);
                 document.getElementById('lookup-order-id').value = order.id;
