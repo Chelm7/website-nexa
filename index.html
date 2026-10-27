@@ -46,10 +46,10 @@
                     <div id="live-time" class="font-bold text-white text-sm">00:00:00</div>
                     <div id="live-date" class="text-sky-200">Senin, 01 Jan 2026</div>
                 </div>
-                <!-- Tombol Keranjang -->
+                <!-- Tombol Keranjang dengan Badge Merah Bulat -->
                 <button id="open-cart-button" onclick="openCart()" class="bg-white text-sky-700 border border-sky-300 hover:bg-sky-50 px-4 py-2 rounded-xl font-bold transition flex items-center shadow">
                     <i class="fa-solid fa-cart-shopping mr-2"></i> Keranjang
-                    <span id="cart-count" class="ml-2 bg-sky-600 text-white text-xs px-2 py-0.5 rounded-full">0</span>
+                    <span id="cart-count" class="ml-2 bg-red-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold">0</span>
                 </button>
             </div>
         </div>
@@ -308,7 +308,7 @@
             try { localStorage.setItem(key, val); } catch (e) { memoryStorage[key] = val; }
         }
 
-        // Fungsi Suara Notifikasi Pesanan Masuk (Beep / Lonceng)
+        // Fungsi Suara Beep
         function playNotificationSound() {
             try {
                 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -520,6 +520,7 @@
             });
         }
 
+        // Masuk ke keranjang tanpa membuka modal, berbunyi beep, dan badge merah bulat bertambah
         function addToCart(menuId) {
             const status = safeGet('mb_resto_status') || 'Buka';
             if (status === 'Tutup') {
@@ -535,8 +536,9 @@
             const key = String(menuId);
             const currentQty = cart.get(key) || 0;
             cart.set(key, currentQty + 1);
+            
             renderCart();
-            openCart();
+            playNotificationSound(); // Bunyi beep saat item masuk ke keranjang
         }
 
         function renderCart() {
@@ -725,8 +727,6 @@
                 } catch(err) {
                     console.log("SheetDB cloud sync note:", err);
                 }
-
-                playNotificationSound();
 
                 localStorage.setItem("last_order_id", order.id);
                 document.getElementById('lookup-order-id').value = order.id;
