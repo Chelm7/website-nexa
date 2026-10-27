@@ -799,7 +799,15 @@
                 return;
             }
 
+<<<<<<< HEAD
             let banners = ['1000047088.png'];
+=======
+            let banners = [];
+            try { banners = JSON.parse(safeGet('mb_banners')) || []; } catch(e) { banners = []; }
+            banners.push(url);
+            safeSet('mb_banners', JSON.stringify(banners));
+            
+>>>>>>> ff73775218f4819b3b3e03b7b9f9c15f4c3a9fb8
             document.getElementById('banner-url-input').value = '';
             if(fileInput) fileInput.value = '';
             renderAdminBanners();
