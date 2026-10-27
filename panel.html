@@ -46,7 +46,7 @@
         </div>
     </div>
 
-    <!-- PANEL UTAMA ADMIN (TERSEMBUNYI SEBELUM LOGIN) -->
+    <!-- PANEL UTAMA ADMIN -->
     <div id="admin-panel" class="hidden min-h-screen flex flex-col">
         
         <!-- Header Admin -->
@@ -63,7 +63,6 @@
                 </div>
 
                 <div class="flex items-center space-x-3">
-                    <!-- Tombol Status Resto (Buka/Tutup) -->
                     <select id="resto-status-toggle" onchange="toggleRestoStatus(this.value)" class="rounded-xl border border-sky-400 bg-sky-700 text-white px-3 py-2 text-xs font-bold outline-none focus:ring-2 focus:ring-white shadow-sm cursor-pointer">
                         <option value="Buka">Resto Buka</option>
                         <option value="Tutup">Resto Tutup</option>
@@ -566,153 +565,4 @@
         const defaultMenu = [
             { id: "menu-001", name: "Mie Bangka Spesial (Topping B2)", category: "Makanan", price: 25000, description: "Mie kenyal khas Bangka dengan topping cincang B2 gurih dan pangsit.", image: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=700&q=80" },
             { id: "menu-002", name: "Mie Bangka Pangsit Kuah", category: "Makanan", price: 22000, description: "Mie hangat dengan kuah kaldu lezat dan pangsit rebus.", image: "https://images.unsplash.com/photo-1612929633738-8fe44f7ec841?auto=format&fit=crop&w=700&q=80" },
-            { id: "menu-003", name: "Es Jeruk Kunci Bangka", category: "Minuman", price: 8000, description: "Minuman segar dengan jeruk kunci khas Bangka.", image: "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=700&q=80" }
-        ];
-
-        function renderAdminMenu() {
-            let menuList = [];
-            try { menuList = JSON.parse(safeGet('mb_menus')) || defaultMenu; } catch(e) { menuList = defaultMenu; }
-            const listDiv = document.getElementById('admin-menu-list');
-            if(!listDiv) return;
-            listDiv.innerHTML = '';
-
-            menuList.forEach(m => {
-                listDiv.innerHTML += `
-                    <div class="border border-sky-100 rounded-2xl p-4 flex flex-col justify-between bg-sky-50/50">
-                        <div>
-                            <div class="font-extrabold text-sky-950">${m.name}</div>
-                            <div class="text-xs text-sky-700 font-bold mb-1">${m.category} - ${rupiah(m.price)}</div>
-                            <p class="text-xs text-slate-600 line-clamp-2">${m.description || '-'}</p>
-                        </div>
-                        <div class="flex gap-2 mt-4 pt-3 border-t border-sky-200">
-                            <button onclick="editMenu('${m.id}')" class="flex-1 bg-white text-sky-700 border border-sky-300 py-1.5 rounded-xl text-xs font-bold hover:bg-sky-50">Edit</button>
-                            <button onclick="deleteMenu('${m.id}')" class="flex-1 bg-red-600 text-white py-1.5 rounded-xl text-xs font-bold hover:bg-red-700">Hapus</button>
-                        </div>
-                    </div>`;
-            });
-        }
-
-        function saveMenu(event) {
-            event.preventDefault();
-            const id = document.getElementById('edit-menu-id').value || ("menu-" + Date.now());
-            const name = document.getElementById('menu-name').value.trim();
-            const category = document.getElementById('menu-category').value;
-            const price = parseFloat(document.getElementById('menu-price').value) || 0;
-            const image = document.getElementById('menu-image').value.trim();
-            const description = document.getElementById('menu-desc').value.trim();
-
-            let menuList = [];
-            try { menuList = JSON.parse(safeGet('mb_menus')) || defaultMenu; } catch(e) { menuList = defaultMenu; }
-
-            const idx = menuList.findIndex(m => String(m.id) === String(id));
-            if (idx >= 0) {
-                menuList[idx] = { id, name, category, price, image, description };
-            } else {
-                menuList.push({ id, name, category, price, image, description });
-            }
-
-            safeSet('mb_menus', JSON.stringify(menuList));
-            resetMenuForm();
-            renderAdminMenu();
-        }
-
-        function editMenu(menuId) {
-            let menuList = [];
-            try { menuList = JSON.parse(safeGet('mb_menus')) || defaultMenu; } catch(e) { menuList = defaultMenu; }
-            const m = menuList.find(item => String(item.id) === String(menuId));
-            if (!m) return;
-
-            document.getElementById('edit-menu-id').value = m.id;
-            document.getElementById('menu-name').value = m.name;
-            document.getElementById('menu-category').value = m.category || 'Makanan';
-            document.getElementById('menu-price').value = m.price;
-            document.getElementById('menu-image').value = m.image || '';
-            document.getElementById('menu-desc').value = m.description || '';
-
-            document.getElementById('menu-form-title').textContent = "Edit Menu";
-            document.getElementById('cancel-edit-btn').classList.remove('hidden');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        function resetMenuForm() {
-            document.getElementById('menu-form').reset();
-            document.getElementById('edit-menu-id').value = '';
-            document.getElementById('menu-form-title').textContent = "Tambah Menu Baru";
-            document.getElementById('cancel-edit-btn').classList.add('hidden');
-        }
-
-        function deleteMenu(menuId) {
-            if(!confirm("Yakin ingin menghapus menu ini?")) return;
-            let menuList = [];
-            try { menuList = JSON.parse(safeGet('mb_menus')) || defaultMenu; } catch(e) { menuList = defaultMenu; }
-            menuList = menuList.filter(m => String(m.id) !== String(menuId));
-            safeSet('mb_menus', JSON.stringify(menuList));
-            renderAdminMenu();
-        }
-
-        function renderAdminBanners() {
-            let banners = [];
-            try { banners = JSON.parse(safeGet('mb_banners')) || []; } catch(e) { banners = []; }
-            const listDiv = document.getElementById('admin-banner-list');
-            if(!listDiv) return;
-            listDiv.innerHTML = '';
-
-            banners.forEach((b, idx) => {
-                let img = typeof b === 'object' ? b.image : b;
-                listDiv.innerHTML += `
-                    <div class="border border-sky-100 rounded-2xl p-3 flex items-center gap-3 bg-sky-50/50">
-                        <img src="${img}" class="w-20 h-14 object-cover rounded-xl bg-sky-100">
-                        <div class="flex-1 truncate text-xs text-slate-700">${img}</div>
-                        <button onclick="deleteBanner(${idx})" class="bg-red-600 text-white px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-red-700">Hapus</button>
-                    </div>`;
-            });
-        }
-
-        function addBanner(event) {
-            event.preventDefault();
-            const url = document.getElementById('banner-url-input').value.trim();
-            if(!url) return;
-            let banners = [];
-            try { banners = JSON.parse(safeGet('mb_banners')) || []; } catch(e) { banners = []; }
-            banners.push(url);
-            safeSet('mb_banners', JSON.stringify(banners));
-            document.getElementById('banner-url-input').value = '';
-            renderAdminBanners();
-        }
-
-        function deleteBanner(idx) {
-            if(!confirm("Yakin ingin menghapus banner ini?")) return;
-            let banners = [];
-            try { banners = JSON.parse(safeGet('mb_banners')) || []; } catch(e) { banners = []; }
-            banners.splice(idx, 1);
-            safeSet('mb_banners', JSON.stringify(banners));
-            renderAdminBanners();
-        }
-
-        function loadPaymentMethodsSettings() {
-            const textarea = document.getElementById('payment-methods-textarea');
-            if(!textarea) return;
-            let defaultMethods = "BCA - 1234567890 (a.n. Mie Bangka Teladan)\nDANA - 081267166886 (a.n. Mie Bangka Teladan)\nKasir (Tunai)";
-            textarea.value = safeGet('mb_payment_methods') || defaultMethods;
-        }
-
-        function savePaymentMethods(event) {
-            event.preventDefault();
-            const val = document.getElementById('payment-methods-textarea').value.trim();
-            safeSet('mb_payment_methods', val);
-            alert("Rekening berhasil disimpan!");
-        }
-
-        function saveAdminCredentials(event) {
-            event.preventDefault();
-            const u = document.getElementById('new-admin-user').value.trim();
-            const p = document.getElementById('new-admin-pass').value.trim();
-            safeSet('mb_admin_user', u);
-            safeSet('mb_admin_pass', p);
-            alert("Akun admin berhasil diperbarui!");
-        }
-
-        window.onload = checkLoginState;
-    </script>
-</body>
-</html>
+            { id: "menu-003", name: "Es Jeruk Kunci Bangka", category: "Minuman", price: 800
