@@ -224,9 +224,9 @@
                         id="payment-method"
                         class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-500 font-medium"
                     >
-                        <option value="BCA">BCA - 1234567890 (a.n. Mie Bangka Teladan)</option>
-                        <option value="DANA">DANA - 081267166886 (a.n. Mie Bangka Teladan)</option>
-                        <option value="Kasir">Bayar di Kasir (Tunai)</option>
+                        <option value="BCA - 1234567890 (a.n. Mie Bangka Teladan)">BCA - 1234567890 (a.n. Mie Bangka Teladan)</option>
+                        <option value="DANA - 081267166886 (a.n. Mie Bangka Teladan)">DANA - 081267166886 (a.n. Mie Bangka Teladan)</option>
+                        <option value="Kasir (Tunai)">Bayar di Kasir (Tunai)</option>
                     </select>
                 </div>
 
@@ -260,7 +260,7 @@
         </div>
     </div>
 
-    <!-- Modal Timer Pembayaran 3 Menit (Dengan Tombol Salin Rekening & Teks Hijau Lebih Besar) -->
+    <!-- Modal Timer Pembayaran 3 Menit (Dengan Tombol Salin Nomor Rekening Tujuan) -->
     <div id="payment-timer-modal" class="fixed inset-0 bg-black bg-opacity-80 hidden z-50 flex justify-center items-center p-4">
         <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 text-center border-t-4 border-sky-600">
             <div class="w-14 h-14 bg-sky-100 text-sky-600 rounded-full flex items-center justify-center text-2xl mx-auto mb-3">
@@ -274,9 +274,9 @@
             <div class="bg-sky-50 p-3 rounded-2xl text-left text-xs space-y-2 mb-4 border border-sky-100">
                 <div><b>ID Pesanan:</b> <span id="pay-order-id"></span></div>
                 <div><b>Nama Pemesan:</b> <span id="pay-buyer-name"></span></div>
-                <div class="flex items-center justify-between">
-                    <div><b>Metode Pembayaran:</b> <span id="pay-method-chosen"></span></div>
-                    <button type="button" onclick="copyPaymentInfo()" class="bg-sky-600 hover:bg-sky-700 text-white px-2 py-1 rounded text-[10px] font-bold shadow transition flex items-center gap-1">
+                <div class="flex items-center justify-between gap-2">
+                    <div class="truncate"><b>Tujuan:</b> <span id="pay-method-chosen"></span></div>
+                    <button type="button" onclick="copyPaymentInfo()" class="bg-sky-600 hover:bg-sky-700 text-white px-2.5 py-1 rounded text-[11px] font-bold shadow transition flex items-center gap-1 shrink-0">
                         <i class="fa-solid fa-copy"></i> Salin Rekening
                     </button>
                 </div>
@@ -578,7 +578,8 @@
             const name = document.getElementById('buyer-name').value.trim();
             const phone = document.getElementById('buyer-phone').value.trim();
             const address = document.getElementById('buyer-address').value.trim();
-            const payment = document.getElementById('payment-method').value;
+            const paymentSelect = document.getElementById('payment-method');
+            const payment = paymentSelect.value;
             const normalizedPhone = normalizePhone(phone);
 
             if (normalizedPhone.length < 10) {
@@ -678,8 +679,9 @@
 
         function copyPaymentInfo() {
             const methodText = document.getElementById('pay-method-chosen').innerText;
+            // Ekstrak angka/nomor rekening saja atau salin seluruh teks tujuan
             navigator.clipboard.writeText(methodText).then(() => {
-                alert('Informasi / Nomor Rekening berhasil disalin: ' + methodText);
+                alert('Nomor / Rekening tujuan berhasil disalin: ' + methodText);
             }).catch(err => {
                 alert('Gagal menyalin teks.');
             });
