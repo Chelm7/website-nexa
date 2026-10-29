@@ -245,9 +245,9 @@
                 <button
                     id="submit-order-button"
                     type="submit"
-                    class="w-full rounded-xl bg-emerald-600 text-white border border-emerald-500 px-4 py-3 font-bold hover:bg-emerald-700 transition shadow flex items-center justify-center gap-2"
+                    class="w-full rounded-xl bg-white text-sky-700 border border-sky-500 px-4 py-3 font-bold hover:bg-sky-50 transition shadow"
                 >
-                    <i class="fa-brands fa-whatsapp text-lg"></i> Kirim Pesanan via WhatsApp & Sistem
+                    <i class="fa-solid fa-check mr-2"></i> Kirim Pesanan
                 </button>
 
                 <p
@@ -260,7 +260,7 @@
     </div>
 
     <!-- Modal Timer Pembayaran 3 Menit -->
-    <div id="payment-timer-modal" class="fixed inset-0 bg-black bg-opacity-80 hidden z-50 flex justify-center items-center p-4">
+    <div id="payment-timer-modal" class="fixed inset-0 bg-black bg-opacity-85 hidden z-50 flex justify-center items-center p-4">
         <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 text-center border-t-4 border-sky-600">
             <div class="w-14 h-14 bg-sky-100 text-sky-600 rounded-full flex items-center justify-center text-2xl mx-auto mb-3">
                 <i class="fa-solid fa-clock"></i>
@@ -283,12 +283,12 @@
             </div>
 
             <div class="bg-emerald-50 text-emerald-800 p-3.5 rounded-xl text-sm font-bold mb-4 border border-emerald-200 leading-relaxed">
-                <i class="fa-solid fa-circle-check mr-1"></i> WhatsApp akan terbuka otomatis untuk mengirim detail pesanan ke resto. Silakan lakukan pembayaran sesuai pilihan Anda.
+                <i class="fa-solid fa-circle-check mr-1"></i> Silakan lakukan pembayaran sesuai pilihan Anda. Pesanan akan segera diproses setelah diverifikasi resto.
             </div>
 
-            <button type="button" onclick="closeTimerModal()" class="w-full bg-sky-600 text-white font-bold py-2.5 rounded-xl text-sm hover:bg-sky-700 transition shadow">
-                Tutup & Cek Status Pesanan
-            </button>
+            <p class="text-xs text-amber-700 font-bold bg-amber-50 p-2.5 rounded-xl border border-amber-200">
+                ⚠️ Modal ini dikunci sampai durasi habis atau resto memproses pesanan Anda. Jika waktu habis dan belum diproses, pesanan akan dibatalkan otomatis dan Anda harus memesan ulang dari awal.
+            </p>
         </div>
     </div>
 
@@ -301,7 +301,6 @@
         "use strict";
 
         const SHEETDB_API = "https://sheetdb.io/api/v1/2ij5jepgf1fdy";
-        const ADMIN_WHATSAPP = "6282384039200"; // Nomor WA Admin / Resto
 
         const memoryStorage = {};
         function safeGet(key) {
@@ -716,23 +715,6 @@
                     console.log("SheetDB cloud sync note:", err);
                 }
 
-                // Buat Pesan WhatsApp otomatis untuk dikirim ke Resto
-                let waText = `Halo Mie Bangka Teladan,%0A%0Saya ingin memesan:%0A%0A`;
-                waText += `*ID Pesanan:* ${orderId}%0A`;
-                waText += `*Nama:* ${name}%0A`;
-                waText += `*No HP:* ${phone}%0A`;
-                waText += `*Tempat/Meja:* ${address}%0A%0A`;
-                waText += `*Menu Pesanan:*%0A`;
-                orderItems.forEach(i => {
-                    waText += `- ${i.qty}x ${i.name} (${rupiah(i.price * i.qty)})%0A`;
-                });
-                waText += `%0A*Total Pembayaran:* ${rupiah(total)}%0A`;
-                waText += `*Metode Pembayaran:* ${payment}%0A%0A`;
-                waText += `Mohon segera diproses ya, terima kasih! 🙏`;
-
-                // Buka WhatsApp Admin di tab baru
-                window.open(`https://wa.me/${ADMIN_WHATSAPP}?text=${waText}`, '_blank');
-
                 localStorage.setItem("last_order_id", order.id);
                 document.getElementById('lookup-order-id').value = order.id;
                 activeTrackingId = order.id;
@@ -749,7 +731,7 @@
                 document.getElementById('pay-method-chosen').textContent = payment;
                 document.getElementById('pay-total').textContent = rupiah(total);
                 document.getElementById('payment-timer-modal').classList.remove('hidden');
-                startCountdownTimer(3 * 60);
+                startCountdownTimer(3 * 60, order.id);
 
             } catch (error) {
                 submitButton.disabled = false;
@@ -773,13 +755,26 @@
             if (section) section.scrollIntoView({ behavior: 'smooth' });
         }
 
-        function startCountdownTimer(durationSeconds) {
+        function startCountdownTimer(durationSeconds, orderId) {
             let timer = durationSeconds;
             const display = document.getElementById('countdown-timer');
             if(!display) return;
             
             clearInterval(window.orderTimerInterval);
             window.orderTimerInterval = setInterval(function () {
+                // Cek status terbaru dari localStorage atau API apakah sudah diproses resto
+                let localOrders = [];
+                try { localOrders = JSON.parse(localStorage.getItem('mb_orders') || '[]'); } catch(e) { localOrders = []; }
+                let currentOrder = localOrders.find(o => o.id === orderId);
+
+                if (currentOrder && (currentOrder.status === 'Diproses' || currentOrder.status === 'Selesai')) {
+                    clearInterval(window.orderTimerInterval);
+                    closeTimerModal();
+                    checkOrderStatusSubmit();
+                    activeTrackingId = null;
+                    return;
+                }
+
                 let minutes = parseInt(timer / 60, 10);
                 let seconds = parseInt(timer % 60, 10);
 
@@ -791,7 +786,16 @@
                 if (--timer < 0) {
                     clearInterval(window.orderTimerInterval);
                     display.textContent = "Waktu Habis";
+                    
+                    // Waktu habis dan resto belum memproses -> Hapus pesanan dan suruh ulang dari awal
+                    let orders = [];
+                    try { orders = JSON.parse(localStorage.getItem('mb_orders') || '[]'); } catch(e) { orders = []; }
+                    orders = orders.filter(o => o.id !== orderId);
+                    localStorage.setItem('mb_orders', JSON.stringify(orders));
+
+                    alert("Waktu konfirmasi 3 menit telah habis dan pesanan belum diproses oleh resto. Pesanan dibatalkan otomatis, silakan buat pesanan baru dari awal.");
                     closeTimerModal();
+                    window.location.reload();
                 }
             }, 1000);
         }
