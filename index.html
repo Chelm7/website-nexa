@@ -373,10 +373,12 @@
 
         function initApp() {
             if (!safeGet('mb_menus')) safeSet('mb_menus', JSON.stringify(defaultMenu));
-            if (!safeGet('mb_banners')) safeSet('mb_banners', JSON.stringify([
-                "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80",
-                "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=1200&q=80"
+            
+            // Penggantian Banner Tunggal
+            safeSet('mb_banners', JSON.stringify([
+                "https://i.ibb.co.com/cKQZPzMB/1000047088.png"
             ]));
+
             if (!safeGet('mb_resto_status')) safeSet('mb_resto_status', 'Buka');
             
             let localOrders = [];
@@ -504,7 +506,6 @@
             });
         }
 
-        // Masuk ke keranjang tanpa membuka modal dan update badge merah bulat
         function addToCart(menuId) {
             const status = safeGet('mb_resto_status') || 'Buka';
             if (status === 'Tutup') {
