@@ -1,4 +1,4 @@
-<meta name='viewport' content='width=device-width, initial-scale=1'/><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -219,7 +219,6 @@
             if (!safeGet('mb_banners')) safeSet('mb_banners', JSON.stringify(["https://i.ibb.co.com/cKQZPzMB/1000047088.png"]));
             if (!safeGet('mb_resto_status')) safeSet('mb_resto_status', 'Buka');
 
-            // Sinkronisasi status resto real-time dari SheetDB
             await fetchRestoStatusRealtime();
 
             loadPaymentMethodsToSelect();
@@ -228,7 +227,6 @@
             updateCartUI();
             checkRestoStatusGlobal();
 
-            // Polling Real-Time setiap 2 detik untuk memeriksa status resto terbaru dari cloud tanpa reload
             setInterval(async () => {
                 await fetchRestoStatusRealtime();
                 checkRestoStatusGlobal();
@@ -370,7 +368,9 @@
             else cart.set(menuId, { ...item, qty: 1 });
 
             updateCartUI();
-            openCart();
+            // (DIUBAH) Modal keranjang TIDAK LAGI dipanggil otomatis di sini,
+            // sehingga pelanggan hanya memasukkan ke keranjang dan modal tetap tertutup
+            // sampai pelanggan mengklik tombol "Keranjang" secara manual di header.
         }
 
         function changeQty(menuId, delta) {
