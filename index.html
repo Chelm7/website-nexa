@@ -245,9 +245,9 @@
                 <button
                     id="submit-order-button"
                     type="submit"
-                    class="w-full rounded-xl bg-white text-sky-700 border border-sky-500 px-4 py-3 font-bold hover:bg-sky-50 transition shadow"
+                    class="w-full rounded-xl bg-emerald-600 text-white border border-emerald-500 px-4 py-3 font-bold hover:bg-emerald-700 transition shadow flex items-center justify-center gap-2"
                 >
-                    <i class="fa-solid fa-check mr-2"></i> Kirim Pesanan
+                    <i class="fa-brands fa-whatsapp text-lg"></i> Kirim Pesanan via WhatsApp & Sistem
                 </button>
 
                 <p
@@ -283,10 +283,12 @@
             </div>
 
             <div class="bg-emerald-50 text-emerald-800 p-3.5 rounded-xl text-sm font-bold mb-4 border border-emerald-200 leading-relaxed">
-                <i class="fa-solid fa-circle-check mr-1"></i> Silakan lakukan pembayaran sesuai pilihan Anda. Pesanan akan segera diproses setelah diverifikasi resto.
+                <i class="fa-solid fa-circle-check mr-1"></i> WhatsApp akan terbuka otomatis untuk mengirim detail pesanan ke resto. Silakan lakukan pembayaran sesuai pilihan Anda.
             </div>
 
-            <p class="text-[11px] text-gray-500">Jika waktu habis tanpa diproses resto atau jika telah diverifikasi, modal ini akan tertutup otomatis.</p>
+            <button type="button" onclick="closeTimerModal()" class="w-full bg-sky-600 text-white font-bold py-2.5 rounded-xl text-sm hover:bg-sky-700 transition shadow">
+                Tutup & Cek Status Pesanan
+            </button>
         </div>
     </div>
 
@@ -299,6 +301,7 @@
         "use strict";
 
         const SHEETDB_API = "https://sheetdb.io/api/v1/2ij5jepgf1fdy";
+        const ADMIN_WHATSAPP = "6282384039200"; // Nomor WA Admin / Resto
 
         const memoryStorage = {};
         function safeGet(key) {
@@ -712,6 +715,23 @@
                 } catch(err) {
                     console.log("SheetDB cloud sync note:", err);
                 }
+
+                // Buat Pesan WhatsApp otomatis untuk dikirim ke Resto
+                let waText = `Halo Mie Bangka Teladan,%0A%0Saya ingin memesan:%0A%0A`;
+                waText += `*ID Pesanan:* ${orderId}%0A`;
+                waText += `*Nama:* ${name}%0A`;
+                waText += `*No HP:* ${phone}%0A`;
+                waText += `*Tempat/Meja:* ${address}%0A%0A`;
+                waText += `*Menu Pesanan:*%0A`;
+                orderItems.forEach(i => {
+                    waText += `- ${i.qty}x ${i.name} (${rupiah(i.price * i.qty)})%0A`;
+                });
+                waText += `%0A*Total Pembayaran:* ${rupiah(total)}%0A`;
+                waText += `*Metode Pembayaran:* ${payment}%0A%0A`;
+                waText += `Mohon segera diproses ya, terima kasih! 🙏`;
+
+                // Buka WhatsApp Admin di tab baru
+                window.open(`https://wa.me/${ADMIN_WHATSAPP}?text=${waText}`, '_blank');
 
                 localStorage.setItem("last_order_id", order.id);
                 document.getElementById('lookup-order-id').value = order.id;
