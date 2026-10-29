@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Panel - Mie Bangka Teladan</title>
+  <title>Panel Resto - Mie Bangka Teladan</title>
   <!-- Supabase JS SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
@@ -15,12 +15,31 @@
       color: #333;
     }
     header {
-      text-align: center;
-      padding: 12px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 12px;
       border-bottom: 2px solid #ddd;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
     }
-    h1 { margin: 0 0 4px 0; color: #d32f2f; }
+    h1 { font-size: 18px; margin: 0; color: #d32f2f; }
+    .header-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    select, button {
+      padding: 6px 10px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+    .btn-logout {
+      background-color: #fff;
+      color: #d32f2f;
+      border: 1px solid #d32f2f;
+      cursor: pointer;
+    }
     .card {
       background: white;
       border: 1px solid #e0e0e0;
@@ -64,7 +83,7 @@
     th, td {
       border: 1px solid #ddd;
       padding: 8px;
-      font-size: 14px;
+      font-size: 13px;
       text-align: left;
     }
     th { background-color: #f1f1f1; }
@@ -81,26 +100,42 @@
 <body>
 
   <header>
-    <h1>Panel Admin Mie Bangka Teladan</h1>
-    <p>Kelola Menu Restoran</p>
+    <div>
+      <h1>Panel Resto - Mie Bangka</h1>
+      <p style="margin: 2px 0 0 0; font-size: 12px; color: #666;">Teladan</p>
+    </div>
+    <div class="header-actions">
+      <select id="resto-status" onchange="updateRestoStatus()">
+        <option value="open">Resto Buka</option>
+        <option value="closed">Resto Tutup</option>
+      </select>
+      <button class="btn-logout" onclick="alert('Keluar panel')">Keluar</button>
+    </div>
   </header>
 
   <main>
-    <!-- Form Tambah Menu -->
+    <!-- Tab Menu -->
     <div class="card">
       <h3>Tambah Menu Baru</h3>
       <form id="add-menu-form">
         <div class="form-group">
           <label>Nama Menu</label>
-          <input type="text" id="menu-name" required placeholder="Contoh: Mie Bangka Spesial">
+          <input type="text" id="menu-name" required placeholder="Contoh: Mie Bangka Spesial B2">
         </div>
         <div class="form-group">
           <label>Kategori</label>
-          <input type="text" id="menu-category" required placeholder="Contoh: Makanan / Minuman">
+          <select id="menu-category" style="width: 100%; padding: 8px;">
+            <option value="Makanan">Makanan</option>
+            <option value="Minuman">Minuman</option>
+          </select>
         </div>
         <div class="form-group">
           <label>Harga (Rp)</label>
           <input type="number" id="menu-price" required placeholder="Contoh: 35000">
+        </div>
+        <div class="form-group">
+          <label>URL Gambar Menu</label>
+          <input type="text" id="menu-image" placeholder="https://...">
         </div>
         <div class="form-group">
           <label>Deskripsi</label>
@@ -110,21 +145,40 @@
       </form>
     </div>
 
-    <!-- Daftar Menu di Database -->
+    <!-- Daftar Menu Saat Ini -->
     <div class="card">
-      <h3>Daya Kelola Daftar Menu</h3>
+      <h3>Daftar Menu Saat Ini</h3>
       <div style="overflow-x:auto;">
         <table>
           <thead>
             <tr>
               <th>Nama</th>
-              <th>Kategori</th>
               <th>Harga</th>
               <th>Aksi</th>
             </tr>
           </thead>
           <tbody id="admin-menu-list">
-            <tr><td colspan="4" style="text-align: center;">Memuat data...</td></tr>
+            <tr><td colspan="3" style="text-align: center;">Memuat data...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Daftar Order Masuk -->
+    <div class="card">
+      <h3>Order Masuk</h3>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Pemesan</th>
+              <th>Total</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="admin-orders-list">
+            <tr><td colspan="4" style="text-align: center;">Belum ada order masuk.</td></tr>
           </tbody>
         </table>
       </div>
@@ -132,12 +186,12 @@
   </main>
 
   <script>
-    // Konfigurasi Supabase (Sinkron dengan project utama)
+    // Konfigurasi Supabase Project Baru
     const SUPABASE_URL = 'https://xqhvipfvfgqpqiiqndvu.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_-RoutcoL6TizW60mnEkB7Q_Hn7Zgy1Z';
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // Fungsi Mengambil Daftar Menu untuk Admin
+    // Fungsi Muat Daftar Menu Admin
     async function loadAdminMenus() {
       const { data: menus, error } = await supabaseClient
         .from('menus')
@@ -145,15 +199,12 @@
         .order('id', { ascending: false });
 
       const tbody = document.getElementById('admin-menu-list');
-
       if (error) {
-        console.error('Error:', error);
-        tbody.innerHTML = '<tr><td colspan="4">Gagal memuat data menu.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="3">Gagal memuat menu.</td></tr>';
         return;
       }
-
       if (!menus || menus.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Belum ada menu.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align: center;">Belum ada menu.</td></tr>';
         return;
       }
 
@@ -161,8 +212,7 @@
       menus.forEach(item => {
         tbody.innerHTML += `
           <tr>
-            <td>${item.name}</td>
-            <td>${item.category}</td>
+            <td><b>${item.name}</b><br><small>Rp ${item.price.toLocaleString('id-ID')}</small></td>
             <td>Rp ${item.price.toLocaleString('id-ID')}</td>
             <td><button class="btn-delete" onclick="deleteMenu(${item.id})">Hapus</button></td>
           </tr>
@@ -170,10 +220,9 @@
       });
     }
 
-    // Fungsi Tambah Menu
+    // Tambah Menu
     document.getElementById('add-menu-form').addEventListener('submit', async (e) => {
       e.preventDefault();
-      
       const name = document.getElementById('menu-name').value;
       const category = document.getElementById('menu-category').value;
       const price = parseFloat(document.getElementById('menu-price').value);
@@ -192,24 +241,12 @@
       }
     });
 
-    // Fungsi Hapus Menu
+    // Hapus Menu
     async function deleteMenu(id) {
       if (!confirm('Yakin ingin menghapus menu ini?')) return;
-
-      const { error } = await supabaseClient
-        .from('menus')
-        .delete()
-        .eq('id', id);
-
+      const { error } = await supabaseClient.from('menus').delete().eq('id', id);
       if (error) {
-        alert('Gagal menghapus menu: ' + error.message);
+        alert('Gagal menghapus: ' + error.message);
       } else {
         loadAdminMenus();
-      }
-    }
-
-    // Muat data saat halaman dibuka
-    document.addEventListener('DOMContentLoaded', loadAdminMenus);
-  </script>
-</body>
-</html>
+      
