@@ -3,10 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mie Bangka Teladan - Kota Tanjungpinang</title>
-    <!-- Tailwind CSS -->
+    <title>Mie Bangka</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Awesome untuk Icon -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * { box-sizing: border-box; }
@@ -35,8 +33,7 @@
                         <i class="fa-solid fa-bowl-food"></i>
                     </div>
                     <div>
-                        <h1 class="text-lg sm:text-xl font-extrabold tracking-wide">Mie Bangka Teladan</h1>
-                        <p class="text-xs text-sky-100">Kota Tanjungpinang</p>
+                        <h1 class="text-lg sm:text-xl font-extrabold tracking-wide">Mie Bangka</h1>
                     </div>
                 </div>
             </div>
@@ -58,6 +55,7 @@
     <!-- Banner Slider / Hero Section -->
     <section class="w-full bg-gradient-to-r from-sky-900 via-sky-700 to-cyan-600 text-white shadow-sm overflow-hidden relative group">
         <div id="banner-container" class="relative h-56 sm:h-72 md:h-96 w-full flex items-center justify-center"></div>
+        
         <button onclick="changeBannerSlide(-1)" class="absolute left-3 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white w-9 h-9 rounded-full flex items-center justify-center text-sm transition z-20 backdrop-blur-sm">
             <i class="fa-solid fa-chevron-left"></i>
         </button>
@@ -72,10 +70,13 @@
             <div>
                 <h2 class="text-2xl font-extrabold text-sky-950">Daftar Menu</h2>
                 <p class="mt-1 text-sm text-slate-500">Pilih menu, masukkan ke keranjang, lalu kirim pesanan.</p>
-                <p class="mt-1 text-xs font-semibold text-slate-700">Informasi: Topping B2 bersifat non-halal.</p>
             </div>
 
-            <select id="category-filter" onchange="filterMenuSelect(this.value)" class="rounded-xl border border-sky-200 bg-white px-4 py-2 text-sm font-semibold text-sky-800 outline-none focus:ring-2 focus:ring-sky-500 shadow-sm">
+            <select
+                id="category-filter"
+                onchange="filterMenuSelect(this.value)"
+                class="rounded-xl border border-sky-200 bg-white px-4 py-2 text-sm font-semibold text-sky-800 outline-none focus:ring-2 focus:ring-sky-500 shadow-sm"
+            >
                 <option value="Semua">Semua Menu</option>
                 <option value="Makanan">Makanan</option>
                 <option value="Minuman">Minuman</option>
@@ -83,47 +84,15 @@
         </div>
 
         <div id="menu-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
-
-        <!-- SPANDUK STATUS PESANAN REAL-TIME DI BAWAH MENU -->
-        <div id="active-order-banner" class="hidden mt-8 p-4 rounded-2xl bg-sky-100 border-2 border-sky-400 text-sky-950 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-md">
-            <div class="flex items-center space-x-3">
-                <div id="active-order-icon" class="w-10 h-10 rounded-full bg-sky-600 text-white flex items-center justify-center text-lg font-bold shrink-0">
-                    <i class="fa-solid fa-spinner fa-spin"></i>
-                </div>
-                <div>
-                    <div id="active-order-title" class="font-extrabold text-sm">Pesanan Anda Sedang Diproses</div>
-                    <div id="active-order-detail" class="text-xs text-sky-800">ID: ORD-XXXXXX | a.n. Pelanggan</div>
-                </div>
-            </div>
-            <span id="active-order-badge" class="px-3 py-1 rounded-full text-xs font-extrabold bg-blue-600 text-white shadow shrink-0">DIPROSES</span>
-        </div>
-
-        <!-- STATUS PESANAN (MANUAL LOOKUP) -->
-        <section id="status-pesanan-section" class="mx-auto mt-12 max-w-2xl rounded-2xl bg-white p-5 shadow-md sm:p-7 border border-sky-100 scroll-mt-24">
-            <h2 class="text-xl font-extrabold text-sky-950">Cek Status Pesanan</h2>
-            <p class="mt-2 text-sm text-slate-500">Masukkan kode pesanan untuk melihat status pesanan dari resto secara real-time.</p>
-
-            <form id="status-form" onsubmit="checkOrderStatusSubmit(event)" class="mt-5 space-y-3">
-                <input id="lookup-order-id" type="text" required placeholder="Contoh: ORD-..." class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-500">
-                <button type="submit" class="w-full rounded-xl bg-white text-sky-700 border border-sky-500 px-4 py-3 font-bold hover:bg-sky-50 transition shadow">Cek Pesanan</button>
-            </form>
-
-            <div id="status-result" class="mt-4" aria-live="polite"></div>
-        </section>
     </main>
-
-    <!-- Tombol Panah Scroll -->
-    <div id="scroll-arrows" class="fixed bottom-6 right-6 z-50 flex flex-col space-y-2 transition-opacity duration-300 opacity-0 pointer-events-none">
-        <button onclick="scrollToTop()" class="bg-sky-600 hover:bg-sky-700 text-white w-11 h-11 rounded-full shadow-xl flex items-center justify-center transition transform hover:scale-110"><i class="fa-solid fa-arrow-up text-base"></i></button>
-        <button onclick="scrollToBottom()" class="bg-sky-600 hover:bg-sky-700 text-white w-11 h-11 rounded-full shadow-xl flex items-center justify-center transition transform hover:scale-110"><i class="fa-solid fa-arrow-down text-base"></i></button>
-    </div>
 
     <!-- MODAL KERANJANG -->
     <div id="cart-modal" class="modal-hidden fixed inset-0 z-50 overflow-y-auto bg-black/60 p-4 flex justify-center items-center">
         <div class="mx-auto my-5 max-w-lg w-full rounded-2xl bg-white p-5 shadow-2xl sm:p-7 relative max-h-[90vh] overflow-y-auto">
+
             <div class="flex items-center justify-between border-b pb-4">
                 <h2 class="text-xl font-extrabold text-sky-950">Keranjang & Pembayaran</h2>
-                <button type="button" onclick="closeCart()" class="rounded-lg px-3 py-1 text-2xl text-slate-500 hover:bg-slate-100">×</button>
+                <button type="button" onclick="closeCart()" class="rounded-lg px-3 py-1 text-2xl text-slate-500 hover:bg-slate-100">&times;</button>
             </div>
 
             <div id="cart-items" class="mt-4 max-h-48 space-y-3 overflow-y-auto divide-y divide-gray-200"></div>
@@ -135,82 +104,54 @@
                 </div>
             </div>
 
-            <form id="checkout-form" onsubmit="submitOrder(event)" class="space-y-3">
+            <form id="checkout-form" onsubmit="submitOrderWhatsApp(event)" class="space-y-3">
                 <div>
                     <label class="mb-1 block text-sm font-bold text-gray-700">Nama Pelanggan</label>
-                    <input id="buyer-name" type="text" required maxlength="80" placeholder="Nama lengkap" class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-500">
+                    <input id="buyer-name" type="text" required placeholder="Nama lengkap" class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-500">
                 </div>
+
                 <div>
                     <label class="mb-1 block text-sm font-bold text-gray-700">Nomor HP / WhatsApp</label>
-                    <input id="buyer-phone" type="tel" required maxlength="20" placeholder="0812..." class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-500">
+                    <input id="buyer-phone" type="tel" required placeholder="Contoh: 081234567890" class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-500">
                 </div>
+
                 <div>
                     <label class="mb-1 block text-sm font-bold text-gray-700">Nomor Meja / Alamat</label>
-                    <input id="buyer-address" type="text" required maxlength="200" placeholder="Meja 3" class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-500">
+                    <input id="buyer-address" type="text" required placeholder="Contoh: Meja 3" class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-500">
                 </div>
+
                 <div>
                     <label class="mb-1 block text-sm font-bold text-gray-700">Metode Pembayaran</label>
-                    <select id="payment-method" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-500 font-medium"></select>
+                    <select id="payment-method" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-500 font-medium">
+                        <option value="Transfer Bank">Transfer Bank</option>
+                        <option value="QRIS Manual">QRIS Manual</option>
+                        <option value="Bayar di Tempat (Tunai)">Bayar di Tempat (Tunai)</option>
+                    </select>
                 </div>
-                <label class="flex items-start gap-2 rounded-xl bg-sky-50 p-3 text-xs text-slate-700 cursor-pointer">
-                    <input id="order-confirmation" type="checkbox" required class="mt-0.5 h-4 w-4 text-sky-600 rounded">
-                    <span>Saya telah memeriksa pesanan dan menyetujui untuk menyelesaikannya.</span>
-                </label>
-                <button id="submit-order-button" type="submit" class="w-full rounded-xl bg-white text-sky-700 border border-sky-500 px-4 py-3 font-bold hover:bg-sky-50 transition shadow">
-                    <i class="fa-solid fa-check mr-2"></i> Kirim Pesanan
+
+                <button type="submit" class="w-full rounded-xl bg-emerald-600 text-white px-4 py-3 font-bold hover:bg-emerald-700 transition shadow flex items-center justify-center gap-2">
+                    <i class="fa-brands fa-whatsapp text-lg"></i> Pesan via WhatsApp
                 </button>
             </form>
         </div>
     </div>
 
-    <!-- Modal Timer Pembayaran -->
-    <div id="payment-timer-modal" class="fixed inset-0 bg-black bg-opacity-80 hidden z-50 flex justify-center items-center p-4">
-        <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 text-center border-t-4 border-sky-600">
-            <div class="w-14 h-14 bg-sky-100 text-sky-600 rounded-full flex items-center justify-center text-2xl mx-auto mb-3"><i class="fa-solid fa-clock"></i></div>
-            <h3 class="text-xl font-extrabold text-sky-950 mb-1">Pesanan Berhasil Dikirim</h3>
-            <p class="text-xs text-gray-500 mb-2">Batas waktu verifikasi resto (3 Menit):</p>
-            <div id="countdown-timer" class="text-3xl font-black text-sky-700 mb-4 tracking-widest bg-sky-50 py-2 rounded-xl border border-sky-200">03:00</div>
-            <div class="bg-sky-50 p-3 rounded-2xl text-left text-xs space-y-2 mb-4 border border-sky-100">
-                <div><b>ID Pesanan:</b> <span id="pay-order-id"></span></div>
-                <div><b>Nama Pemesan:</b> <span id="pay-buyer-name"></span></div>
-                <div class="flex items-center justify-between gap-2">
-                    <div class="truncate"><b>Tujuan:</b> <span id="pay-method-chosen"></span></div>
-                    <button type="button" onclick="copyPaymentInfo()" class="bg-sky-600 hover:bg-sky-700 text-white px-2.5 py-1 rounded text-[11px] font-bold shadow transition shrink-0"><i class="fa-solid fa-copy"></i> Salin</button>
-                </div>
-                <div><b>Total Harga:</b> <span id="pay-total" class="text-xl font-black text-sky-700 block mt-1"></span></div>
-            </div>
-            <div class="bg-emerald-50 text-emerald-800 p-3.5 rounded-xl text-sm font-bold mb-4 border border-emerald-200 leading-relaxed">
-                <i class="fa-solid fa-circle-check mr-1"></i> Silakan lakukan pembayaran. Pesanan akan diproses secara real-time setelah diverifikasi resto.
-            </div>
-        </div>
-    </div>
-
     <!-- Footer -->
     <footer class="mt-10 bg-sky-950 px-4 py-7 text-center text-sm text-sky-100">
-        <p>&copy; 2026 Mie Bangka Teladan - Kota Tanjungpinang. All rights reserved.</p>
+        <p>&copy; 2026 Mie Bangka. All rights reserved.</p>
     </footer>
 
     <script>
         "use strict";
+        const WHATSAPP_NUMBER = "6282384039200";
 
-        const SHEETDB_API = "https://sheetdb.io/api/v1/2ij5jepgf1fdy";
-        function safeGet(key) { return localStorage.getItem(key); }
-        function safeSet(key, val) { localStorage.setItem(key, val); }
-
-        window.addEventListener('scroll', function() {
-            const scrollArrows = document.getElementById('scroll-arrows');
-            if (!scrollArrows) return;
-            scrollArrows.classList.remove('opacity-0', 'pointer-events-none');
-            scrollArrows.classList.add('opacity-100', 'pointer-events-auto');
-            clearTimeout(window.scrollTimeout);
-            window.scrollTimeout = setTimeout(() => {
-                scrollArrows.classList.remove('opacity-100', 'pointer-events-auto');
-                scrollArrows.classList.add('opacity-0', 'pointer-events-none');
-            }, 1500);
-        });
-
-        function scrollToTop() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
-        function scrollToBottom() { window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' }); }
+        const memoryStorage = {};
+        function safeGet(key) {
+            try { return localStorage.getItem(key); } catch (e) { return memoryStorage[key] || null; }
+        }
+        function safeSet(key, val) {
+            try { localStorage.setItem(key, val); } catch (e) { memoryStorage[key] = val; }
+        }
 
         function updateLiveClock() {
             const now = new Date();
@@ -222,236 +163,154 @@
         setInterval(updateLiveClock, 1000);
         updateLiveClock();
 
-        const defaultMenu = [];
+        const defaultMenu = [
+            { id: "menu-001", name: "Mie Bangka Spesial", category: "Makanan", price: 25000, description: "Mie kenyal khas dengan pangsit gurih.", image: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=700&q=80" },
+            { id: "menu-002", name: "Mie Bangka Pangsit Kuah", category: "Makanan", price: 22000, description: "Mie hangat dengan kuah kaldu lezat.", image: "https://images.unsplash.com/photo-1612929633738-8fe44f7ec841?auto=format&fit=crop&w=700&q=80" },
+            { id: "menu-003", name: "Es Jeruk Kunci", category: "Minuman", price: 8000, description: "Minuman segar.", image: "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=700&q=80" }
+        ];
+
         let cart = new Map();
         let currentCategory = "Semua";
         let currentSlideIndex = 0;
-        let activeTrackingId = null;
 
-        async function initApp() {
-            if (!safeGet('mb_banners')) safeSet('mb_banners', JSON.stringify(["https://i.ibb.co.com/cKQZPzMB/1000047088.png"]));
+        function initApp() {
+            if (!safeGet('mb_menus')) safeSet('mb_menus', JSON.stringify(defaultMenu));
+            if (!safeGet('mb_banners')) safeSet('mb_banners', JSON.stringify([
+                "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80"
+            ]));
             if (!safeGet('mb_resto_status')) safeSet('mb_resto_status', 'Buka');
 
-            await syncDataFromCloud();
-
-            loadPaymentMethodsToSelect();
-            renderBanners();
+            checkRestoStatus();
+            loadBanners();
             renderMenu();
-            updateCartUI();
-            checkRestoStatusGlobal();
-
-            activeTrackingId = safeGet('mb_active_tracking_id') || null;
-
-            setInterval(async () => {
-                await syncDataFromCloud();
-                checkRestoStatusGlobal();
-                renderMenu();
-                renderBanners();
-                loadPaymentMethodsToSelect();
-            }, 2000);
-
-            setInterval(pollActiveOrderStatus, 2000);
         }
 
-        async function apiRequest(url, options = {}) {
-            try {
-                const response = await fetch(url, { ...options, headers: { "Content-Type": "application/json", ...(options.headers || {}) } });
-                if (!response.ok) return null;
-                return await response.json();
-            } catch (e) { return null; }
-        }
-
-        async function syncDataFromCloud() {
-            try {
-                const cloudData = await apiRequest(SHEETDB_API);
-                if (Array.isArray(cloudData)) {
-                    let statusRow = cloudData.find(c => c.status && (c.status === 'Buka' || c.status === 'Tutup') && !c.id);
-                    if (statusRow) safeSet('mb_resto_status', statusRow.status);
-
-                    let menuRow = cloudData.find(c => c.type === 'menus');
-                    if (menuRow && menuRow.data) {
-                        safeSet('mb_menus', menuRow.data);
-                    }
-
-                    let bannerRow = cloudData.find(c => c.type === 'banners');
-                    if (bannerRow && bannerRow.data) {
-                        safeSet('mb_banners', bannerRow.data);
-                    }
-
-                    let paymentRow = cloudData.find(c => c.type === 'payment');
-                    if (paymentRow && paymentRow.data) {
-                        safeSet('mb_payment_methods', paymentRow.data);
-                    }
-                }
-            } catch(e) {}
-        }
-
-        function checkRestoStatusGlobal() {
+        function checkRestoStatus() {
             const status = safeGet('mb_resto_status') || 'Buka';
-            const closedBanner = document.getElementById('resto-closed-banner');
-            if (!closedBanner) return;
-            if (status === 'Tutup') closedBanner.classList.remove('hidden');
-            else closedBanner.classList.add('hidden');
+            const banner = document.getElementById('resto-closed-banner');
+            if (!banner) return;
+            if (status === 'Tutup') banner.classList.remove('hidden');
+            else banner.classList.add('hidden');
         }
 
-        function rupiah(value) {
-            return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(Number(value) || 0);
-        }
-
-        function loadPaymentMethodsToSelect() {
-            const select = document.getElementById('payment-method');
-            if (!select) return;
-            const customMethods = safeGet('mb_payment_methods');
-            let lines = customMethods ? customMethods.split('\n').map(l => l.trim()).filter(l => l) : ["BCA - 1234567890 (a.n. Mie Bangka Teladan)", "DANA - 081267166886 (a.n. Mie Bangka Teladan)", "Kasir (Tunai)"];
-            select.innerHTML = '';
-            lines.forEach(line => { select.innerHTML += `<option value="${line}">${line}</option>`; });
-        }
-
-        function renderBanners() {
+        function loadBanners() {
             let banners = [];
-            try { banners = JSON.parse(safeGet('mb_banners')) || []; } catch(e) {}
+            try { banners = JSON.parse(safeGet('mb_banners')) || []; } catch(e) { banners = []; }
             const container = document.getElementById('banner-container');
-            if(!container) return;
-
+            if (!container) return;
             container.innerHTML = '';
-            if (banners.length === 0) {
-                container.innerHTML = `<div class="w-full h-full flex items-center justify-center text-white font-bold bg-sky-800">Mie Bangka Teladan - Kota Tanjungpinang</div>`;
-                return;
-            }
-
             banners.forEach((b, idx) => {
-                let img = typeof b === 'object' ? b.image : b;
-                container.innerHTML += `
-                    <div class="banner-slide absolute inset-0 w-full h-full items-center justify-center ${idx === 0 ? 'active' : ''}">
-                        <img src="${img}" class="w-full h-full object-cover">
-                    </div>`;
+                let bImg = typeof b === 'object' ? b.image : b;
+                container.innerHTML += `<div class="banner-slide ${idx === 0 ? 'active' : ''} absolute inset-0 w-full h-full flex items-center justify-center"><img src="${bImg}" class="w-full h-full object-cover"></div>`;
             });
         }
 
         function changeBannerSlide(n) {
-            const slides = document.querySelectorAll('.banner-slide');
+            const slides = document.getElementsByClassName('banner-slide');
             if (slides.length === 0) return;
             slides[currentSlideIndex].classList.remove('active');
             currentSlideIndex = (currentSlideIndex + n + slides.length) % slides.length;
             slides[currentSlideIndex].classList.add('active');
         }
 
-        setInterval(() => {
-            const slides = document.querySelectorAll('.banner-slide');
-            if (slides.length > 1) changeBannerSlide(1);
-        }, 5000);
-
-        function filterMenuSelect(cat) {
-            currentCategory = cat;
+        function filterMenuSelect(val) {
+            currentCategory = val;
             renderMenu();
         }
 
+        function rupiah(value) {
+            return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(Number(value) || 0);
+        }
+
         function renderMenu() {
+            const grid = document.getElementById('menu-grid');
+            if (!grid) return;
             let menuList = [];
             try { menuList = JSON.parse(safeGet('mb_menus')) || defaultMenu; } catch(e) { menuList = defaultMenu; }
-            const grid = document.getElementById('menu-grid');
-            if(!grid) return;
-
-            let filtered = menuList.filter(m => currentCategory === 'Semua' || m.category === currentCategory);
+            const filtered = currentCategory === "Semua" ? menuList : menuList.filter(m => m.category === currentCategory);
             grid.innerHTML = '';
-
-            if (filtered.length === 0) {
-                grid.innerHTML = `<p class="col-span-full text-center text-gray-500 py-10">Belum ada menu tersedia pada kategori ini. Silakan tambahkan melalui Panel Admin.</p>`;
-                return;
-            }
-
-            filtered.forEach(m => {
-                let imgHtml = m.image ? `<img src="${m.image}" alt="${m.name}" class="w-full h-48 object-cover rounded-2xl mb-3 bg-sky-100">` : `<div class="w-full h-48 bg-sky-100 rounded-2xl mb-3 flex items-center justify-center text-sky-400 font-bold"><i class="fa-solid fa-bowl-food text-4xl"></i></div>`;
+            filtered.forEach(item => {
                 grid.innerHTML += `
-                    <div class="bg-white rounded-3xl p-4 shadow-sm hover:shadow-md border border-sky-100 transition flex flex-col justify-between">
-                        <div>
-                            ${imgHtml}
-                            <div class="flex justify-between items-start mb-1">
-                                <h3 class="font-extrabold text-sky-950 text-base">${m.name}</h3>
-                                <span class="bg-sky-50 text-sky-700 text-xs font-bold px-2.5 py-1 rounded-full">${m.category}</span>
+                    <article class="flex flex-col overflow-hidden rounded-2xl bg-white shadow-md border border-sky-100">
+                        <div class="w-full h-48 bg-sky-100 relative overflow-hidden flex items-center justify-center text-sky-400">
+                            <img src="${item.image}" onerror="this.style.display='none'" class="w-full h-48 object-cover">
+                        </div>
+                        <div class="flex flex-1 flex-col p-5">
+                            <span class="w-fit rounded-full bg-sky-100 px-3 py-1 text-xs font-bold text-sky-700">${item.category}</span>
+                            <h3 class="mt-3 text-lg font-extrabold text-sky-950">${item.name}</h3>
+                            <p class="mt-2 flex-1 text-sm leading-6 text-slate-600 line-clamp-2">${item.description || '-'}</p>
+                            <div class="mt-5 flex items-center justify-between gap-3">
+                                <strong class="text-lg font-extrabold text-sky-700">${rupiah(item.price)}</strong>
+                                <button type="button" onclick="addToCart('${item.id}')" class="rounded-xl bg-white text-sky-700 border border-sky-500 px-4 py-2 text-sm font-bold hover:bg-sky-50 transition shadow">Pesan</button>
                             </div>
-                            <p class="text-xs text-slate-500 line-clamp-2 mb-3">${m.description || '-'}</p>
                         </div>
-                        <div>
-                            <div class="text-sm font-extrabold text-sky-700 mb-3">${rupiah(m.price)}</div>
-                            <button type="button" onclick="addToCart('${m.id}')" class="w-full bg-sky-600 hover:bg-sky-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition shadow flex items-center justify-center">
-                                <i class="fa-solid fa-cart-plus mr-1.5"></i> Tambah ke Keranjang
-                            </button>
-                        </div>
-                    </div>`;
+                    </article>`;
             });
         }
 
         function addToCart(menuId) {
-            const status = safeGet('mb_resto_status') || 'Buka';
-            if (status === 'Tutup') {
-                alert("Mohon Maaf, Restoran sedang TUTUP. Tidak dapat menambah pesanan.");
+            if ((safeGet('mb_resto_status') || 'Buka') === 'Tutup') {
+                alert("Restoran sedang tutup.");
                 return;
             }
+            const key = String(menuId);
+            cart.set(key, (cart.get(key) || 0) + 1);
+            renderCart();
+        }
 
+        function renderCart() {
+            const cartItems = document.getElementById('cart-items');
+            if (!cartItems) return;
+            cartItems.innerHTML = '';
+            let totalItems = 0, totalPrice = 0;
             let menuList = [];
-            try { menuList = JSON.parse(safeGet('mb_menus')) || defaultMenu; } catch(e) {}
-            let item = menuList.find(m => String(m.id) === String(menuId));
-            if(!item) return;
+            try { menuList = JSON.parse(safeGet('mb_menus')) || defaultMenu; } catch(e) { menuList = defaultMenu; }
 
-            if (cart.has(menuId)) cart.get(menuId).qty += 1;
-            else cart.set(menuId, { ...item, qty: 1 });
-
-            updateCartUI();
-        }
-
-        function changeQty(menuId, delta) {
-            if (!cart.has(menuId)) return;
-            let current = cart.get(menuId);
-            current.qty += delta;
-            if (current.qty <= 0) cart.delete(menuId);
-            updateCartUI();
-        }
-
-        function updateCartUI() {
-            const countEl = document.getElementById('cart-count');
-            const itemsEl = document.getElementById('cart-items');
-            const totalEl = document.getElementById('cart-total');
-            if(!countEl || !itemsEl || !totalEl) return;
-
-            let totalQty = 0, totalPrice = 0;
-            itemsEl.innerHTML = '';
-
-            if (cart.size === 0) {
-                countEl.classList.add('hidden');
-                itemsEl.innerHTML = `<p class="text-center text-gray-400 py-4 text-sm">Keranjang masih kosong.</p>`;
-                totalEl.textContent = rupiah(0);
-                return;
-            }
-
-            cart.forEach((val, key) => {
-                totalQty += val.qty;
-                totalPrice += val.price * val.qty;
-                itemsEl.innerHTML += `
-                    <div class="py-3 flex justify-between items-center">
-                        <div>
-                            <div class="font-bold text-sm text-sky-950">${val.name}</div>
-                            <div class="text-xs text-sky-700">${rupiah(val.price)} x ${val.qty}</div>
+            cart.forEach((quantity, menuId) => {
+                const item = menuList.find(m => String(m.id) === String(menuId));
+                if (!item) return;
+                totalItems += quantity;
+                totalPrice += item.price * quantity;
+                cartItems.innerHTML += `
+                    <div class="flex items-center justify-between gap-3 p-2">
+                        <div class="min-w-0 flex-1">
+                            <p class="truncate font-bold text-slate-800 text-sm">${item.name}</p>
+                            <p class="text-xs text-slate-500">${quantity} × ${rupiah(item.price)}</p>
                         </div>
-                        <div class="flex items-center space-x-2">
-                            <button type="button" onclick="changeQty('${key}', -1)" class="w-7 h-7 bg-slate-100 hover:bg-slate-200 rounded-lg font-bold text-slate-700">-</button>
-                            <span class="text-xs font-bold w-5 text-center">${val.qty}</span>
-                            <button type="button" onclick="changeQty('${key}', 1)" class="w-7 h-7 bg-slate-100 hover:bg-slate-200 rounded-lg font-bold text-slate-700">+</button>
+                        <div class="flex items-center gap-2">
+                            <button type="button" onclick="changeQuantity('${menuId}', -1)" class="rounded-lg bg-slate-100 px-2.5 py-1 font-bold">-</button>
+                            <span class="min-w-5 text-center font-bold text-sm">${quantity}</span>
+                            <button type="button" onclick="changeQuantity('${menuId}', 1)" class="rounded-lg bg-slate-100 px-2.5 py-1 font-bold">+</button>
                         </div>
                     </div>`;
             });
 
-            countEl.textContent = totalQty;
-            countEl.classList.remove('hidden');
-            totalEl.textContent = rupiah(totalPrice);
+            if (totalItems === 0) cartItems.innerHTML = `<p class="py-5 text-center text-sm text-slate-500">Keranjang masih kosong.</p>`;
+            const countEl = document.getElementById('cart-count');
+            if (totalItems > 0) { countEl.textContent = totalItems; countEl.classList.remove('hidden'); } else { countEl.classList.add('hidden'); }
+            document.getElementById('cart-total').textContent = rupiah(totalPrice);
         }
 
-        function openCart() { document.getElementById('cart-modal').classList.remove('modal-hidden'); }
+        function changeQuantity(menuId, delta) {
+            const key = String(menuId);
+            const newQty = (cart.get(key) || 0) + delta;
+            if (newQty <= 0) cart.delete(key); else cart.set(key, newQty);
+            renderCart();
+        }
+
+        function openCart() {
+            if ((safeGet('mb_resto_status') || 'Buka') === 'Tutup') {
+                alert("Restoran sedang tutup.");
+                return;
+            }
+            document.getElementById('cart-modal').classList.remove('modal-hidden');
+            renderCart();
+        }
+
         function closeCart() { document.getElementById('cart-modal').classList.add('modal-hidden'); }
 
-        async function submitOrder(event) {
+        function submitOrderWhatsApp(event) {
             event.preventDefault();
-            if ((safeGet('mb_resto_status') || 'Buka') === 'Tutup') { alert("Restoran sedang tutup."); return; }
             if (cart.size === 0) { alert("Keranjang kosong!"); return; }
 
             const name = document.getElementById('buyer-name').value.trim();
@@ -459,192 +318,24 @@
             const address = document.getElementById('buyer-address').value.trim();
             const payment = document.getElementById('payment-method').value;
 
-            let itemsArr = Array.from(cart.values());
-            let total = itemsArr.reduce((sum, item) => sum + (item.price * item.qty), 0);
-            const orderId = "ORD-" + Math.random().toString(36).substring(2, 6).toUpperCase() + Math.floor(1000 + Math.random() * 9000);
-            const now = new Date();
-            const dateStr = now.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) + ", " + now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+            let menuList = [];
+            try { menuList = JSON.parse(safeGet('mb_menus')) || defaultMenu; } catch(e) { menuList = defaultMenu; }
 
-            const newOrder = {
-                id: orderId, createdAt: Date.now(), created_at: dateStr, date: dateStr,
-                name, phone, address, items: itemsArr, total: String(total), payment, status: "Menunggu"
-            };
+            let orderText = `Halo Kak, saya ingin memesan:\n\n*Nama:* ${name}\n*No. HP:* ${phone}\n*Meja/Alamat:* ${address}\n*Pembayaran:* ${payment}\n\n*Pesanan:*\n`;
+            let total = 0;
 
-            let localOrders = [];
-            try { localOrders = JSON.parse(safeGet('mb_orders') || '[]'); } catch(e) {}
-            localOrders.push(newOrder);
-            safeSet('mb_orders', JSON.stringify(localOrders));
-
-            const submitBtn = document.getElementById('submit-order-button');
-            submitBtn.disabled = true;
-            submitBtn.textContent = "Mengirim Pesanan...";
-
-            try {
-                await apiRequest(SHEETDB_API, {
-                    method: "POST",
-                    body: JSON.stringify({
-                        data: {
-                            id: newOrder.id, createdAt: String(newOrder.createdAt), created_at: newOrder.created_at,
-                            name: newOrder.name, phone: newOrder.phone, address: newOrder.address,
-                            items: JSON.stringify(newOrder.items), total: newOrder.total, payment: newOrder.payment, status: newOrder.status
-                        }
-                    })
-                });
-            } catch(e) {}
-
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = '<i class="fa-solid fa-check mr-2"></i> Kirim Pesanan';
-            cart.clear();
-            updateCartUI();
-            closeCart();
-
-            activeTrackingId = orderId;
-            safeSet('mb_active_tracking_id', orderId);
-            showPaymentTimerModal(newOrder);
-        }
-
-        let paymentTimerInterval = null;
-        function showPaymentTimerModal(order) {
-            document.getElementById('pay-order-id').textContent = order.id;
-            document.getElementById('pay-buyer-name').textContent = order.name;
-            document.getElementById('pay-method-chosen').textContent = order.payment;
-            document.getElementById('pay-total').textContent = rupiah(order.total);
-            document.getElementById('payment-timer-modal').classList.remove('hidden');
-
-            let timeLeft = 180;
-            const timerEl = document.getElementById('countdown-timer');
-            if (paymentTimerInterval) clearInterval(paymentTimerInterval);
-
-            paymentTimerInterval = setInterval(() => {
-                let m = Math.floor(timeLeft / 60);
-                let s = timeLeft % 60;
-                timerEl.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-                if (timeLeft <= 0) {
-                    clearInterval(paymentTimerInterval);
-                    document.getElementById('payment-timer-modal').classList.add('hidden');
+            cart.forEach((qty, menuId) => {
+                const item = menuList.find(m => String(m.id) === String(menuId));
+                if (item) {
+                    orderText += `- ${item.name} (${qty}x) @${rupiah(item.price)}\n`;
+                    total += item.price * qty;
                 }
-                timeLeft--;
-            }, 1000);
-        }
+            });
 
-        function copyPaymentInfo() {
-            navigator.clipboard.writeText(document.getElementById('pay-method-chosen').textContent).then(() => alert("Informasi pembayaran disalin!"));
-        }
+            orderText += `\n*Total Harga: ${rupiah(total)}*\n\nMohon segera diproses ya, terima kasih!`;
 
-        async function checkOrderStatusSubmit(event) {
-            event.preventDefault();
-            const id = document.getElementById('lookup-order-id').value.trim();
-            const resultDiv = document.getElementById('status-result');
-            if(!id) return;
-
-            resultDiv.innerHTML = `<p class="text-xs text-slate-500">Mencari status pesanan secara real-time...</p>`;
-            let found = null;
-            let localOrders = [];
-            try { localOrders = JSON.parse(safeGet('mb_orders') || '[]'); } catch(e) {}
-            found = localOrders.find(o => String(o.id).toUpperCase() === String(id).toUpperCase());
-
-            if (!found) {
-                const cloudData = await apiRequest(SHEETDB_API);
-                if (Array.isArray(cloudData)) {
-                    let cMatch = cloudData.find(c => String(c.id).toUpperCase() === String(id).toUpperCase());
-                    if (cMatch) {
-                        let itemsParsed = [];
-                        try { itemsParsed = typeof cMatch.items === 'string' ? JSON.parse(cMatch.items) : (cMatch.items || []); } catch(e) {}
-                        found = { id: cMatch.id, name: cMatch.name, status: cMatch.status || 'Menunggu', total: cMatch.total, payment: cMatch.payment, created_at: cMatch.created_at || cMatch.date || '-', items: itemsParsed };
-                    }
-                }
-            }
-
-            if (!found) {
-                resultDiv.innerHTML = `<div class="p-3 bg-red-50 text-red-700 text-xs rounded-xl font-bold">Pesanan dengan ID "${id}" tidak ditemukan.</div>`;
-                return;
-            }
-
-            let badge = "bg-yellow-100 text-yellow-800";
-            if(found.status === 'Diproses') badge = "bg-blue-100 text-blue-800";
-            if(found.status === 'Selesai') badge = "bg-green-100 text-green-800";
-            if(found.status === 'Dibatalkan') badge = "bg-red-100 text-red-800";
-
-            resultDiv.innerHTML = `
-                <div class="p-4 rounded-2xl bg-sky-50 border border-sky-200 space-y-2 text-xs">
-                    <div class="flex justify-between items-center font-bold text-sky-950">
-                        <span>ID: ${found.id}</span>
-                        <span class="px-2.5 py-0.5 rounded-full ${badge}">${found.status}</span>
-                    </div>
-                    <div><b>Pemesan:</b> ${found.name}</div>
-                    <div><b>Waktu:</b> ${found.created_at || '-'}</div>
-                    <div><b>Total:</b> ${rupiah(found.total)}</div>
-                    <div><b>Pembayaran:</b> ${found.payment || '-'}</div>
-                </div>`;
-        }
-
-        async function pollActiveOrderStatus() {
-            if (!activeTrackingId) return;
-
-            let currentStatus = null;
-            let buyerName = "";
-
-            let localOrders = [];
-            try { localOrders = JSON.parse(safeGet('mb_orders') || '[]'); } catch(e) {}
-            let localMatch = localOrders.find(o => String(o.id).toUpperCase() === String(activeTrackingId).toUpperCase());
-            if (localMatch) {
-                currentStatus = localMatch.status;
-                buyerName = localMatch.name;
-            }
-
-            try {
-                const cloudData = await apiRequest(SHEETDB_API);
-                if (Array.isArray(cloudData)) {
-                    let match = cloudData.find(c => String(c.id).toUpperCase() === String(activeTrackingId).toUpperCase());
-                    if (match) {
-                        currentStatus = match.status || currentStatus;
-                        buyerName = match.name || buyerName;
-                    }
-                }
-            } catch(e) {}
-
-            const activeBanner = document.getElementById('active-order-banner');
-            const titleEl = document.getElementById('active-order-title');
-            const detailEl = document.getElementById('active-order-detail');
-            const badgeEl = document.getElementById('active-order-badge');
-            const iconEl = document.getElementById('active-order-icon');
-
-            if (!currentStatus) return;
-
-            if (currentStatus === 'Diproses' || currentStatus === 'Selesai' || currentStatus === 'Dibatalkan') {
-                const timerModal = document.getElementById('payment-timer-modal');
-                if (timerModal && !timerModal.classList.contains('hidden')) {
-                    timerModal.classList.add('hidden');
-                    if (paymentTimerInterval) clearInterval(paymentTimerInterval);
-                }
-            }
-
-            if (activeBanner) {
-                activeBanner.classList.remove('hidden');
-                detailEl.textContent = `ID: ${activeTrackingId} | a.n. ${buyerName || 'Pelanggan'}`;
-
-                if (currentStatus === 'Menunggu') {
-                    titleEl.textContent = "Pesanan Anda Terkirim (Menunggu Verifikasi Resto)";
-                    badgeEl.textContent = "MENUNGGU";
-                    badgeEl.className = "px-3 py-1 rounded-full text-xs font-extrabold bg-amber-500 text-white shadow shrink-0";
-                    iconEl.innerHTML = `<i class="fa-solid fa-clock"></i>`;
-                } else if (currentStatus === 'Diproses') {
-                    titleEl.textContent = "Pesanan Anda Sedang DIPROSES oleh Resto";
-                    badgeEl.textContent = "DIPROSES";
-                    badgeEl.className = "px-3 py-1 rounded-full text-xs font-extrabold bg-blue-600 text-white shadow shrink-0 animate-pulse";
-                    iconEl.innerHTML = `<i class="fa-solid fa-fire-burner"></i>`;
-                } else if (currentStatus === 'Selesai') {
-                    titleEl.textContent = "Pesanan Anda Telah SELESAI / SIAP";
-                    badgeEl.textContent = "SELESAI";
-                    badgeEl.className = "px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-600 text-white shadow shrink-0";
-                    iconEl.innerHTML = `<i class="fa-solid fa-circle-check"></i>`;
-                } else if (currentStatus === 'Dibatalkan') {
-                    titleEl.textContent = "Pesanan Anda DIBATALKAN / DITOLAK";
-                    badgeEl.textContent = "DIBATALKAN";
-                    badgeEl.className = "px-3 py-1 rounded-full text-xs font-extrabold bg-red-600 text-white shadow shrink-0";
-                    iconEl.innerHTML = `<i class="fa-solid fa-circle-xmark"></i>`;
-                }
-            }
+            const waUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(orderText)}`;
+            window.open(waUrl, '_blank');
         }
 
         window.onload = initApp;
