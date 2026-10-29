@@ -259,7 +259,7 @@
         </div>
     </div>
 
-    <!-- Modal Timer Pembayaran 3 Menit -->
+    <!-- Timer Pembayaran 3 Menit -->
     <div id="payment-timer-modal" class="fixed inset-0 bg-black bg-opacity-85 hidden z-50 flex justify-center items-center p-4">
         <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 text-center border-t-4 border-sky-600">
             <div class="w-14 h-14 bg-sky-100 text-sky-600 rounded-full flex items-center justify-center text-2xl mx-auto mb-3">
@@ -734,7 +734,7 @@
 
                 // Buka WhatsApp otomatis ke nomor resto
                 let itemsTextSummary = orderItems.map(i => `- ${i.qty}x ${i.name} (${rupiah(i.price * i.qty)})`).join('%0A');
-                let waMessage = `Halo Admin Mie Bangka Teladan,%0A%0ASaya ingin memesan:%0A*ID:* ${orderId}%0A*Nama:* ${name}%0A*Meja/Alamat:* ${address}%0A%0A*Pesanan:*%0A${itemsTextSummary}%0A*Total:* ${rupiah(total)}%0A*Pembayaran:* ${payment}%0A%0ATerima kasih!`;
+                let waMessage = `Halo Admin Mie Bangka Teladan,%0ASaya ingin memesan:%0A*ID:* ${orderId}%0A*Nama:* ${name}%0A*Meja/Alamat:* ${address}%0A%0A*Pesanan:*%0A${itemsTextSummary}%0A*Total:* ${rupiah(total)}%0A*Pembayaran:* ${payment}%0A%0ATerima kasih!`;
                 window.open(`https://wa.me/${RESTO_WA_NUMBER}?text=${waMessage}`, '_blank');
 
                 startCountdownTimer(3 * 60, order.id);
