@@ -229,11 +229,10 @@
         let activeTrackingId = null;
 
         async function initApp() {
-            if (!safeGet('mb_menus')) safeSet('mb_menus', JSON.stringify(defaultMenu));
             if (!safeGet('mb_banners')) safeSet('mb_banners', JSON.stringify(["https://i.ibb.co.com/cKQZPzMB/1000047088.png"]));
             if (!safeGet('mb_resto_status')) safeSet('mb_resto_status', 'Buka');
 
-            await fetchRestoStatusRealtime();
+            await syncDataFromCloud();
 
             loadPaymentMethodsToSelect();
             renderBanners();
@@ -241,16 +240,16 @@
             updateCartUI();
             checkRestoStatusGlobal();
 
-            // Pulihkan tracking ID dari localStorage jika ada
             activeTrackingId = safeGet('mb_active_tracking_id') || null;
 
             setInterval(async () => {
-                await fetchRestoStatusRealtime();
+                await syncDataFromCloud();
                 checkRestoStatusGlobal();
                 renderMenu();
+                renderBanners();
+                loadPaymentMethodsToSelect();
             }, 2000);
 
-            // Polling status pesanan aktif tiap 2 detik untuk respon instan
             setInterval(pollActiveOrderStatus, 2000);
         }
 
@@ -262,13 +261,26 @@
             } catch (e) { return null; }
         }
 
-        async function fetchRestoStatusRealtime() {
+        async function syncDataFromCloud() {
             try {
                 const cloudData = await apiRequest(SHEETDB_API);
                 if (Array.isArray(cloudData)) {
-                    let statusRow = cloudData.find(c => c.status && (c.status === 'Buka' || c.status === 'Tutup'));
-                    if (statusRow) {
-                        safeSet('mb_resto_status', statusRow.status);
+                    let statusRow = cloudData.find(c => c.status && (c.status === 'Buka' || c.status === 'Tutup') && !c.id);
+                    if (statusRow) safeSet('mb_resto_status', statusRow.status);
+
+                    let menuRow = cloudData.find(c => c.type === 'menus');
+                    if (menuRow && menuRow.data) {
+                        safeSet('mb_menus', menuRow.data);
+                    }
+
+                    let bannerRow = cloudData.find(c => c.type === 'banners');
+                    if (bannerRow && bannerRow.data) {
+                        safeSet('mb_banners', bannerRow.data);
+                    }
+
+                    let paymentRow = cloudData.find(c => c.type === 'payment');
+                    if (paymentRow && paymentRow.data) {
+                        safeSet('mb_payment_methods', paymentRow.data);
                     }
                 }
             } catch(e) {}
@@ -566,14 +578,12 @@
                 </div>`;
         }
 
-        // FUNGSI UTAMA: MENGECEK STATUS REAL-TIME DARI CLOUD / LOCALSTORAGE
         async function pollActiveOrderStatus() {
             if (!activeTrackingId) return;
 
             let currentStatus = null;
             let buyerName = "";
 
-            // Cek lokal
             let localOrders = [];
             try { localOrders = JSON.parse(safeGet('mb_orders') || '[]'); } catch(e) {}
             let localMatch = localOrders.find(o => String(o.id).toUpperCase() === String(activeTrackingId).toUpperCase());
@@ -582,7 +592,6 @@
                 buyerName = localMatch.name;
             }
 
-            // Cek cloud untuk update terbaru dari Admin
             try {
                 const cloudData = await apiRequest(SHEETDB_API);
                 if (Array.isArray(cloudData)) {
@@ -602,7 +611,6 @@
 
             if (!currentStatus) return;
 
-            // Jika admin klik "Diproses", "Selesai", atau "Dibatalkan", tutup modal timer layar secara otomatis
             if (currentStatus === 'Diproses' || currentStatus === 'Selesai' || currentStatus === 'Dibatalkan') {
                 const timerModal = document.getElementById('payment-timer-modal');
                 if (timerModal && !timerModal.classList.contains('hidden')) {
@@ -611,7 +619,6 @@
                 }
             }
 
-            // Tampilkan spanduk status keterangan pelanggan di bawah daftar menu
             if (activeBanner) {
                 activeBanner.classList.remove('hidden');
                 detailEl.textContent = `ID: ${activeTrackingId} | a.n. ${buyerName || 'Pelanggan'}`;
