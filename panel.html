@@ -14,7 +14,7 @@
     label { display: block; margin-bottom: 4px; font-weight: bold; font-size: 14px; }
     input, textarea, select { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
     .btn-save { background-color: #388e3c; color: white; border: none; padding: 10px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; }
-    .btn-refresh { background-color: #1976d2; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 13px; margin-bottom: 10px; }
+    .btn-refresh { background-color: #1976d2; color: white; border: none; padding: 8px 14px; border-radius: 4px; cursor: pointer; font-size: 13px; margin-bottom: 15px; font-weight: bold; width: 100%; }
     table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; }
     th, td { border: 1px solid #ddd; padding: 8px; font-size: 13px; text-align: left; }
     th { background-color: #f1f1f1; }
@@ -40,7 +40,6 @@
   </header>
 
   <main>
-    <!-- Kontrol Cepat -->
     <button class="btn-refresh" onclick="loadAllData()">🔄 Muat Ulang Data (Refresh)</button>
 
     <!-- Bagian Order Masuk -->
@@ -53,7 +52,7 @@
               <th>Waktu & Pemesan</th>
               <th>Pesanan</th>
               <th>Total</th>
-              <th>Status / Aksi</th>
+              <th>Aksi</th>
             </tr>
           </thead>
           <tbody id="admin-orders-list">
@@ -124,12 +123,11 @@
     async function loadAdminMenus() {
       const { data: menus, error } = await supabaseClient
         .from('menus')
-        .select('*')
-        .order('id', { ascending: false });
+        .select('*');
 
       const tbody = document.getElementById('admin-menu-list');
       if (error) {
-        tbody.innerHTML = '<tr><td colspan="3">Gagal memuat menu.</td></tr>';
+        tbody.innerHTML = `<tr><td colspan="3" style="color:red;">Error: ${error.message}</td></tr>`;
         return;
       }
       if (!menus || menus.length === 0) {
@@ -142,7 +140,7 @@
         tbody.innerHTML += `
           <tr>
             <td><b>${item.name}</b><br><small style="color:#666;">${item.category}</small></td>
-            <td>Rp ${item.price.toLocaleString('id-ID')}</td>
+            <td>Rp ${Number(item.price).toLocaleString('id-ID')}</td>
             <td><button class="btn-delete" onclick="deleteMenu(${item.id})">Hapus</button></td>
           </tr>
         `;
@@ -153,28 +151,31 @@
     async function loadAdminOrders() {
       const { data: orders, error } = await supabaseClient
         .from('orders')
-        .select('*')
-        .order('id', { ascending: false });
+        .select('*');
 
       const tbody = document.getElementById('admin-orders-list');
-      if (error || !orders || orders.length === 0) {
+      if (error) {
+        tbody.innerHTML = `<tr><td colspan="4" style="color:red;">Error DB: ${error.message}</td></tr>`;
+        return;
+      }
+      if (!orders || orders.length === 0) {
         tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Belum ada order masuk.</td></tr>';
         return;
       }
 
       tbody.innerHTML = '';
       orders.forEach(order => {
-        const time = new Date(order.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+        const time = order.created_at ? new Date(order.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : '-';
         const badgeClass = order.status === 'Selesai' ? 'badge-selesai' : 'badge-baru';
         
         tbody.innerHTML += `
           <tr>
-            <td><b>${order.customer_name}</b><br><small style="color:#666;">${time} WIB - ${order.phone || '-'}</small></td>
+            <td><b>${order.customer_name}</b><br><small style="color:#666;">${time} - ${order.phone || '-'}</small></td>
             <td>${order.items}</td>
-            <td>Rp ${parseFloat(order.total_price).toLocaleString('id-ID')}</td>
+            <td>Rp ${Number(order.total_price).toLocaleString('id-ID')}</td>
             <td>
-              <span class="status-badge ${badgeClass}">${order.status}</span><br>
-              ${order.status !== 'Selesai' ? `<button onclick="markOrderDone(${order.id})" style="margin-top:4px; padding:2px 6px; font-size:11px;">Tandai Selesai</button>` : `<button onclick="deleteOrder(${order.id})" style="margin-top:4px; padding:2px 6px; font-size:11px; background:#666; color:white; border:none; border-radius:3px;">Hapus</button>`}
+              <span class="status-badge ${badgeClass}">${order.status || 'Baru'}</span><br>
+              ${order.status !== 'Selesai' ? `<button onclick="markOrderDone(${order.id})" style="margin-top:4px; padding:3px 6px; font-size:11px;">Selesai</button>` : `<button onclick="deleteOrder(${order.id})" style="margin-top:4px; padding:3px 6px; font-size:11px; background:#666; color:white; border:none; border-radius:3px;">Hapus</button>`}
             </td>
           </tr>
         `;
@@ -182,20 +183,22 @@
     }
 
     async function markOrderDone(id) {
-      await supabaseClient.from('orders').update({ status: 'Selesai' }).eq('id', id);
+      const { error } = await supabaseClient.from('orders').update({ status: 'Selesai' }).eq('id', id);
+      if (error) alert('Gagal update: ' + error.message);
       loadAdminOrders();
     }
 
     async function deleteOrder(id) {
       if (!confirm('Hapus riwayat order ini?')) return;
-      await supabaseClient.from('orders').delete().eq('id', id);
+      const { error } = await supabaseClient.from('orders').delete().eq('id', id);
+      if (error) alert('Gagal hapus: ' + error.message);
       loadAdminOrders();
     }
 
     function updateRestoStatus() {
       const status = document.getElementById('resto-status').value;
       localStorage.setItem('resto_status', status);
-      alert('Status resto berhasil diubah menjadi: ' + (status === 'open' ? 'Buka' : 'Tutup'));
+      alert('Status resto berhasil diubah!');
     }
 
     document.getElementById('add-menu-form').addEventListener('submit', async (e) => {
