@@ -282,13 +282,12 @@
                 <div><b>Total Harga:</b> <span id="pay-total" class="text-xl font-black text-sky-700 block mt-1"></span></div>
             </div>
 
-            <div class="bg-emerald-50 text-emerald-800 p-3.5 rounded-xl text-sm font-bold mb-4 border border-emerald-200 leading-relaxed">
-                <i class="fa-solid fa-circle-check mr-1"></i> Silakan lakukan pembayaran sesuai pilihan Anda. Pesanan akan segera diproses setelah diverifikasi resto.
+            <div class="bg-emerald-50 text-emerald-800 p-3.5 rounded-xl text-xs font-bold mb-4 border border-emerald-200 leading-relaxed text-left space-y-1">
+                <div class="flex items-center gap-1.5"><i class="fa-solid fa-circle-check"></i> <span>WhatsApp akan terbuka otomatis untuk mengirim detail pesanan ke resto.</span></div>
+                <div>Silakan lakukan pembayaran sesuai pilihan Anda. Terima kasih banyak atas pesanan Anda! 🙏</div>
             </div>
 
-            <p class="text-xs text-amber-700 font-bold bg-amber-50 p-2.5 rounded-xl border border-amber-200">
-                ⚠️ Modal ini dikunci sampai durasi habis atau resto memproses pesanan Anda. Jika waktu habis dan belum diproses, pesanan akan dibatalkan otomatis dan Anda harus memesan ulang dari awal.
-            </p>
+            <p class="text-[11px] text-gray-500">Modal terkunci hingga waktu habis atau pesanan diproses resto.</p>
         </div>
     </div>
 
@@ -301,6 +300,7 @@
         "use strict";
 
         const SHEETDB_API = "https://sheetdb.io/api/v1/2ij5jepgf1fdy";
+        const RESTO_WA_NUMBER = "6282384039200"; // Nomor WhatsApp Resto
 
         const memoryStorage = {};
         function safeGet(key) {
@@ -731,6 +731,12 @@
                 document.getElementById('pay-method-chosen').textContent = payment;
                 document.getElementById('pay-total').textContent = rupiah(total);
                 document.getElementById('payment-timer-modal').classList.remove('hidden');
+
+                // Buka WhatsApp otomatis ke nomor resto
+                let itemsTextSummary = orderItems.map(i => `- ${i.qty}x ${i.name} (${rupiah(i.price * i.qty)})`).join('%0A');
+                let waMessage = `Halo Admin Mie Bangka Teladan,%0A%0ASaya ingin memesan:%0A*ID:* ${orderId}%0A*Nama:* ${name}%0A*Meja/Alamat:* ${address}%0A%0A*Pesanan:*%0A${itemsTextSummary}%0A*Total:* ${rupiah(total)}%0A*Pembayaran:* ${payment}%0A%0ATerima kasih!`;
+                window.open(`https://wa.me/${RESTO_WA_NUMBER}?text=${waMessage}`, '_blank');
+
                 startCountdownTimer(3 * 60, order.id);
 
             } catch (error) {
@@ -762,7 +768,6 @@
             
             clearInterval(window.orderTimerInterval);
             window.orderTimerInterval = setInterval(function () {
-                // Cek status terbaru dari localStorage atau API apakah sudah diproses resto
                 let localOrders = [];
                 try { localOrders = JSON.parse(localStorage.getItem('mb_orders') || '[]'); } catch(e) { localOrders = []; }
                 let currentOrder = localOrders.find(o => o.id === orderId);
@@ -787,7 +792,6 @@
                     clearInterval(window.orderTimerInterval);
                     display.textContent = "Waktu Habis";
                     
-                    // Waktu habis dan resto belum memproses -> Hapus pesanan dan suruh ulang dari awal
                     let orders = [];
                     try { orders = JSON.parse(localStorage.getItem('mb_orders') || '[]'); } catch(e) { orders = []; }
                     orders = orders.filter(o => o.id !== orderId);
