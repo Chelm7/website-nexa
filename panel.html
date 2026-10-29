@@ -1,4 +1,4 @@
-<meta name='viewport' content='width=device-width, initial-scale=1'/><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -348,7 +348,6 @@
                     ? "rounded-xl border border-sky-400 bg-sky-700 text-white px-3 py-2 text-xs font-bold outline-none focus:ring-2 focus:ring-white shadow-sm cursor-pointer" 
                     : "rounded-xl border border-red-400 bg-red-700 text-white px-3 py-2 text-xs font-bold outline-none focus:ring-2 focus:ring-white shadow-sm cursor-pointer";
             }
-            // Simpan status resto ke SheetDB agar index.html langsung membaca secara real-time
             try {
                 await apiRequest(SHEETDB_API + "/resto/status", { method: "PUT", body: JSON.stringify({ data: { status: val } }) });
             } catch(e) {}
@@ -370,7 +369,6 @@
         }
 
         async function syncSettingsFromCloud() {
-            // Ambil pengaturan restoran (status, menu, banner, rekening) dari cloud/SheetDB jika ada
             const cloudData = await apiRequest(SHEETDB_API);
             if (Array.isArray(cloudData)) {
                 let statusRow = cloudData.find(c => c.status && (c.status === 'Buka' || c.status === 'Tutup'));
