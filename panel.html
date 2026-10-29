@@ -14,10 +14,14 @@
     label { display: block; margin-bottom: 4px; font-weight: bold; font-size: 14px; }
     input, textarea, select { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
     .btn-save { background-color: #388e3c; color: white; border: none; padding: 10px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; }
+    .btn-refresh { background-color: #1976d2; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 13px; margin-bottom: 10px; }
     table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; }
     th, td { border: 1px solid #ddd; padding: 8px; font-size: 13px; text-align: left; }
     th { background-color: #f1f1f1; }
     .btn-delete { background-color: #d32f2f; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; }
+    .status-badge { padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 12px; display: inline-block; }
+    .badge-baru { background-color: #fff3cd; color: #856404; }
+    .badge-selesai { background-color: #d4edda; color: #155724; }
   </style>
 </head>
 <body>
@@ -27,9 +31,39 @@
       <h1>Panel Resto - Mie Bangka</h1>
       <p style="margin: 2px 0 0 0; font-size: 12px; color: #666;">Teladan (Jl. Batu 8 Atas)</p>
     </div>
+    <div>
+      <select id="resto-status" onchange="updateRestoStatus()" style="padding: 6px; font-weight: bold;">
+        <option value="open">Resto Buka</option>
+        <option value="closed">Resto Tutup</option>
+      </select>
+    </div>
   </header>
 
   <main>
+    <!-- Kontrol Cepat -->
+    <button class="btn-refresh" onclick="loadAllData()">🔄 Muat Ulang Data (Refresh)</button>
+
+    <!-- Bagian Order Masuk -->
+    <div class="card">
+      <h3>Daftar Order Masuk</h3>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>Waktu & Pemesan</th>
+              <th>Pesanan</th>
+              <th>Total</th>
+              <th>Status / Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="admin-orders-list">
+            <tr><td colspan="4" style="text-align: center;">Memuat order...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Bagian Tambah Menu -->
     <div class="card">
       <h3>Tambah Menu Baru</h3>
       <form id="add-menu-form">
@@ -56,20 +90,23 @@
       </form>
     </div>
 
+    <!-- Bagian Daftar Menu -->
     <div class="card">
-      <h3>Daftar Menu Saat Ini</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>Nama & Kategori</th>
-            <th>Harga</th>
-            <th>Aksi</th>
-          </tr>
-        </thead>
-        <tbody id="admin-menu-list">
-          <tr><td colspan="3" style="text-align: center;">Memuat data...</td></tr>
-        </tbody>
-      </table>
+      <h3>Kelola Daftar Menu</h3>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>Nama & Kategori</th>
+              <th>Harga</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="admin-menu-list">
+            <tr><td colspan="3" style="text-align: center;">Memuat data...</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </main>
 
@@ -78,6 +115,12 @@
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhxaHZpcGZ2ZmdxcHFpaXFuZHZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMyNzkzNzcsImV4cCI6MjEwODg1NTM3N30.6l0-1171AZSl3DpDqpxPjYiVfLnqSaFw6S4XaXgxQlA';
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+    function loadAllData() {
+      loadAdminMenus();
+      loadAdminOrders();
+    }
+
+    // Muat Menu
     async function loadAdminMenus() {
       const { data: menus, error } = await supabaseClient
         .from('menus')
@@ -86,7 +129,7 @@
 
       const tbody = document.getElementById('admin-menu-list');
       if (error) {
-        tbody.innerHTML = '<tr><td colspan="3">Gagal memuat menu: ' + error.message + '</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="3">Gagal memuat menu.</td></tr>';
         return;
       }
       if (!menus || menus.length === 0) {
@@ -104,6 +147,55 @@
           </tr>
         `;
       });
+    }
+
+    // Muat Order Masuk
+    async function loadAdminOrders() {
+      const { data: orders, error } = await supabaseClient
+        .from('orders')
+        .select('*')
+        .order('id', { ascending: false });
+
+      const tbody = document.getElementById('admin-orders-list');
+      if (error || !orders || orders.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Belum ada order masuk.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = '';
+      orders.forEach(order => {
+        const time = new Date(order.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+        const badgeClass = order.status === 'Selesai' ? 'badge-selesai' : 'badge-baru';
+        
+        tbody.innerHTML += `
+          <tr>
+            <td><b>${order.customer_name}</b><br><small style="color:#666;">${time} WIB - ${order.phone || '-'}</small></td>
+            <td>${order.items}</td>
+            <td>Rp ${parseFloat(order.total_price).toLocaleString('id-ID')}</td>
+            <td>
+              <span class="status-badge ${badgeClass}">${order.status}</span><br>
+              ${order.status !== 'Selesai' ? `<button onclick="markOrderDone(${order.id})" style="margin-top:4px; padding:2px 6px; font-size:11px;">Tandai Selesai</button>` : `<button onclick="deleteOrder(${order.id})" style="margin-top:4px; padding:2px 6px; font-size:11px; background:#666; color:white; border:none; border-radius:3px;">Hapus</button>`}
+            </td>
+          </tr>
+        `;
+      });
+    }
+
+    async function markOrderDone(id) {
+      await supabaseClient.from('orders').update({ status: 'Selesai' }).eq('id', id);
+      loadAdminOrders();
+    }
+
+    async function deleteOrder(id) {
+      if (!confirm('Hapus riwayat order ini?')) return;
+      await supabaseClient.from('orders').delete().eq('id', id);
+      loadAdminOrders();
+    }
+
+    function updateRestoStatus() {
+      const status = document.getElementById('resto-status').value;
+      localStorage.setItem('resto_status', status);
+      alert('Status resto berhasil diubah menjadi: ' + (status === 'open' ? 'Buka' : 'Tutup'));
     }
 
     document.getElementById('add-menu-form').addEventListener('submit', async (e) => {
@@ -136,7 +228,11 @@
       }
     }
 
-    document.addEventListener('DOMContentLoaded', loadAdminMenus);
+    document.addEventListener('DOMContentLoaded', () => {
+      loadAllData();
+      const savedStatus = localStorage.getItem('resto_status') || 'open';
+      document.getElementById('resto-status').value = savedStatus;
+    });
   </script>
 </body>
 </html>
