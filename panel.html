@@ -653,11 +653,8 @@
             w.print();
         }
 
-        const defaultMenu = [
-            { id: "menu-001", name: "Mie Bangka Spesial (Topping B2)", category: "Makanan", price: 25000, description: "Mie kenyal khas Bangka dengan topping cincang B2 gurih dan pangsit.", image: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=700&q=80" },
-            { id: "menu-002", name: "Mie Bangka Pangsit Kuah", category: "Makanan", price: 22000, description: "Mie hangat dengan kuah kaldu lezat dan pangsit rebus.", image: "https://images.unsplash.com/photo-1612929633738-8fe44f7ec841?auto=format&fit=crop&w=700&q=80" },
-            { id: "menu-003", name: "Es Jeruk Kunci Bangka", category: "Minuman", price: 8000, description: "Minuman segar dengan jeruk kunci khas Bangka.", image: "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=700&q=80" }
-        ];
+        // Daftar menu dikosongkan (array kosong) sesuai permintaan
+        const defaultMenu = [];
 
         function renderAdminMenu() {
             let menuList = [];
@@ -665,6 +662,11 @@
             const listDiv = document.getElementById('admin-menu-list');
             if(!listDiv) return;
             listDiv.innerHTML = '';
+
+            if (menuList.length === 0) {
+                listDiv.innerHTML = `<p class="col-span-full text-center text-gray-500 py-6 text-xs">Belum ada menu yang ditambahkan.</p>`;
+                return;
+            }
 
             menuList.forEach(m => {
                 listDiv.innerHTML += `
@@ -686,7 +688,6 @@
             event.preventDefault();
             const submitBtn = document.getElementById('menu-submit-btn');
             
-            // Cek apakah ada file yang dipilih untuk di-upload ke Cloudinary
             const fileInput = document.getElementById('menu-file-input');
             let imageUrl = document.getElementById('menu-image').value.trim();
 
@@ -700,7 +701,7 @@
                 if (uploadedUrl) {
                     imageUrl = uploadedUrl;
                 } else {
-                    return; // Batalkan jika upload gagal
+                    return; 
                 }
             }
 
@@ -795,7 +796,7 @@
                 if (uploadedUrl) {
                     url = uploadedUrl;
                 } else {
-                    return; // Batalkan jika upload gagal
+                    return; 
                 }
             }
 
