@@ -354,9 +354,9 @@
         }
 
         async function initAdminPanel() {
+            await syncAllFromCloud();
             const status = safeGet('mb_resto_status') || 'Buka';
             toggleRestoStatus(status);
-            await syncSettingsFromCloud();
             renderAdminOrders();
             renderAdminMenu();
             renderAdminBanners();
@@ -365,14 +365,48 @@
             document.getElementById('new-admin-user').value = safeGet('mb_admin_user') || 'admin';
             document.getElementById('new-admin-pass').value = safeGet('mb_admin_pass') || 'admin123';
 
-            setInterval(renderAdminOrders, 2000);
+            setInterval(async () => {
+                await syncAllFromCloud();
+                renderAdminOrders();
+            }, 2000);
         }
 
-        async function syncSettingsFromCloud() {
+        async function syncAllFromCloud() {
             const cloudData = await apiRequest(SHEETDB_API);
             if (Array.isArray(cloudData)) {
-                let statusRow = cloudData.find(c => c.status && (c.status === 'Buka' || c.status === 'Tutup'));
+                let statusRow = cloudData.find(c => c.status && (c.status === 'Buka' || c.status === 'Tutup') && !c.id);
                 if (statusRow) safeSet('mb_resto_status', statusRow.status);
+
+                let menuRow = cloudData.find(c => c.type === 'menus');
+                if (menuRow && menuRow.data) {
+                    try { safeSet('mb_menus', menuRow.data); } catch(e) {}
+                }
+
+                let bannerRow = cloudData.find(c => c.type === 'banners');
+                if (bannerRow && bannerRow.data) {
+                    try { safeSet('mb_banners', bannerRow.data); } catch(e) {}
+                }
+
+                let paymentRow = cloudData.find(c => c.type === 'payment');
+                if (paymentRow && paymentRow.data) {
+                    safeSet('mb_payment_methods', paymentRow.data);
+                }
+            }
+        }
+
+        async function pushConfigToCloud(type, dataVal) {
+            try {
+                await apiRequest(SHEETDB_API + "/type/" + type, {
+                    method: "PUT",
+                    body: JSON.stringify({ data: { type: type, data: dataVal } })
+                });
+            } catch(e) {
+                try {
+                    await apiRequest(SHEETDB_API, {
+                        method: "POST",
+                        body: JSON.stringify({ data: { type: type, data: dataVal } })
+                    });
+                } catch(err) {}
             }
         }
 
@@ -639,6 +673,7 @@
             safeSet('mb_menus', JSON.stringify(menuList));
             resetMenuForm();
             renderAdminMenu();
+            await pushConfigToCloud('menus', JSON.stringify(menuList));
         }
 
         function editMenu(menuId) {
@@ -667,13 +702,14 @@
             document.getElementById('cancel-edit-btn').classList.add('hidden');
         }
 
-        function deleteMenu(menuId) {
+        async function deleteMenu(menuId) {
             if(!confirm("Yakin ingin menghapus menu ini?")) return;
             let menuList = [];
             try { menuList = JSON.parse(safeGet('mb_menus')) || defaultMenu; } catch(e) {}
             menuList = menuList.filter(m => String(m.id) !== String(menuId));
             safeSet('mb_menus', JSON.stringify(menuList));
             renderAdminMenu();
+            await pushConfigToCloud('menus', JSON.stringify(menuList));
         }
 
         function renderAdminBanners() {
@@ -722,15 +758,17 @@
             document.getElementById('banner-url-input').value = '';
             if(fileInput) fileInput.value = '';
             renderAdminBanners();
+            await pushConfigToCloud('banners', JSON.stringify(banners));
         }
 
-        function deleteBanner(idx) {
+        async function deleteBanner(idx) {
             if(!confirm("Yakin ingin menghapus banner ini?")) return;
             let banners = [];
             try { banners = JSON.parse(safeGet('mb_banners')) || []; } catch(e) {}
             banners.splice(idx, 1);
             safeSet('mb_banners', JSON.stringify(banners));
             renderAdminBanners();
+            await pushConfigToCloud('banners', JSON.stringify(banners));
         }
 
         function loadPaymentMethodsSettings() {
@@ -740,10 +778,12 @@
             textarea.value = safeGet('mb_payment_methods') || defaultMethods;
         }
 
-        function savePaymentMethods(event) {
+        async function savePaymentMethods(event) {
             event.preventDefault();
-            safeSet('mb_payment_methods', document.getElementById('payment-methods-textarea').value.trim());
+            const val = document.getElementById('payment-methods-textarea').value.trim();
+            safeSet('mb_payment_methods', val);
             alert("Rekening berhasil disimpan secara real-time!");
+            await pushConfigToCloud('payment', val);
         }
 
         function saveAdminCredentials(event) {
