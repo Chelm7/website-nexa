@@ -8,11 +8,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome untuk Icon -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Vercel Speed Insights -->
-    <script>
-        window.si = window.si || function () { (window.siq = window.siq || []).push(arguments); };
-    </script>
-    <script defer src="/_vercel/speed-insights/script.js"></script>
     <style>
         * { box-sizing: border-box; }
         body { margin: 0; background: #f0f9ff; color: #1e293b; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
@@ -63,8 +58,6 @@
     <!-- Banner Slider / Hero Section -->
     <section class="w-full bg-gradient-to-r from-sky-900 via-sky-700 to-cyan-600 text-white shadow-sm overflow-hidden relative group">
         <div id="banner-container" class="relative h-56 sm:h-72 md:h-96 w-full flex items-center justify-center"></div>
-        
-        <!-- Panah Navigasi Slider -->
         <button onclick="changeBannerSlide(-1)" class="absolute left-3 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white w-9 h-9 rounded-full flex items-center justify-center text-sm transition z-20 backdrop-blur-sm">
             <i class="fa-solid fa-chevron-left"></i>
         </button>
@@ -82,11 +75,7 @@
                 <p class="mt-1 text-xs font-semibold text-slate-700">Informasi: Topping B2 bersifat non-halal.</p>
             </div>
 
-            <select
-                id="category-filter"
-                onchange="filterMenuSelect(this.value)"
-                class="rounded-xl border border-sky-200 bg-white px-4 py-2 text-sm font-semibold text-sky-800 outline-none focus:ring-2 focus:ring-sky-500 shadow-sm"
-            >
+            <select id="category-filter" onchange="filterMenuSelect(this.value)" class="rounded-xl border border-sky-200 bg-white px-4 py-2 text-sm font-semibold text-sky-800 outline-none focus:ring-2 focus:ring-sky-500 shadow-sm">
                 <option value="Semua">Semua Menu</option>
                 <option value="Makanan">Makanan</option>
                 <option value="Minuman">Minuman</option>
@@ -97,77 +86,33 @@
 
         <!-- STATUS PESANAN -->
         <section id="status-pesanan-section" class="mx-auto mt-16 max-w-2xl rounded-2xl bg-white p-5 shadow-md sm:p-7 border border-sky-100 scroll-mt-24">
-            <h2 class="text-xl font-extrabold text-sky-950">
-                Status Pesanan
-            </h2>
-
-            <p class="mt-2 text-sm text-slate-500">
-                Masukkan urutan kode pesan untuk melihat status pesanan dari resto yang sedang dikerjakan.
-            </p>
+            <h2 class="text-xl font-extrabold text-sky-950">Status Pesanan</h2>
+            <p class="mt-2 text-sm text-slate-500">Masukkan kode pesan untuk melihat status pesanan dari resto secara real-time.</p>
 
             <form id="status-form" onsubmit="checkOrderStatusSubmit(event)" class="mt-5 space-y-3">
-                <input
-                    id="lookup-order-id"
-                    type="text"
-                    required
-                    placeholder="Contoh: ORD-CBAY0975"
-                    class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-500"
-                >
-
-                <button
-                    type="submit"
-                    id="check-status-button"
-                    class="w-full rounded-xl bg-white text-sky-700 border border-sky-500 px-4 py-3 font-bold hover:bg-sky-50 transition shadow"
-                >
-                    Cek Pesanan
-                </button>
+                <input id="lookup-order-id" type="text" required placeholder="Contoh: ORD-..." class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-500">
+                <button type="submit" class="w-full rounded-xl bg-white text-sky-700 border border-sky-500 px-4 py-3 font-bold hover:bg-sky-50 transition shadow">Cek Pesanan</button>
             </form>
 
-            <div
-                id="status-result"
-                class="mt-4"
-                aria-live="polite"
-            ></div>
+            <div id="status-result" class="mt-4" aria-live="polite"></div>
         </section>
     </main>
 
-    <!-- Tombol Panah Scroll Otomatis -->
+    <!-- Tombol Panah Scroll -->
     <div id="scroll-arrows" class="fixed bottom-6 right-6 z-50 flex flex-col space-y-2 transition-opacity duration-300 opacity-0 pointer-events-none">
-        <button onclick="scrollToTop()" class="bg-sky-600 hover:bg-sky-700 text-white w-11 h-11 rounded-full shadow-xl flex items-center justify-center transition transform hover:scale-110" title="Gulir ke Atas">
-            <i class="fa-solid fa-arrow-up text-base"></i>
-        </button>
-        <button onclick="scrollToBottom()" class="bg-sky-600 hover:bg-sky-700 text-white w-11 h-11 rounded-full shadow-xl flex items-center justify-center transition transform hover:scale-110" title="Gulir ke Bawah">
-            <i class="fa-solid fa-arrow-down text-base"></i>
-        </button>
+        <button onclick="scrollToTop()" class="bg-sky-600 hover:bg-sky-700 text-white w-11 h-11 rounded-full shadow-xl flex items-center justify-center transition transform hover:scale-110"><i class="fa-solid fa-arrow-up text-base"></i></button>
+        <button onclick="scrollToBottom()" class="bg-sky-600 hover:bg-sky-700 text-white w-11 h-11 rounded-full shadow-xl flex items-center justify-center transition transform hover:scale-110"><i class="fa-solid fa-arrow-down text-base"></i></button>
     </div>
 
     <!-- MODAL KERANJANG -->
-    <div
-        id="cart-modal"
-        class="modal-hidden fixed inset-0 z-50 overflow-y-auto bg-black/60 p-4 flex justify-center items-center"
-    >
+    <div id="cart-modal" class="modal-hidden fixed inset-0 z-50 overflow-y-auto bg-black/60 p-4 flex justify-center items-center">
         <div class="mx-auto my-5 max-w-lg w-full rounded-2xl bg-white p-5 shadow-2xl sm:p-7 relative max-h-[90vh] overflow-y-auto">
-
             <div class="flex items-center justify-between border-b pb-4">
-                <h2 class="text-xl font-extrabold text-sky-950">
-                    Keranjang & Pembayaran
-                </h2>
-
-                <button
-                    id="close-cart-button"
-                    type="button"
-                    onclick="closeCart()"
-                    class="rounded-lg px-3 py-1 text-2xl text-slate-500 hover:bg-slate-100"
-                    aria-label="Tutup keranjang"
-                >
-                    ×
-                </button>
+                <h2 class="text-xl font-extrabold text-sky-950">Keranjang & Pembayaran</h2>
+                <button type="button" onclick="closeCart()" class="rounded-lg px-3 py-1 text-2xl text-slate-500 hover:bg-slate-100">×</button>
             </div>
 
-            <div
-                id="cart-items"
-                class="mt-4 max-h-48 space-y-3 overflow-y-auto divide-y divide-gray-200"
-            ></div>
+            <div id="cart-items" class="mt-4 max-h-48 space-y-3 overflow-y-auto divide-y divide-gray-200"></div>
 
             <div class="mt-5 border-t pt-4">
                 <div class="flex items-center justify-between text-lg font-extrabold mb-4">
@@ -177,121 +122,52 @@
             </div>
 
             <form id="checkout-form" onsubmit="submitOrder(event)" class="space-y-3">
-
                 <div>
-                    <label for="buyer-name" class="mb-1 block text-sm font-bold text-gray-700">
-                        Nama Pelanggan
-                    </label>
-                    <input
-                        id="buyer-name"
-                        type="text"
-                        required
-                        maxlength="80"
-                        placeholder="Nama lengkap"
-                        class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-500"
-                    >
+                    <label class="mb-1 block text-sm font-bold text-gray-700">Nama Pelanggan</label>
+                    <input id="buyer-name" type="text" required maxlength="80" placeholder="Nama lengkap" class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-500">
                 </div>
-
                 <div>
-                    <label for="buyer-phone" class="mb-1 block text-sm font-bold text-gray-700">
-                        Nomor HP / WhatsApp
-                    </label>
-                    <input
-                        id="buyer-phone"
-                        type="tel"
-                        required
-                        maxlength="20"
-                        inputmode="tel"
-                        placeholder="Contoh: 081234567890"
-                        class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-500"
-                    >
+                    <label class="mb-1 block text-sm font-bold text-gray-700">Nomor HP / WhatsApp</label>
+                    <input id="buyer-phone" type="tel" required maxlength="20" placeholder="0812..." class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-500">
                 </div>
-
                 <div>
-                    <label for="buyer-address" class="mb-1 block text-sm font-bold text-gray-700">
-                        Nomor Meja / Alamat
-                    </label>
-                    <input
-                        id="buyer-address"
-                        type="text"
-                        required
-                        maxlength="200"
-                        placeholder="Contoh: Meja 3 atau Jalan Batu 8 Atas"
-                        class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-500"
-                    >
+                    <label class="mb-1 block text-sm font-bold text-gray-700">Nomor Meja / Alamat</label>
+                    <input id="buyer-address" type="text" required maxlength="200" placeholder="Meja 3" class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-500">
                 </div>
-
                 <div>
-                    <label for="payment-method" class="mb-1 block text-sm font-bold text-gray-700">
-                        Metode Pembayaran (Pilih Bank / Kasir)
-                    </label>
-                    <select
-                        id="payment-method"
-                        class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-500 font-medium"
-                    >
-                        <option value="BCA - 1234567890 (a.n. Mie Bangka Teladan)">BCA - 1234567890 (a.n. Mie Bangka Teladan)</option>
-                        <option value="DANA - 081267166886 (a.n. Mie Bangka Teladan)">DANA - 081267166886 (a.n. Mie Bangka Teladan)</option>
-                        <option value="Kasir (Tunai)">Bayar di Kasir (Tunai)</option>
-                    </select>
+                    <label class="mb-1 block text-sm font-bold text-gray-700">Metode Pembayaran</label>
+                    <select id="payment-method" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-500 font-medium"></select>
                 </div>
-
                 <label class="flex items-start gap-2 rounded-xl bg-sky-50 p-3 text-xs text-slate-700 cursor-pointer">
-                    <input
-                        id="order-confirmation"
-                        type="checkbox"
-                        required
-                        class="mt-0.5 h-4 w-4 text-sky-600 rounded"
-                    >
-                    <span>
-                        Saya telah memeriksa pesanan dan menyetujui untuk menyelesaikannya.
-                    </span>
+                    <input id="order-confirmation" type="checkbox" required class="mt-0.5 h-4 w-4 text-sky-600 rounded">
+                    <span>Saya telah memeriksa pesanan dan menyetujui untuk menyelesaikannya.</span>
                 </label>
-
-                <button
-                    id="submit-order-button"
-                    type="submit"
-                    class="w-full rounded-xl bg-white text-sky-700 border border-sky-500 px-4 py-3 font-bold hover:bg-sky-50 transition shadow"
-                >
+                <button id="submit-order-button" type="submit" class="w-full rounded-xl bg-white text-sky-700 border border-sky-500 px-4 py-3 font-bold hover:bg-sky-50 transition shadow">
                     <i class="fa-solid fa-check mr-2"></i> Kirim Pesanan
                 </button>
-
-                <p
-                    id="checkout-message"
-                    class="text-center text-sm"
-                    aria-live="polite"
-                ></p>
             </form>
         </div>
     </div>
 
-    <!-- Modal Timer Pembayaran 3 Menit -->
+    <!-- Modal Timer Pembayaran -->
     <div id="payment-timer-modal" class="fixed inset-0 bg-black bg-opacity-80 hidden z-50 flex justify-center items-center p-4">
         <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 text-center border-t-4 border-sky-600">
-            <div class="w-14 h-14 bg-sky-100 text-sky-600 rounded-full flex items-center justify-center text-2xl mx-auto mb-3">
-                <i class="fa-solid fa-clock"></i>
-            </div>
+            <div class="w-14 h-14 bg-sky-100 text-sky-600 rounded-full flex items-center justify-center text-2xl mx-auto mb-3"><i class="fa-solid fa-clock"></i></div>
             <h3 class="text-xl font-extrabold text-sky-950 mb-1">Pesanan Berhasil Dikirim</h3>
-            <p class="text-xs text-gray-500 mb-2">Batas waktu konfirmasi / verifikasi resto (3 Menit):</p>
-            
+            <p class="text-xs text-gray-500 mb-2">Batas waktu verifikasi resto (3 Menit):</p>
             <div id="countdown-timer" class="text-3xl font-black text-sky-700 mb-4 tracking-widest bg-sky-50 py-2 rounded-xl border border-sky-200">03:00</div>
-
             <div class="bg-sky-50 p-3 rounded-2xl text-left text-xs space-y-2 mb-4 border border-sky-100">
                 <div><b>ID Pesanan:</b> <span id="pay-order-id"></span></div>
                 <div><b>Nama Pemesan:</b> <span id="pay-buyer-name"></span></div>
                 <div class="flex items-center justify-between gap-2">
                     <div class="truncate"><b>Tujuan:</b> <span id="pay-method-chosen"></span></div>
-                    <button type="button" onclick="copyPaymentInfo()" class="bg-sky-600 hover:bg-sky-700 text-white px-2.5 py-1 rounded text-[11px] font-bold shadow transition flex items-center gap-1 shrink-0">
-                        <i class="fa-solid fa-copy"></i> Salin Rekening
-                    </button>
+                    <button type="button" onclick="copyPaymentInfo()" class="bg-sky-600 hover:bg-sky-700 text-white px-2.5 py-1 rounded text-[11px] font-bold shadow transition shrink-0"><i class="fa-solid fa-copy"></i> Salin</button>
                 </div>
                 <div><b>Total Harga:</b> <span id="pay-total" class="text-xl font-black text-sky-700 block mt-1"></span></div>
             </div>
-
             <div class="bg-emerald-50 text-emerald-800 p-3.5 rounded-xl text-sm font-bold mb-4 border border-emerald-200 leading-relaxed">
-                <i class="fa-solid fa-circle-check mr-1"></i> Silakan lakukan pembayaran sesuai pilihan Anda. Pesanan akan segera diproses setelah diverifikasi resto.
+                <i class="fa-solid fa-circle-check mr-1"></i> Silakan lakukan pembayaran. Pesanan akan diproses secara real-time setelah diverifikasi resto.
             </div>
-
-            <p class="text-[11px] text-gray-500">Jika waktu habis tanpa diproses resto atau jika telah diverifikasi, modal ini akan tertutup otomatis.</p>
         </div>
     </div>
 
@@ -304,23 +180,16 @@
         "use strict";
 
         const SHEETDB_API = "https://sheetdb.io/api/v1/2ij5jepgf1fdy";
+        function safeGet(key) { return localStorage.getItem(key); }
+        function safeSet(key, val) { localStorage.setItem(key, val); }
 
-        const memoryStorage = {};
-        function safeGet(key) {
-            try { return localStorage.getItem(key); } catch (e) { return memoryStorage[key] !== undefined ? memoryStorage[key] : null; }
-        }
-        function safeSet(key, val) {
-            try { localStorage.setItem(key, val); } catch (e) { memoryStorage[key] = val; }
-        }
-
-        let scrollTimeout;
         window.addEventListener('scroll', function() {
             const scrollArrows = document.getElementById('scroll-arrows');
             if (!scrollArrows) return;
             scrollArrows.classList.remove('opacity-0', 'pointer-events-none');
             scrollArrows.classList.add('opacity-100', 'pointer-events-auto');
-            clearTimeout(scrollTimeout);
-            scrollTimeout = setTimeout(function() {
+            clearTimeout(window.scrollTimeout);
+            window.scrollTimeout = setTimeout(() => {
                 scrollArrows.classList.remove('opacity-100', 'pointer-events-auto');
                 scrollArrows.classList.add('opacity-0', 'pointer-events-none');
             }, 1500);
@@ -340,69 +209,79 @@
         updateLiveClock();
 
         const defaultMenu = [];
-
         let cart = new Map();
         let currentCategory = "Semua";
         let currentSlideIndex = 0;
         let activeTrackingId = null;
 
-        function initApp() {
+        async function initApp() {
             if (!safeGet('mb_menus')) safeSet('mb_menus', JSON.stringify(defaultMenu));
-            
-            safeSet('mb_banners', JSON.stringify([
-                "https://i.ibb.co.com/cKQZPzMB/1000047088.png"
-            ]));
-
+            if (!safeGet('mb_banners')) safeSet('mb_banners', JSON.stringify(["https://i.ibb.co.com/cKQZPzMB/1000047088.png"]));
             if (!safeGet('mb_resto_status')) safeSet('mb_resto_status', 'Buka');
-            
+
+            // Sinkronisasi status resto real-time dari SheetDB
+            await fetchRestoStatusRealtime();
+
             loadPaymentMethodsToSelect();
             renderBanners();
             renderMenu();
             updateCartUI();
             checkRestoStatusGlobal();
 
-            setInterval(checkRestoStatusGlobal, 3000);
-            setInterval(pollActiveOrderStatus, 4000);
+            // Polling Real-Time setiap 2 detik untuk memeriksa status resto terbaru dari cloud tanpa reload
+            setInterval(async () => {
+                await fetchRestoStatusRealtime();
+                checkRestoStatusGlobal();
+                renderMenu();
+            }, 2000);
+
+            setInterval(pollActiveOrderStatus, 3000);
+        }
+
+        async function apiRequest(url, options = {}) {
+            try {
+                const response = await fetch(url, { ...options, headers: { "Content-Type": "application/json", ...(options.headers || {}) } });
+                if (!response.ok) return null;
+                return await response.json();
+            } catch (e) { return null; }
+        }
+
+        async function fetchRestoStatusRealtime() {
+            try {
+                const cloudData = await apiRequest(SHEETDB_API);
+                if (Array.isArray(cloudData)) {
+                    let statusRow = cloudData.find(c => c.status && (c.status === 'Buka' || c.status === 'Tutup'));
+                    if (statusRow) {
+                        safeSet('mb_resto_status', statusRow.status);
+                    }
+                }
+            } catch(e) {}
         }
 
         function checkRestoStatusGlobal() {
             const status = safeGet('mb_resto_status') || 'Buka';
             const closedBanner = document.getElementById('resto-closed-banner');
             if (!closedBanner) return;
-
-            if (status === 'Tutup') {
-                closedBanner.classList.remove('hidden');
-            } else {
-                closedBanner.classList.add('hidden');
-            }
+            if (status === 'Tutup') closedBanner.classList.remove('hidden');
+            else closedBanner.classList.add('hidden');
         }
 
         function rupiah(value) {
-            return new Intl.NumberFormat("id-ID", {
-                style: "currency",
-                currency: "IDR",
-                maximumFractionDigits: 0
-            }).format(Number(value) || 0);
+            return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(Number(value) || 0);
         }
 
         function loadPaymentMethodsToSelect() {
             const select = document.getElementById('payment-method');
             if (!select) return;
             const customMethods = safeGet('mb_payment_methods');
-            if (customMethods) {
-                const lines = customMethods.split('\n').map(l => l.trim()).filter(l => l);
-                if (lines.length > 0) {
-                    select.innerHTML = '';
-                    lines.forEach(line => {
-                        select.innerHTML += `<option value="${line}">${line}</option>`;
-                    });
-                }
-            }
+            let lines = customMethods ? customMethods.split('\n').map(l => l.trim()).filter(l => l) : ["BCA - 1234567890 (a.n. Mie Bangka Teladan)", "DANA - 081267166886 (a.n. Mie Bangka Teladan)", "Kasir (Tunai)"];
+            select.innerHTML = '';
+            lines.forEach(line => { select.innerHTML += `<option value="${line}">${line}</option>`; });
         }
 
         function renderBanners() {
             let banners = [];
-            try { banners = JSON.parse(safeGet('mb_banners')) || []; } catch(e) { banners = []; }
+            try { banners = JSON.parse(safeGet('mb_banners')) || []; } catch(e) {}
             const container = document.getElementById('banner-container');
             if(!container) return;
 
@@ -431,9 +310,7 @@
 
         setInterval(() => {
             const slides = document.querySelectorAll('.banner-slide');
-            if (slides.length > 1) {
-                changeBannerSlide(1);
-            }
+            if (slides.length > 1) changeBannerSlide(1);
         }, 5000);
 
         function filterMenuSelect(cat) {
@@ -448,16 +325,15 @@
             if(!grid) return;
 
             let filtered = menuList.filter(m => currentCategory === 'Semua' || m.category === currentCategory);
-
             grid.innerHTML = '';
+
             if (filtered.length === 0) {
-                grid.innerHTML = `<p class="col-span-full text-center text-gray-500 py-10">Belum ada menu tersedia pada kategori ini.</p>`;
+                grid.innerHTML = `<p class="col-span-full text-center text-gray-500 py-10">Belum ada menu tersedia pada kategori ini. Silakan tambahkan melalui Panel Admin.</p>`;
                 return;
             }
 
             filtered.forEach(m => {
                 let imgHtml = m.image ? `<img src="${m.image}" alt="${m.name}" class="w-full h-48 object-cover rounded-2xl mb-3 bg-sky-100">` : `<div class="w-full h-48 bg-sky-100 rounded-2xl mb-3 flex items-center justify-center text-sky-400 font-bold"><i class="fa-solid fa-bowl-food text-4xl"></i></div>`;
-                
                 grid.innerHTML += `
                     <div class="bg-white rounded-3xl p-4 shadow-sm hover:shadow-md border border-sky-100 transition flex flex-col justify-between">
                         <div>
@@ -486,15 +362,13 @@
             }
 
             let menuList = [];
-            try { menuList = JSON.parse(safeGet('mb_menus')) || defaultMenu; } catch(e) { menuList = defaultMenu; }
+            try { menuList = JSON.parse(safeGet('mb_menus')) || defaultMenu; } catch(e) {}
             let item = menuList.find(m => String(m.id) === String(menuId));
             if(!item) return;
 
-            if (cart.has(menuId)) {
-                cart.get(menuId).qty += 1;
-            } else {
-                cart.set(menuId, { ...item, qty: 1 });
-            }
+            if (cart.has(menuId)) cart.get(menuId).qty += 1;
+            else cart.set(menuId, { ...item, qty: 1 });
+
             updateCartUI();
             openCart();
         }
@@ -503,9 +377,7 @@
             if (!cart.has(menuId)) return;
             let current = cart.get(menuId);
             current.qty += delta;
-            if (current.qty <= 0) {
-                cart.delete(menuId);
-            }
+            if (current.qty <= 0) cart.delete(menuId);
             updateCartUI();
         }
 
@@ -515,8 +387,7 @@
             const totalEl = document.getElementById('cart-total');
             if(!countEl || !itemsEl || !totalEl) return;
 
-            let totalQty = 0;
-            let totalPrice = 0;
+            let totalQty = 0, totalPrice = 0;
             itemsEl.innerHTML = '';
 
             if (cart.size === 0) {
@@ -548,43 +419,13 @@
             totalEl.textContent = rupiah(totalPrice);
         }
 
-        function openCart() {
-            document.getElementById('cart-modal').classList.remove('modal-hidden');
-        }
-
-        function closeCart() {
-            document.getElementById('cart-modal').classList.add('modal-hidden');
-        }
-
-        async function apiRequest(url, options = {}) {
-            try {
-                const response = await fetch(url, {
-                    ...options,
-                    headers: {
-                        "Content-Type": "application/json",
-                        ...(options.headers || {})
-                    }
-                });
-                let result;
-                try { result = await response.json(); } catch { result = null; }
-                if (!response.ok) { return null; }
-                return result;
-            } catch (e) {
-                return null;
-            }
-        }
+        function openCart() { document.getElementById('cart-modal').classList.remove('modal-hidden'); }
+        function closeCart() { document.getElementById('cart-modal').classList.add('modal-hidden'); }
 
         async function submitOrder(event) {
             event.preventDefault();
-            const status = safeGet('mb_resto_status') || 'Buka';
-            if (status === 'Tutup') {
-                alert("Restoran sedang tutup.");
-                return;
-            }
-            if (cart.size === 0) {
-                alert("Keranjang kosong!");
-                return;
-            }
+            if ((safeGet('mb_resto_status') || 'Buka') === 'Tutup') { alert("Restoran sedang tutup."); return; }
+            if (cart.size === 0) { alert("Keranjang kosong!"); return; }
 
             const name = document.getElementById('buyer-name').value.trim();
             const phone = document.getElementById('buyer-phone').value.trim();
@@ -593,28 +434,17 @@
 
             let itemsArr = Array.from(cart.values());
             let total = itemsArr.reduce((sum, item) => sum + (item.price * item.qty), 0);
-
-            const randomSuffix = Math.random().toString(36).substring(2, 6).toUpperCase();
-            const orderId = "ORD-" + randomSuffix + Math.floor(1000 + Math.random() * 9000);
+            const orderId = "ORD-" + Math.random().toString(36).substring(2, 6).toUpperCase() + Math.floor(1000 + Math.random() * 9000);
             const now = new Date();
             const dateStr = now.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) + ", " + now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
 
             const newOrder = {
-                id: orderId,
-                createdAt: Date.now(),
-                created_at: dateStr,
-                date: dateStr,
-                name: name,
-                phone: phone,
-                address: address,
-                items: itemsArr,
-                total: String(total),
-                payment: payment,
-                status: "Menunggu"
+                id: orderId, createdAt: Date.now(), created_at: dateStr, date: dateStr,
+                name, phone, address, items: itemsArr, total: String(total), payment, status: "Menunggu"
             };
 
             let localOrders = [];
-            try { localOrders = JSON.parse(safeGet('mb_orders') || '[]'); } catch(e) { localOrders = []; }
+            try { localOrders = JSON.parse(safeGet('mb_orders') || '[]'); } catch(e) {}
             localOrders.push(newOrder);
             safeSet('mb_orders', JSON.stringify(localOrders));
 
@@ -627,16 +457,9 @@
                     method: "POST",
                     body: JSON.stringify({
                         data: {
-                            id: newOrder.id,
-                            createdAt: String(newOrder.createdAt),
-                            created_at: newOrder.created_at,
-                            name: newOrder.name,
-                            phone: newOrder.phone,
-                            address: newOrder.address,
-                            items: JSON.stringify(newOrder.items),
-                            total: newOrder.total,
-                            payment: newOrder.payment,
-                            status: newOrder.status
+                            id: newOrder.id, createdAt: String(newOrder.createdAt), created_at: newOrder.created_at,
+                            name: newOrder.name, phone: newOrder.phone, address: newOrder.address,
+                            items: JSON.stringify(newOrder.items), total: newOrder.total, payment: newOrder.payment, status: newOrder.status
                         }
                     })
                 });
@@ -644,7 +467,6 @@
 
             submitBtn.disabled = false;
             submitBtn.innerHTML = '<i class="fa-solid fa-check mr-2"></i> Kirim Pesanan';
-
             cart.clear();
             updateCartUI();
             closeCart();
@@ -659,33 +481,26 @@
             document.getElementById('pay-buyer-name').textContent = order.name;
             document.getElementById('pay-method-chosen').textContent = order.payment;
             document.getElementById('pay-total').textContent = rupiah(order.total);
-
             document.getElementById('payment-timer-modal').classList.remove('hidden');
 
-            let timeLeft = 180; // 3 menit
+            let timeLeft = 180;
             const timerEl = document.getElementById('countdown-timer');
-
             if (paymentTimerInterval) clearInterval(paymentTimerInterval);
 
             paymentTimerInterval = setInterval(() => {
                 let m = Math.floor(timeLeft / 60);
                 let s = timeLeft % 60;
                 timerEl.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-                
                 if (timeLeft <= 0) {
                     clearInterval(paymentTimerInterval);
                     document.getElementById('payment-timer-modal').classList.add('hidden');
-                    alert("Waktu konfirmasi habis atau pesanan telah diverifikasi.");
                 }
                 timeLeft--;
             }, 1000);
         }
 
         function copyPaymentInfo() {
-            const text = document.getElementById('pay-method-chosen').textContent;
-            navigator.clipboard.writeText(text).then(() => {
-                alert("Informasi pembayaran berhasil disalin!");
-            });
+            navigator.clipboard.writeText(document.getElementById('pay-method-chosen').textContent).then(() => alert("Informasi pembayaran disalin!"));
         }
 
         async function checkOrderStatusSubmit(event) {
@@ -694,11 +509,10 @@
             const resultDiv = document.getElementById('status-result');
             if(!id) return;
 
-            resultDiv.innerHTML = `<p class="text-xs text-slate-500">Mencari status pesanan...</p>`;
-
+            resultDiv.innerHTML = `<p class="text-xs text-slate-500">Mencari status pesanan secara real-time...</p>`;
             let found = null;
             let localOrders = [];
-            try { localOrders = JSON.parse(safeGet('mb_orders') || '[]'); } catch(e) { localOrders = []; }
+            try { localOrders = JSON.parse(safeGet('mb_orders') || '[]'); } catch(e) {}
             found = localOrders.find(o => String(o.id).toUpperCase() === String(id).toUpperCase());
 
             if (!found) {
@@ -708,15 +522,7 @@
                     if (cMatch) {
                         let itemsParsed = [];
                         try { itemsParsed = typeof cMatch.items === 'string' ? JSON.parse(cMatch.items) : (cMatch.items || []); } catch(e) {}
-                        found = {
-                            id: cMatch.id,
-                            name: cMatch.name,
-                            status: cMatch.status || 'Menunggu',
-                            total: cMatch.total,
-                            payment: cMatch.payment,
-                            created_at: cMatch.created_at || cMatch.date || '-',
-                            items: itemsParsed
-                        };
+                        found = { id: cMatch.id, name: cMatch.name, status: cMatch.status || 'Menunggu', total: cMatch.total, payment: cMatch.payment, created_at: cMatch.created_at || cMatch.date || '-', items: itemsParsed };
                     }
                 }
             }
@@ -750,7 +556,7 @@
             if (Array.isArray(cloudData)) {
                 let match = cloudData.find(c => String(c.id).toUpperCase() === String(activeTrackingId).toUpperCase());
                 if (match && match.status && match.status !== 'Menunggu') {
-                    if (match.status === 'Diproses' || match.status === 'Selesai') {
+                    if (match.status === 'Diproses' || match.status === 'Selesai' || match.status === 'Dibatalkan') {
                         document.getElementById('payment-timer-modal').classList.add('hidden');
                         if(paymentTimerInterval) clearInterval(paymentTimerInterval);
                         activeTrackingId = null;
