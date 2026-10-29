@@ -340,5 +340,121 @@
 
         window.onload = initApp;
     </script>
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mie Bangka Teladan</title>
+  <!-- Supabase JS SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 16px;
+      background-color: #f9f9f9;
+      color: #333;
+    }
+    header {
+      text-align: center;
+      padding: 12px 0;
+      border-bottom: 2px solid #ddd;
+      margin-bottom: 20px;
+    }
+    h1 { margin: 0 0 8px 0; color: #d32f2f; }
+    .badge-nonhalal {
+      display: inline-block;
+      background-color: #d32f2f;
+      color: white;
+      font-size: 12px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      margin-top: 4px;
+    }
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+    }
+    .menu-card {
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 16px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .menu-card h3 { margin: 0 0 8px 0; }
+    .price { font-weight: bold; color: #388e3c; font-size: 16px; }
+    .btn-add {
+      background-color: #d32f2f;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 4px;
+      width: 100%;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Mie Bangka Teladan</h1>
+    <p>Jl. Batu 8 Atas, Tanjung Pinang</p>
+    <span class="badge-nonhalal">Menu Non-Halal (Topping B2)</span>
+  </header>
+
+  <main>
+    <h2>Daftar Menu</h2>
+    <div id="menu-list" class="menu-grid">
+      <p>Memuat daftar menu...</p>
+    </div>
+  </main>
+
+  <script>
+    // Konfigurasi Supabase dengan Project ID baru
+    const SUPABASE_URL = 'https://xqhvipfvfgqpqiiqndvu.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_-RoutcoL6TizW60mnEkB7Q_Hn7Zgy1Z';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // Fungsi Mengambil & Menampilkan Data Menu dari Supabase
+    async function fetchMenus() {
+      const { data: menus, error } = await supabaseClient
+        .from('menus')
+        .select('*')
+        .eq('is_available', true);
+
+      const container = document.getElementById('menu-list');
+
+      if (error) {
+        console.error('Error fetching menus:', error);
+        container.innerHTML = '<p>Gagal memuat daftar menu.</p>';
+        return;
+      }
+
+      if (!menus || menus.length === 0) {
+        container.innerHTML = '<p>Belum ada menu yang tersedia.</p>';
+        return;
+      }
+
+      container.innerHTML = '';
+      menus.forEach(item => {
+        container.innerHTML += `
+          <div class="menu-card">
+            <h3>${item.name}</h3>
+            <p>${item.description || ''}</p>
+            <p class="price">Rp ${item.price.toLocaleString('id-ID')}</p>
+            <button class="btn-add" onclick="alert('Menu ${item.name} ditambahkan!')">Pesan Sekarang</button>
+          </div>
+        `;
+      });
+    }
+
+    // Eksekusi fungsi saat file dibuka
+    document.addEventListener('DOMContentLoaded', fetchMenus);
+  </script>
 </body>
 </html>
