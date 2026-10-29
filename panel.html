@@ -4,97 +4,20 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Panel Resto - Mie Bangka Teladan</title>
-  <!-- Supabase JS SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 16px;
-      background-color: #f4f6f8;
-      color: #333;
-    }
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding-bottom: 12px;
-      border-bottom: 2px solid #ddd;
-      margin-bottom: 16px;
-    }
+    body { font-family: Arial, sans-serif; margin: 0; padding: 16px; background-color: #f4f6f8; color: #333; }
+    header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 2px solid #ddd; margin-bottom: 16px; }
     h1 { font-size: 18px; margin: 0; color: #d32f2f; }
-    .header-actions {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
-    select, button {
-      padding: 6px 10px;
-      border-radius: 4px;
-      border: 1px solid #ccc;
-      font-size: 14px;
-    }
-    .btn-logout {
-      background-color: #fff;
-      color: #d32f2f;
-      border: 1px solid #d32f2f;
-      cursor: pointer;
-    }
-    .card {
-      background: white;
-      border: 1px solid #e0e0e0;
-      border-radius: 8px;
-      padding: 16px;
-      margin-bottom: 20px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    }
-    .form-group {
-      margin-bottom: 12px;
-    }
-    label {
-      display: block;
-      margin-bottom: 4px;
-      font-weight: bold;
-      font-size: 14px;
-    }
-    input, textarea, select {
-      width: 100%;
-      padding: 8px;
-      box-sizing: border-box;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
-    .btn-save {
-      background-color: #388e3c;
-      color: white;
-      border: none;
-      padding: 10px 16px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-weight: bold;
-      width: 100%;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-      background: white;
-    }
-    th, td {
-      border: 1px solid #ddd;
-      padding: 8px;
-      font-size: 13px;
-      text-align: left;
-    }
+    .card { background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 16px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+    .form-group { margin-bottom: 12px; }
+    label { display: block; margin-bottom: 4px; font-weight: bold; font-size: 14px; }
+    input, textarea, select { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+    .btn-save { background-color: #388e3c; color: white; border: none; padding: 10px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; }
+    th, td { border: 1px solid #ddd; padding: 8px; font-size: 13px; text-align: left; }
     th { background-color: #f1f1f1; }
-    .btn-delete {
-      background-color: #d32f2f;
-      color: white;
-      border: none;
-      padding: 6px 10px;
-      border-radius: 4px;
-      cursor: pointer;
-    }
+    .btn-delete { background-color: #d32f2f; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; }
   </style>
 </head>
 <body>
@@ -104,17 +27,9 @@
       <h1>Panel Resto - Mie Bangka</h1>
       <p style="margin: 2px 0 0 0; font-size: 12px; color: #666;">Teladan (Jl. Batu 8 Atas)</p>
     </div>
-    <div class="header-actions">
-      <select id="resto-status" onchange="updateRestoStatus()">
-        <option value="open">Resto Buka</option>
-        <option value="closed">Resto Tutup</option>
-      </select>
-      <button class="btn-logout" onclick="alert('Keluar panel admin')">Keluar</button>
-    </div>
   </header>
 
   <main>
-    <!-- Form Tambah Menu -->
     <div class="card">
       <h3>Tambah Menu Baru</h3>
       <form id="add-menu-form">
@@ -134,10 +49,6 @@
           <input type="number" id="menu-price" required placeholder="Contoh: 35000">
         </div>
         <div class="form-group">
-          <label>URL Gambar Menu</label>
-          <input type="text" id="menu-image" placeholder="https://...">
-        </div>
-        <div class="form-group">
           <label>Deskripsi</label>
           <textarea id="menu-desc" placeholder="Deskripsi singkat menu..."></textarea>
         </div>
@@ -145,53 +56,28 @@
       </form>
     </div>
 
-    <!-- Daftar Menu Saat Ini -->
     <div class="card">
       <h3>Daftar Menu Saat Ini</h3>
-      <div style="overflow-x:auto;">
-        <table>
-          <thead>
-            <tr>
-              <th>Nama & Kategori</th>
-              <th>Harga</th>
-              <th>Aksi</th>
-            </tr>
-          </thead>
-          <tbody id="admin-menu-list">
-            <tr><td colspan="3" style="text-align: center;">Memuat data...</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Daftar Order Masuk -->
-    <div class="card">
-      <h3>Order Masuk</h3>
-      <div style="overflow-x:auto;">
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Pemesan</th>
-              <th>Total</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody id="admin-orders-list">
-            <tr><td colspan="4" style="text-align: center;">Belum ada order masuk.</td></tr>
-          </tbody>
-        </table>
-      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Nama & Kategori</th>
+            <th>Harga</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="admin-menu-list">
+          <tr><td colspan="3" style="text-align: center;">Memuat data...</td></tr>
+        </tbody>
+      </table>
     </div>
   </main>
 
   <script>
-    // Konfigurasi Supabase dengan API Key yang baru dan valid
     const SUPABASE_URL = 'https://xqhvipfvfgqpqiiqndvu.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhxaHZpcGZ2ZmdxcHFpaXFuZHZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMyNzkzNzcsImV4cCI6MjEwODg1NTM3N30.6l0-1171AZSl3DpDqpxPjYiVfLnqSaFw6S4XaXgxQlA';
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // Fungsi Muat Daftar Menu Admin
     async function loadAdminMenus() {
       const { data: menus, error } = await supabaseClient
         .from('menus')
@@ -200,7 +86,7 @@
 
       const tbody = document.getElementById('admin-menu-list');
       if (error) {
-        tbody.innerHTML = '<tr><td colspan="3">Gagal memuat menu.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="3">Gagal memuat menu: ' + error.message + '</td></tr>';
         return;
       }
       if (!menus || menus.length === 0) {
@@ -220,7 +106,6 @@
       });
     }
 
-    // Fungsi Tambah Menu ke Supabase
     document.getElementById('add-menu-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const name = document.getElementById('menu-name').value;
@@ -241,7 +126,6 @@
       }
     });
 
-    // Fungsi Hapus Menu dari Supabase
     async function deleteMenu(id) {
       if (!confirm('Yakin ingin menghapus menu ini?')) return;
       const { error } = await supabaseClient.from('menus').delete().eq('id', id);
@@ -252,12 +136,6 @@
       }
     }
 
-    function updateRestoStatus() {
-      const status = document.getElementById('resto-status').value;
-      alert('Status resto diubah menjadi: ' + (status === 'open' ? 'Buka' : 'Tutup'));
-    }
-
-    // Muat data saat halaman dibuka
     document.addEventListener('DOMContentLoaded', loadAdminMenus);
   </script>
 </body>
