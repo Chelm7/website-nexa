@@ -401,5 +401,27 @@ Kasir (Tunai)</textarea>
 
         window.onload = initPanel;
     </script>
+
+async function loadAdminOrders() {
+    try {
+        const response = await fetch("https://bshjfhjwfbdwtdqphjla.supabase.co/rest/v1/orders?select=*&order=createdAt.desc", {
+            headers: {
+                "apikey": "sb_publishable_-RoutcoL6TizW60mnEkB7Q_Hn7Zgy1Z",
+                "Authorization": "Bearer sb_publishable_-RoutcoL6TizW60mnEkB7Q_Hn7Zgy1Z"
+            }
+        });
+        if (response.ok) {
+            const cloudOrders = await response.json();
+            if (Array.isArray(cloudOrders)) {
+                // Simpan ke local dan render ke panel admin
+                safeSet('mb_orders', JSON.stringify(cloudOrders));
+                renderOrdersList(cloudOrders);
+            }
+        }
+    } catch(e) {
+        console.log("Gagal memuat dari cloud, menggunakan local.");
+    }
+}
+
 </body>
 </html>
