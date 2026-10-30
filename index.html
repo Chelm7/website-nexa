@@ -259,7 +259,7 @@
         </div>
     </div>
 
-    <!-- Modal Timer Pembayaran 3 Menit -->
+    <!-- Timer Pembayaran 3 Menit -->
     <div id="payment-timer-modal" class="fixed inset-0 bg-black bg-opacity-85 hidden z-50 flex justify-center items-center p-4">
         <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 text-center border-t-4 border-sky-600">
             <div class="w-14 h-14 bg-sky-100 text-sky-600 rounded-full flex items-center justify-center text-2xl mx-auto mb-3">
@@ -299,10 +299,8 @@
     <script>
         "use strict";
 
-        // Konfigurasi Supabase
-        const SUPABASE_URL = "https://bshjfhjwfbdwtdqphjla.supabase.co";
-        const SUPABASE_ANON_KEY = "sb_publishable_-RoutcoL6TizW60mnEkB7Q_Hn7Zgy1Z";
-        const RESTO_WA_NUMBER = "6282384039200";
+        const SHEETDB_API = "https://sheetdb.io/api/v1/2ij5jepgf1fdy";
+        const RESTO_WA_NUMBER = "6282384039200"; // Nomor WhatsApp Resto
 
         const memoryStorage = {};
         function safeGet(key) {
@@ -607,19 +605,18 @@
             return "ORD-" + Math.random().toString(36).substring(2, 10).toUpperCase();
         }
 
-        // Fungsi koneksi Supabase API
-        async function supabaseRequest(endpoint, options = {}) {
-            const response = await fetch(`${SUPABASE_URL}/rest/v1/${endpoint}`, {
+        async function apiRequest(url, options = {}) {
+            const response = await fetch(url, {
                 ...options,
                 headers: {
                     "Content-Type": "application/json",
-                    "apikey": SUPABASE_ANON_KEY,
-                    "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
                     ...(options.headers || {})
                 }
             });
-            if (!response.ok) return null;
-            try { return await response.json(); } catch(e) { return null; }
+            let result;
+            try { result = await response.json(); } catch { throw new Error("Respons dari SheetDB tidak dapat dibaca."); }
+            if (!response.ok) { throw new Error(result?.error || "Permintaan ke SheetDB gagal."); }
+            return result;
         }
 
         async function submitOrder(event) {
@@ -676,6 +673,7 @@
                 id: orderId,
                 createdAt: nowTime,
                 created_at: dateStr,
+                date: dateStr,
                 name: name,
                 phone: normalizedPhone,
                 address: address,
@@ -695,12 +693,27 @@
                 localOrders.push(order);
                 localStorage.setItem('mb_orders', JSON.stringify(localOrders));
 
-                // Kirim ke Supabase tabel orders
-                await supabaseRequest("orders", {
-                    method: "POST",
-                    headers: { "Prefer": "return=minimal" },
-                    body: JSON.stringify(order)
-                });
+                try {
+                    await apiRequest(SHEETDB_API, {
+                        method: "POST",
+                        body: JSON.stringify({
+                            data: [{
+                                id: order.id,
+                                createdAt: order.createdAt,
+                                created_at: order.created_at,
+                                name: order.name,
+                                phone: order.phone,
+                                address: order.address,
+                                items: JSON.stringify(order.items),
+                                total: order.total,
+                                payment: order.payment,
+                                status: order.status
+                            }]
+                        })
+                    });
+                } catch(err) {
+                    console.log("SheetDB cloud sync note:", err);
+                }
 
                 localStorage.setItem("last_order_id", order.id);
                 document.getElementById('lookup-order-id').value = order.id;
@@ -719,8 +732,9 @@
                 document.getElementById('pay-total').textContent = rupiah(total);
                 document.getElementById('payment-timer-modal').classList.remove('hidden');
 
+                // Buka WhatsApp otomatis ke nomor resto
                 let itemsTextSummary = orderItems.map(i => `- ${i.qty}x ${i.name} (${rupiah(i.price * i.qty)})`).join('%0A');
-                let waMessage = `Halo Admin Mie Bangka Teladan,%0A%0ASaya ingin memesan:%0A*ID:* ${orderId}%0A*Nama:* ${name}%0A*Meja/Alamat:* ${address}%0A%0A*Pesanan:*%0A${itemsTextSummary}%0A*Total:* ${rupiah(total)}%0A*Pembayaran:* ${payment}%0A%0ATerima kasih!`;
+                let waMessage = `Halo Admin Mie Bangka Teladan,%0ASaya ingin memesan:%0A*ID:* ${orderId}%0A*Nama:* ${name}%0A*Meja/Alamat:* ${address}%0A%0A*Pesanan:*%0A${itemsTextSummary}%0A*Total:* ${rupiah(total)}%0A*Pembayaran:* ${payment}%0A%0ATerima kasih!`;
                 window.open(`https://wa.me/${RESTO_WA_NUMBER}?text=${waMessage}`, '_blank');
 
                 startCountdownTimer(3 * 60, order.id);
@@ -845,9 +859,13 @@
                 foundOrder = localOrders.find(o => String(o.id).toLowerCase() === String(orderId).toLowerCase());
 
                 if (!foundOrder) {
-                    const cloudData = await supabaseRequest(`orders?id=eq.${encodeURIComponent(orderId)}`);
-                    if (Array.isArray(cloudData) && cloudData.length > 0) {
-                        foundOrder = cloudData[0];
+                    try {
+                        const data = await apiRequest(SHEETDB_API + "/search?id=" + encodeURIComponent(orderId));
+                        if (Array.isArray(data) && data.length > 0) {
+                            foundOrder = data[0];
+                        }
+                    } catch(err) {
+                        console.log("Cloud search error:", err);
                     }
                 }
 
@@ -899,7 +917,7 @@
                         ${restNote}
                         <div class="mt-4 pt-3 border-t border-dashed border-slate-200 text-center font-bold text-slate-800 text-sm">
                             Terima kasih telah memesan di Resto Mie Bangka Teladan! 🙏<br>
-                            <span class="text-xs font-normal text-slate-500">Selamat menikmati hidangan Anda.</span>
+                            <span class="text-xs font-normal text-slate-500">🙂.</span>
                         </div>
                     </div>`;
 
@@ -912,299 +930,4 @@
         window.onload = initApp;
     </script>
 </body>
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mie Bangka Teladan - Kota Tanjungpinang</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Awesome untuk Icon -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        * { box-sizing: border-box; }
-        body { margin: 0; background: #f0f9ff; color: #1e293b; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-    </style>
-</head>
-<body class="bg-sky-50 text-slate-800 font-sans selection:bg-sky-500 selection:text-white">
-
-    <!-- Header Resto -->
-    <header class="bg-sky-600 text-white shadow-lg sticky top-0 z-40">
-        <div class="mx-auto max-w-7xl px-4 py-3 flex justify-between items-center">
-            <div class="flex items-center space-x-3">
-                <div class="w-11 h-11 bg-white text-sky-600 rounded-full flex items-center justify-center font-bold text-xl shadow">
-                    <i class="fa-solid fa-bowl-food"></i>
-                </div>
-                <div>
-                    <h1 class="text-lg sm:text-xl font-extrabold tracking-wide">Mie Bangka Teladan</h1>
-                    <p class="text-xs text-sky-100">Jl. Batu 8 Atas, Kota Tanjungpinang (Non-Halal B2)</p>
-                </div>
-            </div>
-            <button onclick="toggleCartModal()" class="bg-white text-sky-700 hover:bg-sky-50 px-4 py-2 rounded-2xl text-xs font-bold transition flex items-center shadow">
-                <i class="fa-solid fa-cart-shopping mr-2"></i> Keranjang <span id="cart-count" class="ml-1.5 bg-sky-600 text-white px-2 py-0.5 rounded-full text-[10px]">0</span>
-            </button>
-        </div>
-    </header>
-
-    <!-- Konten Utama -->
-    <main class="container mx-auto px-4 py-6 max-w-5xl space-y-6">
-        
-        <!-- Banner Promosi -->
-        <div class="bg-white rounded-2xl p-4 shadow-sm border border-sky-100 text-center">
-            <h2 class="text-base font-extrabold text-sky-950">Selamat Datang di Mie Bangka Teladan</h2>
-            <p class="text-xs text-slate-500 mt-1">Nikmati kelezatan Mie Bangka autentik khas Tanjungpinang (Topping B2).</p>
-        </div>
-
-        <!-- Daftar Menu -->
-        <div class="space-y-4">
-            <h3 class="text-lg font-extrabold text-sky-950">Menu Pilihan Resto</h3>
-            <div id="menu-list-container" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <!-- Item Menu Default -->
-                <div class="bg-white border border-sky-100 rounded-2xl p-4 shadow-sm flex justify-between items-center gap-4">
-                    <div>
-                        <span class="text-[10px] font-bold bg-sky-100 text-sky-700 px-2.5 py-0.5 rounded-full">Makanan</span>
-                        <h4 class="font-extrabold text-sm text-slate-900 mt-1">Mie Kecil Kering (Topping B2)</h4>
-                        <p class="text-xs text-slate-500 mt-0.5">Mie kenyal dengan taburan daging babi gurih dan pangsit kuah.</p>
-                        <p class="text-xs font-bold text-sky-700 mt-2">Rp 25.000</p>
-                    </div>
-                    <button onclick="addToCart('Mie Kecil Kering', 25000)" class="bg-sky-600 hover:bg-sky-700 text-white px-3.5 py-2 rounded-xl text-xs font-bold shadow transition">
-                        <i class="fa-solid fa-plus mr-1"></i> Tambah
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Cek Status Pesanan -->
-        <div class="bg-white rounded-2xl p-5 shadow-md border border-sky-100 space-y-3">
-            <h3 class="text-base font-extrabold text-sky-950">Status Pesanan Anda</h3>
-            <p class="text-xs text-slate-500">Masukkan kode pesanan (contoh: ORD-XXXXXX) untuk melacak status.</p>
-            <div class="flex gap-2">
-                <input id="check-order-input" type="text" placeholder="Masukkan ID Pesanan..." class="flex-1 rounded-xl border border-slate-300 px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-sky-500">
-                <button onclick="checkOrderStatus()" class="bg-sky-600 hover:bg-sky-700 text-white px-4 py-2 rounded-xl text-xs font-bold shadow transition">Cek Pesanan</button>
-            </div>
-            <div id="order-result-box" class="mt-3"></div>
-        </div>
-    </main>
-
-    <!-- Modal Keranjang & Checkout -->
-    <div id="cart-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-md rounded-2xl p-5 shadow-2xl max-h-[90vh] overflow-y-auto space-y-4">
-            <div class="flex justify-between items-center border-b pb-3">
-                <h3 class="font-extrabold text-base text-sky-950">Keranjang & Pembayaran</h3>
-                <button onclick="toggleCartModal()" class="text-slate-400 hover:text-slate-600 text-sm font-bold"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            
-            <div id="cart-items-container" class="space-y-2">
-                <!-- Item di keranjang -->
-            </div>
-
-            <div class="border-t pt-3 space-y-3">
-                <div class="flex justify-between font-extrabold text-sm text-slate-900">
-                    <span>Total</span>
-                    <span id="cart-total-price">Rp 0</span>
-                </div>
-                
-                <div class="space-y-2 pt-2">
-                    <input id="cust-name" type="text" placeholder="Nama Pelanggan" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-xs outline-none">
-                    <input id="cust-phone" type="tel" placeholder="Nomor HP / WhatsApp" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-xs outline-none">
-                    <input id="cust-address" type="text" placeholder="Nomor Meja / Alamat Pengiriman" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-xs outline-none">
-                    <select id="cust-payment" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs outline-none">
-                        <option value="BCA - 1234567890 (a.n. Mie Bangka Teladan)">BCA - 1234567890 (a.n. Mie Bangka Teladan)</option>
-                        <option value="DANA - 081267166886 (a.n. Mie Bangka Teladan)">DANA - 081267166886 (a.n. Mie Bangka Teladan)</option>
-                        <option value="Kasir (Tunai)">Kasir (Tunai)</option>
-                    </select>
-                </div>
-
-                <button onclick="submitOrder()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-bold text-xs shadow transition flex items-center justify-center gap-1.5">
-                    <i class="fa-solid fa-check"></i> Kirim Pesanan
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        "use strict";
-
-        // Konfigurasi Supabase Resto Mie Bangka Teladan
-        const SUPABASE_URL = "https://bshjfhjwfbdwtdqphjla.supabase.co";
-        const SUPABASE_ANON_KEY = "sb_publishable_-RoutcoL6TizW60mnEkB7Q_Hn7Zgy1Z";
-        const RESTO_WA = "6282384039200";
-
-        let cart = [];
-
-        function safeGet(key) {
-            try { return localStorage.getItem(key); } catch(e) { return null; }
-        }
-        function safeSet(key, val) {
-            try { localStorage.setItem(key, val); } catch(e) {}
-        }
-
-        function addToCart(name, price) {
-            const existing = cart.find(i => i.name === name);
-            if (existing) {
-                existing.qty += 1;
-            } else {
-                cart.push({ name, price, qty: 1 });
-            }
-            updateCartUI();
-            toggleCartModal();
-        }
-
-        function updateCartUI() {
-            const countEl = document.getElementById('cart-count');
-            const container = document.getElementById('cart-items-container');
-            const totalEl = document.getElementById('cart-total-price');
-
-            const totalQty = cart.reduce((sum, i) => sum + i.qty, 0);
-            if(countEl) countEl.innerText = totalQty;
-
-            if(!container) return;
-            if(cart.length === 0) {
-                container.innerHTML = `<p class="text-center text-xs text-slate-500 py-4">Keranjang masih kosong.</p>`;
-                if(totalEl) totalEl.innerText = "Rp 0";
-                return;
-            }
-
-            let html = '';
-            let total = 0;
-            cart.forEach((item, idx) => {
-                total += item.price * item.qty;
-                html += `
-                    <div class="flex justify-between items-center text-xs border-b pb-2">
-                        <div>
-                            <span class="font-bold text-slate-900">${item.name}</span>
-                            <span class="text-slate-500 block">${item.qty}x @ Rp ${item.price.toLocaleString("id-ID")}</span>
-                        </div>
-                        <button onclick="removeCart(${idx})" class="text-red-500 hover:text-red-700 p-1"><i class="fa-solid fa-trash"></i></button>
-                    </div>`;
-            });
-            container.innerHTML = html;
-            if(totalEl) totalEl.innerText = "Rp " + total.toLocaleString("id-ID");
-        }
-
-        function removeCart(idx) {
-            cart.splice(idx, 1);
-            updateCartUI();
-        }
-
-        function toggleCartModal() {
-            const modal = document.getElementById('cart-modal');
-            if(modal) modal.classList.toggle('hidden');
-        }
-
-        async function submitOrder() {
-            if (cart.length === 0) {
-                alert("Keranjang masih kosong!");
-                return;
-            }
-            const name = document.getElementById('cust-name').value.trim();
-            const phone = document.getElementById('cust-phone').value.trim();
-            const address = document.getElementById('cust-address').value.trim();
-            const payment = document.getElementById('cust-payment').value;
-
-            if (!name || !phone || !address) {
-                alert("Mohon lengkapi data pemesan, nomor HP, dan nomor meja/alamat!");
-                return;
-            }
-
-            const total = cart.reduce((sum, i) => sum + (i.price * i.qty), 0);
-            const orderId = "ORD-" + Math.random().toString(36).substring(2, 8).toUpperCase();
-            
-            const orderData = {
-                id: orderId,
-                createdAt: Date.now(),
-                created_at: new Date().toLocaleString("id-ID", { dateStyle: "medium", timeStyle: "short" }),
-                name: name,
-                phone: phone,
-                address: address,
-                items: JSON.stringify(cart),
-                total: String(total),
-                payment: payment,
-                status: "Menunggu"
-            };
-
-            // Simpan ke LocalStorage lokal
-            let localOrders = [];
-            try { localOrders = JSON.parse(safeGet('mb_orders') || '[]'); } catch(e) {}
-            localOrders.unshift(orderData);
-            safeSet('mb_orders', JSON.stringify(localOrders));
-
-            // Kirim ke database Supabase secara real-time
-            try {
-                await fetch(`${SUPABASE_URL}/rest/v1/orders`, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "apikey": SUPABASE_ANON_KEY,
-                        "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
-                        "Prefer": "return=minimal"
-                    },
-                    body: JSON.stringify(orderData)
-                });
-            } catch(e) {
-                console.log("Koneksi cloud tertunda, tersimpan secara lokal.");
-            }
-
-            // Buka WhatsApp Otomatis ke Resto
-            let text = `Halo Resto Mie Bangka Teladan, saya ingin memesan:\nID: ${orderId}\nNama: ${name}\nNo HP: ${phone}\nMeja/Alamat: ${address}\n\nPesanan:\n`;
-            cart.forEach(i => { text += `- ${i.name} (${i.qty}x) Rp ${(i.price * i.qty).toLocaleString("id-ID")}\n`; });
-            text += `\nTotal: Rp ${total.toLocaleString("id-ID")}\nPembayaran: ${payment}`;
-            
-            cart = [];
-            updateCartUI();
-            toggleCartModal();
-
-            alert("Pesanan berhasil dikirim dengan Kode: " + orderId);
-            window.open(`https://wa.me/${RESTO_WA}?text=` + encodeURIComponent(text), '_blank');
-        }
-
-        async function checkOrderStatus() {
-            const code = document.getElementById('check-order-input').value.trim();
-            const box = document.getElementById('order-result-box');
-            if(!code) {
-                alert("Masukkan kode pesanan terlebih dahulu!");
-                return;
-            }
-
-            let found = null;
-            try {
-                const res = await fetch(`${SUPABASE_URL}/rest/v1/orders?id=eq.${encodeURIComponent(code)}&select=*`, {
-                    headers: {
-                        "apikey": SUPABASE_ANON_KEY,
-                        "Authorization": `Bearer ${SUPABASE_ANON_KEY}`
-                    }
-                });
-                if(res.ok) {
-                    const data = await res.json();
-                    if(data && data.length > 0) found = data[0];
-                }
-            } catch(e) {}
-
-            if(!found) {
-                try {
-                    const local = JSON.parse(safeGet('mb_orders') || '[]');
-                    found = local.find(o => o.id === code);
-                } catch(e) {}
-            }
-
-            if(!found) {
-                box.innerHTML = `<p class="text-xs text-red-500 font-bold">Pesanan dengan ID "${code}" tidak ditemukan.</p>`;
-                return;
-            }
-
-            box.innerHTML = `
-                <div class="bg-sky-50 border border-sky-200 rounded-xl p-3 text-xs space-y-1">
-                    <p><b>ID Pesanan:</b> ${found.id}</p>
-                    <p><b>Nama:</b> ${found.name}</p>
-                    <p><b>Status:</b> <span class="font-bold text-sky-700">${found.status || 'Menunggu'}</span></p>
-                    <p><b>Total:</b> Rp ${Number(found.total).toLocaleString("id-ID")}</p>
-                </div>`;
-        }
-    </script>
-</body>
 </html>
-
-</html>
-
-
