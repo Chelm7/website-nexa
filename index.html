@@ -259,7 +259,7 @@
         </div>
     </div>
 
-    <!-- Timer Pembayaran 3 Menit -->
+    <!-- Modal Timer Pembayaran 3 Menit -->
     <div id="payment-timer-modal" class="fixed inset-0 bg-black bg-opacity-85 hidden z-50 flex justify-center items-center p-4">
         <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 text-center border-t-4 border-sky-600">
             <div class="w-14 h-14 bg-sky-100 text-sky-600 rounded-full flex items-center justify-center text-2xl mx-auto mb-3">
@@ -299,8 +299,10 @@
     <script>
         "use strict";
 
-        const SHEETDB_API = "https://sheetdb.io/api/v1/2ij5jepgf1fdy";
-        const RESTO_WA_NUMBER = "6282384039200"; // Nomor WhatsApp Resto
+        // Konfigurasi Supabase Anda (Ganti dengan URL dan Anon Key project Supabase Anda)
+        const SUPABASE_URL = "https://YOUR_SUPABASE_PROJECT_ID.supabase.co";
+        const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
+        const RESTO_WA_NUMBER = "6282384039200";
 
         const memoryStorage = {};
         function safeGet(key) {
@@ -605,18 +607,23 @@
             return "ORD-" + Math.random().toString(36).substring(2, 10).toUpperCase();
         }
 
-        async function apiRequest(url, options = {}) {
-            const response = await fetch(url, {
+        // Fungsi koneksi Supabase API
+        async function supabaseRequest(endpoint, options = {}) {
+            if (SUPABASE_URL.includes("YOUR_SUPABASE_PROJECT_ID")) {
+                console.log("Supabase URL belum dikonfigurasi.");
+                return null;
+            }
+            const response = await fetch(`${SUPABASE_URL}/rest/v1/${endpoint}`, {
                 ...options,
                 headers: {
                     "Content-Type": "application/json",
+                    "apikey": SUPABASE_ANON_KEY,
+                    "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
                     ...(options.headers || {})
                 }
             });
-            let result;
-            try { result = await response.json(); } catch { throw new Error("Respons dari SheetDB tidak dapat dibaca."); }
-            if (!response.ok) { throw new Error(result?.error || "Permintaan ke SheetDB gagal."); }
-            return result;
+            if (!response.ok) return null;
+            try { return await response.json(); } catch(e) { return null; }
         }
 
         async function submitOrder(event) {
@@ -673,7 +680,6 @@
                 id: orderId,
                 createdAt: nowTime,
                 created_at: dateStr,
-                date: dateStr,
                 name: name,
                 phone: normalizedPhone,
                 address: address,
@@ -693,27 +699,12 @@
                 localOrders.push(order);
                 localStorage.setItem('mb_orders', JSON.stringify(localOrders));
 
-                try {
-                    await apiRequest(SHEETDB_API, {
-                        method: "POST",
-                        body: JSON.stringify({
-                            data: [{
-                                id: order.id,
-                                createdAt: order.createdAt,
-                                created_at: order.created_at,
-                                name: order.name,
-                                phone: order.phone,
-                                address: order.address,
-                                items: JSON.stringify(order.items),
-                                total: order.total,
-                                payment: order.payment,
-                                status: order.status
-                            }]
-                        })
-                    });
-                } catch(err) {
-                    console.log("SheetDB cloud sync note:", err);
-                }
+                // Kirim ke Supabase tabel orders
+                await supabaseRequest("orders", {
+                    method: "POST",
+                    headers: { "Prefer": "return=minimal" },
+                    body: JSON.stringify(order)
+                });
 
                 localStorage.setItem("last_order_id", order.id);
                 document.getElementById('lookup-order-id').value = order.id;
@@ -732,9 +723,8 @@
                 document.getElementById('pay-total').textContent = rupiah(total);
                 document.getElementById('payment-timer-modal').classList.remove('hidden');
 
-                // Buka WhatsApp otomatis ke nomor resto
                 let itemsTextSummary = orderItems.map(i => `- ${i.qty}x ${i.name} (${rupiah(i.price * i.qty)})`).join('%0A');
-                let waMessage = `Halo Admin Mie Bangka Teladan,%0ASaya ingin memesan:%0A*ID:* ${orderId}%0A*Nama:* ${name}%0A*Meja/Alamat:* ${address}%0A%0A*Pesanan:*%0A${itemsTextSummary}%0A*Total:* ${rupiah(total)}%0A*Pembayaran:* ${payment}%0A%0ATerima kasih!`;
+                let waMessage = `Halo Admin Mie Bangka Teladan,%0A%0ASaya ingin memesan:%0A*ID:* ${orderId}%0A*Nama:* ${name}%0A*Meja/Alamat:* ${address}%0A%0A*Pesanan:*%0A${itemsTextSummary}%0A*Total:* ${rupiah(total)}%0A*Pembayaran:* ${payment}%0A%0ATerima kasih!`;
                 window.open(`https://wa.me/${RESTO_WA_NUMBER}?text=${waMessage}`, '_blank');
 
                 startCountdownTimer(3 * 60, order.id);
@@ -859,13 +849,9 @@
                 foundOrder = localOrders.find(o => String(o.id).toLowerCase() === String(orderId).toLowerCase());
 
                 if (!foundOrder) {
-                    try {
-                        const data = await apiRequest(SHEETDB_API + "/search?id=" + encodeURIComponent(orderId));
-                        if (Array.isArray(data) && data.length > 0) {
-                            foundOrder = data[0];
-                        }
-                    } catch(err) {
-                        console.log("Cloud search error:", err);
+                    const cloudData = await supabaseRequest(`orders?id=eq.${encodeURIComponent(orderId)}`);
+                    if (Array.isArray(cloudData) && cloudData.length > 0) {
+                        foundOrder = cloudData[0];
                     }
                 }
 
@@ -917,7 +903,7 @@
                         ${restNote}
                         <div class="mt-4 pt-3 border-t border-dashed border-slate-200 text-center font-bold text-slate-800 text-sm">
                             Terima kasih telah memesan di Resto Mie Bangka Teladan! 🙏<br>
-                            <span class="text-xs font-normal text-slate-500">🙂.</span>
+                            <span class="text-xs font-normal text-slate-500">Selamat menikmati hidangan Anda.</span>
                         </div>
                     </div>`;
 
