@@ -911,5 +911,32 @@
 
         window.onload = initApp;
     </script>
+
+// Contoh struktur data yang dikirim ke Supabase dari index.html
+const orderData = {
+    id: "ORD-" + Math.random().toString(36).substring(2, 8).toUpperCase(),
+    createdAt: Date.now(),
+    created_at: new Date().toLocaleString("id-ID", { dateStyle: "medium", timeStyle: "short" }),
+    name: customerName,
+    phone: customerPhone,
+    address: customerAddress,
+    items: JSON.stringify(cartItems),
+    total: totalAmount,
+    payment: paymentMethod,
+    status: "Menunggu"
+};
+
+// Kirim ke Supabase
+await fetch("https://bshjfhjwfbdwtdqphjla.supabase.co/rest/v1/orders", {
+    method: "POST",
+    headers: {
+        "Content-Type": "application/json",
+        "apikey": "sb_publishable_-RoutcoL6TizW60mnEkB7Q_Hn7Zgy1Z",
+        "Authorization": "Bearer sb_publishable_-RoutcoL6TizW60mnEkB7Q_Hn7Zgy1Z",
+        "Prefer": "return=minimal"
+    },
+    body: JSON.stringify(orderData)
+});
+
 </body>
 </html>
