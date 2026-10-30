@@ -299,8 +299,10 @@
     <script>
         "use strict";
 
-        const SHEETDB_API = "https://sheetdb.io/api/v1/2ij5jepgf1fdy";
-        const RESTO_WA_NUMBER = "6282384039200"; // Nomor WhatsApp Resto
+        // Konfigurasi Supabase Resto Mie Bangka Teladan
+        const SUPABASE_URL = "https://bshjfhjwfbdwtdqphjla.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_-RoutcoL6TizW60mnEkB7Q_Hn7Zgy1Z";
+        const RESTO_WA_NUMBER = "6282384039200";
 
         const memoryStorage = {};
         function safeGet(key) {
@@ -605,19 +607,9 @@
             return "ORD-" + Math.random().toString(36).substring(2, 10).toUpperCase();
         }
 
-        async function apiRequest(url, options = {}) {
-            const response = await fetch(url, {
-                ...options,
-                headers: {
-                    "Content-Type": "application/json",
-                    ...(options.headers || {})
-                }
-            });
-            let result;
-            try { result = await response.json(); } catch { throw new Error("Respons dari SheetDB tidak dapat dibaca."); }
-            if (!response.ok) { throw new Error(result?.error || "Permintaan ke SheetDB gagal."); }
-            return result;
-        }
+        // Integrasi Supabase Satu Pintu
+        const SUPABASE_URL = "https://bshjfhjwfbdwtdqphjla.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_-RoutcoL6TizW60mnEkB7Q_Hn7Zgy1Z";
 
         async function submitOrder(event) {
             event.preventDefault();
@@ -673,7 +665,6 @@
                 id: orderId,
                 createdAt: nowTime,
                 created_at: dateStr,
-                date: dateStr,
                 name: name,
                 phone: normalizedPhone,
                 address: address,
@@ -685,7 +676,7 @@
 
             submitButton.disabled = true;
             checkoutMessage.className = "text-center text-sm text-sky-700";
-            checkoutMessage.textContent = "Pesanan sedang dikirim...";
+            checkoutMessage.textContent = "Pesanan sedang dikirim ke database...";
 
             try {
                 let localOrders = [];
@@ -693,26 +684,20 @@
                 localOrders.push(order);
                 localStorage.setItem('mb_orders', JSON.stringify(localOrders));
 
+                // Kirim ke database Supabase
                 try {
-                    await apiRequest(SHEETDB_API, {
+                    await fetch(`${SUPABASE_URL}/rest/v1/orders`, {
                         method: "POST",
-                        body: JSON.stringify({
-                            data: [{
-                                id: order.id,
-                                createdAt: order.createdAt,
-                                created_at: order.created_at,
-                                name: order.name,
-                                phone: order.phone,
-                                address: order.address,
-                                items: JSON.stringify(order.items),
-                                total: order.total,
-                                payment: order.payment,
-                                status: order.status
-                            }]
-                        })
+                        headers: {
+                            "Content-Type": "application/json",
+                            "apikey": SUPABASE_ANON_KEY,
+                            "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+                            "Prefer": "return=minimal"
+                        },
+                        body: JSON.stringify(order)
                     });
                 } catch(err) {
-                    console.log("SheetDB cloud sync note:", err);
+                    console.log("Cloud sync note:", err);
                 }
 
                 localStorage.setItem("last_order_id", order.id);
@@ -732,7 +717,6 @@
                 document.getElementById('pay-total').textContent = rupiah(total);
                 document.getElementById('payment-timer-modal').classList.remove('hidden');
 
-                // Buka WhatsApp otomatis ke nomor resto
                 let itemsTextSummary = orderItems.map(i => `- ${i.qty}x ${i.name} (${rupiah(i.price * i.qty)})`).join('%0A');
                 let waMessage = `Halo Admin Mie Bangka Teladan,%0ASaya ingin memesan:%0A*ID:* ${orderId}%0A*Nama:* ${name}%0A*Meja/Alamat:* ${address}%0A%0A*Pesanan:*%0A${itemsTextSummary}%0A*Total:* ${rupiah(total)}%0A*Pembayaran:* ${payment}%0A%0ATerima kasih!`;
                 window.open(`https://wa.me/${RESTO_WA_NUMBER}?text=${waMessage}`, '_blank');
@@ -853,20 +837,25 @@
 
             try {
                 let foundOrder = null;
-                let localOrders = [];
-                try { localOrders = JSON.parse(localStorage.getItem('mb_orders') || '[]'); } catch(e) { localOrders = []; }
                 
-                foundOrder = localOrders.find(o => String(o.id).toLowerCase() === String(orderId).toLowerCase());
+                // Cek langsung ke Supabase
+                try {
+                    const res = await fetch(`${SUPABASE_URL}/rest/v1/orders?id=eq.${encodeURIComponent(orderId)}&select=*`, {
+                        headers: {
+                            "apikey": SUPABASE_ANON_KEY,
+                            "Authorization": `Bearer ${SUPABASE_ANON_KEY}`
+                        }
+                    });
+                    if(res.ok) {
+                        const data = await res.json();
+                        if(data && data.length > 0) foundOrder = data[0];
+                    }
+                } catch(e) {}
 
                 if (!foundOrder) {
-                    try {
-                        const data = await apiRequest(SHEETDB_API + "/search?id=" + encodeURIComponent(orderId));
-                        if (Array.isArray(data) && data.length > 0) {
-                            foundOrder = data[0];
-                        }
-                    } catch(err) {
-                        console.log("Cloud search error:", err);
-                    }
+                    let localOrders = [];
+                    try { localOrders = JSON.parse(localStorage.getItem('mb_orders') || '[]'); } catch(e) { localOrders = []; }
+                    foundOrder = localOrders.find(o => String(o.id).toLowerCase() === String(orderId).toLowerCase());
                 }
 
                 if (!foundOrder) {
