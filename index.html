@@ -299,9 +299,9 @@
     <script>
         "use strict";
 
-        // Konfigurasi Supabase Anda (Ganti dengan URL dan Anon Key project Supabase Anda)
-        const SUPABASE_URL = "https://YOUR_SUPABASE_PROJECT_ID.supabase.co";
-        const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
+        // Konfigurasi Supabase
+        const SUPABASE_URL = "https://bshjfhjwfbdwtdqphjla.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_-RoutcoL6TizW60mnEkB7Q_Hn7Zgy1Z";
         const RESTO_WA_NUMBER = "6282384039200";
 
         const memoryStorage = {};
@@ -609,10 +609,6 @@
 
         // Fungsi koneksi Supabase API
         async function supabaseRequest(endpoint, options = {}) {
-            if (SUPABASE_URL.includes("YOUR_SUPABASE_PROJECT_ID")) {
-                console.log("Supabase URL belum dikonfigurasi.");
-                return null;
-            }
             const response = await fetch(`${SUPABASE_URL}/rest/v1/${endpoint}`, {
                 ...options,
                 headers: {
