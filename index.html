@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<meta name='viewport' content='width=device-width, initial-scale=1'/><!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -309,12 +309,7 @@
         const RESTO_WA_NUMBER = "6282384039200";
         const SUPABASE_URL = "https://bshjfhjwfbdwtdqphjla.supabase.co";
         const SUPABASE_KEY = "sb_publishable_-Routcol6TizW60mnEkB7Q_Hn7Zgy1Z";
-
-        const headers = {
-            "apikey": SUPABASE_KEY,
-            "Authorization": "Bearer " + SUPABASE_KEY,
-            "Content-Type": "application/json"
-        };
+        const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let cart = new Map();
         let currentCategory = "Semua";
@@ -359,10 +354,9 @@
             const container = document.getElementById('banner-container');
             if (!container) return;
             try {
-                const res = await fetch(`${SUPABASE_URL}/rest/v1/settings?key=eq.banner`, { headers });
-                const data = await res.json();
-                if (data && data.length > 0 && data[0].value) {
-                    bannerImages = typeof data[0].value === 'string' ? JSON.parse(data[0].value) : data[0].value;
+                const { data } = await dbClient.from('settings').select('value').eq('key', 'banner').single();
+                if (data && data.value) {
+                    bannerImages = typeof data.value === 'string' ? JSON.parse(data.value) : data.value;
                 }
             } catch (e) {}
 
@@ -394,9 +388,8 @@
             const grid = document.getElementById('menu-grid');
             if (!grid) return;
             try {
-                const res = await fetch(`${SUPABASE_URL}/rest/v1/menus?select=*`, { headers });
-                const data = await res.json();
-                cachedMenus = Array.isArray(data) ? data : [];
+                const { data } = await dbClient.from('menus').select('*');
+                cachedMenus = data || [];
             } catch (e) {
                 cachedMenus = [];
             }
@@ -551,11 +544,7 @@
             submitBtn.textContent = "Mengirim Pesanan...";
 
             try {
-                await fetch(`${SUPABASE_URL}/rest/v1/orders`, {
-                    method: 'POST',
-                    headers: headers,
-                    body: JSON.stringify(orderData)
-                });
+                await dbClient.from('orders').insert([orderData]);
             } catch (e) {}
 
             let waText = `Halo Admin Mie Bangka Teladan, saya ingin memesan:\n\n*ID Pesanan:* ${orderId}\n*Nama:* ${name}\n*No HP:* ${phone}\n*Alamat/Meja:* ${address}\n\n*Detail Pesanan:*\n`;
@@ -598,10 +587,9 @@
 
                 // Cek status apakah sudah diproses resto
                 try {
-                    const res = await fetch(`${SUPABASE_URL}/rest/v1/orders?id=eq.${orderId}&select=status`, { headers });
-                    const data = await res.json();
-                    if (data && data.length > 0) {
-                        let currentStatus = data[0].status;
+                    const { data } = await dbClient.from('orders').select('status').eq('id', orderId).single();
+                    if (data) {
+                        let currentStatus = data.status;
                         if (currentStatus === 'Diproses' || currentStatus === 'Selesai') {
                             clearInterval(countdownInterval);
                             modal.classList.add('hidden');
@@ -617,10 +605,7 @@
                     clearInterval(countdownInterval);
                     // Hapus otomatis jika waktu habis & tidak direspons
                     try {
-                        await fetch(`${SUPABASE_URL}/rest/v1/orders?id=eq.${orderId}`, {
-                            method: 'DELETE',
-                            headers: headers
-                        });
+                        await dbClient.from('orders').delete().eq('id', orderId);
                     } catch (e) {}
 
                     modal.classList.add('hidden');
@@ -649,11 +634,8 @@
 
             let found = null;
             try {
-                const res = await fetch(`${SUPABASE_URL}/rest/v1/orders?id=eq.${encodeURIComponent(orderId)}`, { headers });
-                const data = await res.json();
-                if (Array.isArray(data) && data.length > 0) {
-                    found = data[0];
-                }
+                const { data } = await dbClient.from('orders').select('*').eq('id', orderId.toUpperCase()).single();
+                found = data;
             } catch (e) {}
 
             if (!found) {
@@ -677,6 +659,13 @@
                     <div><b>Total:</b> ${rupiah(found.total)}</div>
                 </div>
             `;
+        }
+
+        function copyPaymentInfo() {
+            const text = document.getElementById('pay-method-chosen').innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                alert("Informasi pembayaran berhasil disalin!");
+            });
         }
 
         window.onload = () => {
