@@ -864,5 +864,25 @@
   muatPesanan();
 </script>
 
+<script>
+  // Fungsi untuk mengambil daftar pesanan dari server Redis
+  async function muatPesanan() {
+    try {
+      const response = await fetch('/api/pesanan');
+      const data = await response.json();
+      
+      if (data.success) {
+        console.log('Daftar pesanan masuk:', data.pesanan);
+        // Di sini data.pesanan bisa ditampilkan ke tabel / kartu pesanan
+      }
+    } catch (err) {
+      console.error('Gagal mengambil pesanan:', err);
+    }
+  }
+
+  // Muat pesanan saat halaman admin dibuka
+  muatPesanan();
+</script>
+
 </body>
 </html>
