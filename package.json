@@ -1,5 +1,5 @@
 {
-  "name": "my-website-backend",
+  "name": "website-nexa",
   "version": "1.0.0",
   "description": "Backend Node.js untuk website",
   "main": "server.js",
@@ -7,6 +7,7 @@
     "start": "node server.js"
   },
   "dependencies": {
-    "express": "^4.19.2"
+    "express": "^4.18.2",
+    "@upstash/redis": "^1.28.0"
   }
 }
