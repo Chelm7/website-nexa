@@ -166,7 +166,7 @@
             e.preventDefault();
             const u = document.getElementById('admin-user').value;
             const p = document.getElementById('admin-pass').value;
-            if (u === "admin" && p === "admin123") {
+            if (u === "admin" && p === "admin888") {
                 document.getElementById('login-section').classList.add('hidden');
                 document.getElementById('admin-panel').classList.remove('hidden');
                 loadAdminData();
@@ -197,7 +197,7 @@
         async function loadAdminData() {
             // Ambil Pesanan
             try {
-                const res = await fetch(`${SUPABASE_URL}/rest/v1/Pesan?select=*`, {
+                const res = await fetch(`${SUPABASE_URL}/rest/v1/pesan?select=*`, {
                     headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
                 });
                 const orders = await res.json();
