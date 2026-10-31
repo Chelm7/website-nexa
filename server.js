@@ -1,87 +1,74 @@
-const express = require('express');
-const { Redis } = require('@upstash/redis');
+import express from 'express';
+import { Redis } from '@upstash/redis';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
-const port = process.env.PORT || 3000;
-
-// Inisialisasi Upstash Redis (otomatis membaca KV_REST_API_URL & KV_REST_API_TOKEN dari Vercel)
-const redis = Redis.fromEnv();
-
-// Middleware untuk membaca JSON dari request
 app.use(express.json());
+app.use(express.static(path.join(__dirname)));
 
-// ==========================================
-// 1. ENDPOINT UTAMA & TES KONEKSI REDIS
-// ==========================================
+// Inisialisasi Upstash Redis (mengambil otomatis dari env: UPSTASH_REDIS_REST_URL & UPSTASH_REDIS_REST_TOKEN)
+let redis;
+try {
+    redis = Redis.fromEnv();
+} catch (e) {
+    console.log("Catatan: Redis belum dikonfigurasi via env, menggunakan memori lokal sementara.");
+}
 
-// Endpoint utama website
-app.get('/', (req, res) => {
-  res.send('Website Mie Bangka Teladan Berjalan Normal!');
-});
+// Memori cadangan jika Redis gagal terhubung
+let memoriPesanan = [];
 
-// Endpoint untuk tes simpan data ke Redis
-app.get('/test-redis', async (req, res) => {
-  try {
-    await redis.set('test_koneksi', 'Berhasil terhubung ke Upstash Redis!');
-    const pesan = await redis.get('test_koneksi');
-    
-    res.json({
-      success: true,
-      message: pesan
-    });
-  } catch (err) {
-    res.status(500).json({
-      success: false,
-      error: err.message
-    });
-  }
-});
-
-// ==========================================
-// 2. ENDPOINT PESANAN & PANEL ADMIN
-// ==========================================
-
-// Endpoint untuk menyimpan pesanan baru dari pelanggan
+// API Kirim Pesanan (POST)
 app.post('/api/pesanan', async (req, res) => {
-  try {
-    const dataPesanan = req.body;
-    const idPesanan = 'order_' + Date.now();
-    
-    // Simpan data pesanan ke Upstash Redis
-    await redis.set(idPesanan, JSON.stringify(dataPesanan));
-    
-    // Masukkan ID pesanan ke dalam list daftar pesanan
-    await redis.lpush('daftar_pesanan', idPesanan);
+    try {
+        const pesananBaru = req.body;
+        if (!pesananBaru.id) {
+            pesananBaru.id = "ORD-" + Math.random().toString(36).substring(2, 8).toUpperCase();
+        }
 
-    res.json({ success: true, message: 'Pesanan berhasil disimpan!', id: idPesanan });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
+        // Coba simpan ke Upstash Redis
+        if (redis) {
+            await redis.lpush('daftar_pesanan', JSON.stringify(pesananBaru));
+        }
+        
+        // Simpan juga ke memori lokal sbg cadangan aman
+        memoriPesanan.unshift(pesananBaru);
+
+        res.json({ success: true, message: "Pesanan berhasil disimpan!", pesanan: pesananBaru });
+    } catch (error) {
+        console.error("Gagal simpan pesanan:", error);
+        res.status(500).json({ success: false, error: error.message });
+    }
 });
 
-// Endpoint untuk mengambil semua daftar pesanan untuk Panel Admin
+// API Ambil Daftar Pesanan (GET)
 app.get('/api/pesanan', async (req, res) => {
-  try {
-    const listId = await redis.lrange('daftar_pesanan', 0, -1);
-    if (!listId || listId.length === 0) {
-      return res.json({ success: true, pesanan: [] });
-    }
+    try {
+        let semuaPesanan = [];
 
-    const semuaPesanan = [];
-    for (const id of listId) {
-      const detail = await redis.get(id);
-      if (detail) {
-        semuaPesanan.push({ id, ...JSON.parse(detail) });
-      }
-    }
+        if (redis) {
+            const dataRedis = await redis.lrange('daftar_pesanan', 0, -1);
+            if (dataRedis && dataRedis.length > 0) {
+                semuaPesanan = dataRedis.map(item => typeof item === 'string' ? JSON.parse(item) : item);
+            }
+        }
 
-    res.json({ success: true, pesanan: semuaPesanan });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
+        // Jika Redis kosong, gunakan memori lokal
+        if (semuaPesanan.length === 0) {
+            semuaPesanan = memoriPesanan;
+        }
+
+        res.json({ success: true, pesanan: semuaPesanan });
+    } catch (error) {
+        console.error("Gagal ambil pesanan:", error);
+        res.json({ success: true, pesanan: memoriPesanan });
+    }
 });
 
-// Menjalankan server
-app.listen(port, () => {
-  console.log(`Server berjalan di port ${port}`);
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Server Mie Bangka Teladan berjalan di port ${PORT}`);
 });
