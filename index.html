@@ -307,6 +307,9 @@
         function safeSet(key, val) {
             try { localStorage.setItem(key, val); } catch (e) { memoryStorage[key] = val; }
         }
+        function safeRemove(key) {
+            try { localStorage.removeItem(key); } catch (e) { delete memoryStorage[key]; }
+        }
 
         let scrollTimeout;
         window.addEventListener('scroll', function() {
@@ -375,7 +378,7 @@
             if (!safeGet('mb_resto_status')) safeSet('mb_resto_status', 'Buka');
             
             let localOrders = [];
-            try { localOrders = JSON.parse(localStorage.getItem('mb_orders') || '[]'); } catch(e) { localOrders = []; }
+            try { localOrders = JSON.parse(safeGet('mb_orders') || '[]'); } catch(e) { localOrders = []; }
             if (localOrders.length === 0) {
                 localOrders.push({
                     id: "ORD-CBAY0975",
@@ -387,7 +390,7 @@
                     date: "27 Okt 2026, 11.47",
                     items: [{ id: "menu-001", name: "Mie Bangka Spesial", price: 30000, qty: 1, topping: "B2" }]
                 });
-                localStorage.setItem('mb_orders', JSON.stringify(localOrders));
+                safeSet('mb_orders', JSON.stringify(localOrders));
             }
 
             checkRestoStatus();
@@ -499,7 +502,6 @@
             });
         }
 
-        // Masuk ke keranjang tanpa membuka modal dan update badge merah bulat
         function addToCart(menuId) {
             const status = safeGet('mb_resto_status') || 'Buka';
             if (status === 'Tutup') {
@@ -688,9 +690,9 @@
 
             try {
                 let localOrders = [];
-                try { localOrders = JSON.parse(localStorage.getItem('mb_orders') || '[]'); } catch(e) { localOrders = []; }
+                try { localOrders = JSON.parse(safeGet('mb_orders') || '[]'); } catch(e) { localOrders = []; }
                 localOrders.push(order);
-                localStorage.setItem('mb_orders', JSON.stringify(localOrders));
+                safeSet('mb_orders', JSON.stringify(localOrders));
 
                 try {
                     await apiRequest(SHEETDB_API, {
@@ -714,7 +716,7 @@
                     console.log("SheetDB cloud sync note:", err);
                 }
 
-                localStorage.setItem("last_order_id", order.id);
+                safeSet("last_order_id", order.id);
                 document.getElementById('lookup-order-id').value = order.id;
                 activeTrackingId = order.id;
                 checkOrderStatusSubmit();
@@ -779,7 +781,7 @@
 
         function checkCustomerOrdersExpiry() {
             let localOrders = [];
-            try { localOrders = JSON.parse(localStorage.getItem('mb_orders') || '[]'); } catch(e) { localOrders = []; }
+            try { localOrders = JSON.parse(safeGet('mb_orders') || '[]'); } catch(e) { localOrders = []; }
             let now = Date.now();
             let changed = false;
 
@@ -795,14 +797,14 @@
             });
 
             if (changed) {
-                localStorage.setItem('mb_orders', JSON.stringify(localOrders));
+                safeSet('mb_orders', JSON.stringify(localOrders));
             }
         }
 
         function autoCheckActiveOrderStatus() {
             if (!activeTrackingId) return;
             let localOrders = [];
-            try { localOrders = JSON.parse(localStorage.getItem('mb_orders') || '[]'); } catch(e) { localOrders = []; }
+            try { localOrders = JSON.parse(safeGet('mb_orders') || '[]'); } catch(e) { localOrders = []; }
             let found = localOrders.find(o => o.id === activeTrackingId);
             if (found && (found.status === 'Diproses' || found.status === 'Selesai')) {
                 const modal = document.getElementById('payment-timer-modal');
@@ -827,7 +829,7 @@
             try {
                 let foundOrder = null;
                 let localOrders = [];
-                try { localOrders = JSON.parse(localStorage.getItem('mb_orders') || '[]'); } catch(e) { localOrders = []; }
+                try { localOrders = JSON.parse(safeGet('mb_orders') || '[]'); } catch(e) { localOrders = []; }
                 
                 foundOrder = localOrders.find(o => String(o.id).toLowerCase() === String(orderId).toLowerCase());
 
