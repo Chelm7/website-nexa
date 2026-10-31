@@ -884,5 +884,66 @@
   muatPesanan();
 </script>
 
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Admin - Mie Bangka Teladan</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f6f8; margin: 0; padding: 15px; color: #333; }
+        h2 { text-align: center; color: #d9534f; }
+        .card { background: white; padding: 15px; margin-bottom: 12px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .card h4 { margin: 0 0 8px 0; color: #0275d8; }
+        .card p { margin: 4px 0; font-size: 14px; }
+        .btn-refresh { display: block; width: 100%; padding: 12px; background: #0275d8; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; margin-bottom: 15px; }
+        .empty { text-align: center; color: #777; margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+    <h2>Panel Admin Mie Bangka Teladan</h2>
+    
+    <button class="btn-refresh" onclick="muatPesanan()">Refresh Pesanan</button>
+    
+    <div id="daftarPesanan">
+        <p class="empty">Memuat data pesanan...</p>
+    </div>
+
+    <script>
+        async function muatPesanan() {
+            const container = document.getElementById('daftarPesanan');
+            container.innerHTML = '<p class="empty">Memuat data...</p>';
+
+            try {
+                const response = await fetch('/api/pesanan');
+                const data = await response.json();
+
+                if (data.success && data.pesanan.length > 0) {
+                    let html = '';
+                    data.pesanan.forEach(item => {
+                        html += `
+                            <div class="card">
+                                <h4>👤 ${item.nama || 'Tanpa Nama'}</h4>
+                                <p><strong>Menu:</strong> ${item.menu || '-'}</p>
+                                <p><strong>Catatan:</strong> ${item.catatan || 'Tidak ada'}</p>
+                                <p><strong>Waktu:</strong> ${item.waktu || '-'}</p>
+                            </div>
+                        `;
+                    });
+                    container.innerHTML = html;
+                } else {
+                    container.innerHTML = '<p class="empty">Belum ada pesanan masuk.</p>';
+                }
+            } catch (err) {
+                container.innerHTML = '<p class="empty" style="color:red;">Gagal memuat pesanan: ' + err.message + '</p>';
+            }
+        }
+
+        // Otomatis muat pesanan saat halaman dibuka
+        muatPesanan();
+    </script>
+
 </body>
 </html>
+
