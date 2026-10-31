@@ -279,7 +279,6 @@
                         <i class="fa-solid fa-copy"></i> Salin Rekening
                     </button>
                 </div>
-                <!-- Tombol Chat WhatsApp dengan Logo WA di bawah tombol salin -->
                 <div>
                     <button type="button" onclick="connectWhatsApp()" class="w-full mt-2 bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-xl text-xs font-bold shadow transition flex items-center justify-center gap-2">
                         <i class="fa-brands fa-whatsapp text-base"></i> Chat WhatsApp
@@ -304,8 +303,7 @@
     <script>
         "use strict";
 
-        const SHEETDB_API = "https://sheetdb.io/api/v1/2ij5jepgf1fdy";
-        const RESTO_WA_NUMBER = "6282384039200"; // Nomor WhatsApp Resto
+        const RESTO_WA_NUMBER = "6282384039200";
 
         const memoryStorage = {};
         function safeGet(key) {
@@ -313,9 +311,6 @@
         }
         function safeSet(key, val) {
             try { localStorage.setItem(key, val); } catch (e) { memoryStorage[key] = val; }
-        }
-        function safeRemove(key) {
-            try { localStorage.removeItem(key); } catch (e) { delete memoryStorage[key]; }
         }
 
         let scrollTimeout;
@@ -383,36 +378,12 @@
                 "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=1200&q=80"
             ]));
             if (!safeGet('mb_resto_status')) safeSet('mb_resto_status', 'Buka');
-            
-            let localOrders = [];
-            try { localOrders = JSON.parse(safeGet('mb_orders') || '[]'); } catch(e) { localOrders = []; }
-            if (localOrders.length === 0) {
-                localOrders.push({
-                    id: "ORD-CBAY0975",
-                    name: "U",
-                    status: "Selesai",
-                    total: "30000",
-                    payment: "BCA - 1234567890 (a.n. Mie Bangka Teladan)",
-                    created_at: "27 Okt 2026, 11.47",
-                    date: "27 Okt 2026, 11.47",
-                    items: [{ id: "menu-001", name: "Mie Bangka Spesial", price: 30000, qty: 1, topping: "B2" }]
-                });
-                safeSet('mb_orders', JSON.stringify(localOrders));
-            }
 
             checkRestoStatus();
             loadBanners();
             renderMenu();
-            
-            const lookupInput = document.getElementById('lookup-order-id');
-            if (lookupInput && !lookupInput.value) {
-                lookupInput.value = "ORD-CBAY0975";
-            }
-            checkOrderStatusSubmit();
 
             setInterval(checkRestoStatus, 2000);
-            setInterval(checkCustomerOrdersExpiry, 1000);
-            setInterval(autoCheckActiveOrderStatus, 2000);
         }
 
         function checkRestoStatus() {
@@ -613,20 +584,7 @@
             return "ORD-" + Math.random().toString(36).substring(2, 10).toUpperCase();
         }
 
-        async function apiRequest(url, options = {}) {
-            const response = await fetch(url, {
-                ...options,
-                headers: {
-                    "Content-Type": "application/json",
-                    ...(options.headers || {})
-                }
-            });
-            let result;
-            try { result = await response.json(); } catch { throw new Error("Respons dari SheetDB tidak dapat dibaca."); }
-            if (!response.ok) { throw new Error(result?.error || "Permintaan ke SheetDB gagal."); }
-            return result;
-        }
-
+        // FUNGSI PENGIRIMAN PESANAN KE BACKEND NODE.JS & REDIS
         async function submitOrder(event) {
             event.preventDefault();
             const checkoutMessage = document.getElementById('checkout-message');
@@ -674,72 +632,53 @@
             });
 
             const orderId = createOrderId();
-            const nowTime = Date.now();
             const dateStr = new Date().toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
 
-            const order = {
+            const orderData = {
                 id: orderId,
-                createdAt: nowTime,
-                created_at: dateStr,
-                date: dateStr,
-                name: name,
+                nama: name,
                 phone: normalizedPhone,
                 address: address,
                 items: orderItems,
                 total: String(total),
                 payment: payment,
+                waktu: dateStr,
                 status: "Menunggu"
             };
 
             submitButton.disabled = true;
             checkoutMessage.className = "text-center text-sm text-sky-700";
-            checkoutMessage.textContent = "Pesanan sedang dikirim...";
+            checkoutMessage.textContent = "Pesanan sedang dikirim ke server...";
 
             try {
-                let localOrders = [];
-                try { localOrders = JSON.parse(safeGet('mb_orders') || '[]'); } catch(e) { localOrders = []; }
-                localOrders.push(order);
-                safeSet('mb_orders', JSON.stringify(localOrders));
+                // Mengirim ke Backend Express API yang terhubung ke Upstash Redis
+                const response = await fetch('/api/pesanan', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(orderData)
+                });
 
-                try {
-                    await apiRequest(SHEETDB_API, {
-                        method: "POST",
-                        body: JSON.stringify({
-                            data: [{
-                                id: order.id,
-                                createdAt: order.createdAt,
-                                created_at: order.created_at,
-                                name: order.name,
-                                phone: order.phone,
-                                address: order.address,
-                                items: JSON.stringify(order.items),
-                                total: order.total,
-                                payment: order.payment,
-                                status: order.status
-                            }]
-                        })
-                    });
-                } catch(err) {
-                    console.log("SheetDB cloud sync note:", err);
+                const hasil = await response.json();
+
+                if (response.ok && hasil.success) {
+                    activeTrackingId = orderId;
+                    cart.clear();
+                    renderCart();
+                    closeCart();
+                    submitButton.disabled = false;
+                    checkoutMessage.textContent = "";
+
+                    document.getElementById('pay-order-id').textContent = orderId;
+                    document.getElementById('pay-buyer-name').textContent = name;
+                    document.getElementById('pay-method-chosen').textContent = payment;
+                    document.getElementById('pay-total').textContent = rupiah(total);
+                    document.getElementById('payment-timer-modal').classList.remove('hidden');
+                    startCountdownTimer(3 * 60);
+                } else {
+                    throw new Error(hasil.error || "Gagal menyimpan pesanan di server.");
                 }
-
-                safeSet("last_order_id", order.id);
-                document.getElementById('lookup-order-id').value = order.id;
-                activeTrackingId = order.id;
-                checkOrderStatusSubmit();
-
-                cart.clear();
-                renderCart();
-                closeCart();
-                submitButton.disabled = false;
-                checkoutMessage.textContent = "";
-
-                document.getElementById('pay-order-id').textContent = order.id;
-                document.getElementById('pay-buyer-name').textContent = order.name;
-                document.getElementById('pay-method-chosen').textContent = payment;
-                document.getElementById('pay-total').textContent = rupiah(total);
-                document.getElementById('payment-timer-modal').classList.remove('hidden');
-                startCountdownTimer(3 * 60);
 
             } catch (error) {
                 submitButton.disabled = false;
@@ -763,28 +702,9 @@
             const paymentMethod = document.getElementById('pay-method-chosen').innerText;
             const total = document.getElementById('pay-total').innerText;
 
-            let localOrders = [];
-            try { localOrders = JSON.parse(safeGet('mb_orders') || '[]'); } catch(e) { localOrders = []; }
-            const found = localOrders.find(o => o.id === orderId);
-
-            let itemsDetail = "";
-            if (found && found.items) {
-                let itemsList = typeof found.items === 'string' ? JSON.parse(found.items) : found.items;
-                itemsList.forEach((it, idx) => {
-                    itemsDetail += `\n${idx + 1}. ${it.name} (${it.qty}x) - ${rupiah(it.price * it.qty)}`;
-                });
-            }
-
-            const message = `Halo Resto Mie Bangka Teladan, saya ingin konfirmasi pesanan saya:\n\n*ID Pesanan:* ${orderId}\n*Nama Pemesan:* ${buyerName}\n*Metode Pembayaran:* ${paymentMethod}\n*Total Harga:* ${total}\n*Rincian Menu:*${itemsDetail}\n\nTerima kasih!`;
-
+            const message = `Halo Resto Mie Bangka Teladan, saya ingin konfirmasi pesanan saya:\n\n*ID Pesanan:* ${orderId}\n*Nama Pemesan:* ${buyerName}\n*Metode Pembayaran:* ${paymentMethod}\n*Total Harga:* ${total}\n\nTerima kasih!`;
             const waUrl = `https://wa.me/${RESTO_WA_NUMBER}?text=` + encodeURIComponent(message);
             window.open(waUrl, '_blank');
-        }
-
-        function closeTimerModal() {
-            document.getElementById('payment-timer-modal').classList.add('hidden');
-            const section = document.getElementById('status-pesanan-section');
-            if (section) section.scrollIntoView({ behavior: 'smooth' });
         }
 
         function startCountdownTimer(durationSeconds) {
@@ -805,182 +725,13 @@
                 if (--timer < 0) {
                     clearInterval(window.orderTimerInterval);
                     display.textContent = "Waktu Habis";
-                    
-                    // Waktu habis: tutup modal, hapus pesanan pending dari local storage agar mereset dari awal
                     document.getElementById('payment-timer-modal').classList.add('hidden');
-                    if (activeTrackingId) {
-                        let localOrders = [];
-                        try { localOrders = JSON.parse(safeGet('mb_orders') || '[]'); } catch(e) { localOrders = []; }
-                        localOrders = localOrders.filter(o => o.id !== activeTrackingId);
-                        safeSet('mb_orders', JSON.stringify(localOrders));
-                        activeTrackingId = null;
-                    }
-                    alert("Waktu konfirmasi habis. Pesanan dibatalkan otomatis dan dikembalikan dari awal.");
-                    window.location.reload();
+                    alert("Waktu konfirmasi habis.");
                 }
             }, 1000);
-        }
-
-        function checkCustomerOrdersExpiry() {
-            let localOrders = [];
-            try { localOrders = JSON.parse(safeGet('mb_orders') || '[]'); } catch(e) { localOrders = []; }
-            let now = Date.now();
-            let changed = false;
-
-            localOrders = localOrders.filter(o => {
-                let isPending = (o.status === 'Menunggu' || o.status === 'Pending' || o.status === 'Menunggu Verifikasi Resto' || !o.status);
-                if (isPending && o.createdAt) {
-                    if (now - o.createdAt > 3 * 60 * 1000) {
-                        changed = true;
-                        return false;
-                    }
-                }
-                return true;
-            });
-
-            if (changed) {
-                safeSet('mb_orders', JSON.stringify(localOrders));
-            }
-        }
-
-        function autoCheckActiveOrderStatus() {
-            if (!activeTrackingId) return;
-            let localOrders = [];
-            try { localOrders = JSON.parse(safeGet('mb_orders') || '[]'); } catch(e) { localOrders = []; }
-            let found = localOrders.find(o => o.id === activeTrackingId);
-            if (found && (found.status === 'Diproses' || found.status === 'Selesai')) {
-                const modal = document.getElementById('payment-timer-modal');
-                if (modal && !modal.classList.contains('hidden')) {
-                    closeTimerModal();
-                }
-                checkOrderStatusSubmit();
-                activeTrackingId = null;
-            }
-        }
-
-        async function checkOrderStatusSubmit(event) {
-            if (event) event.preventDefault();
-            const orderId = document.getElementById('lookup-order-id').value.trim();
-            const resultDiv = document.getElementById('status-result');
-
-            if (!orderId) return;
-
-            resultDiv.className = "mt-4 rounded-xl p-4 text-sm bg-sky-50 text-sky-800";
-            resultDiv.textContent = "Mencari status pesanan...";
-
-            try {
-                let foundOrder = null;
-                let localOrders = [];
-                try { localOrders = JSON.parse(safeGet('mb_orders') || '[]'); } catch(e) { localOrders = []; }
-                
-                foundOrder = localOrders.find(o => String(o.id).toLowerCase() === String(orderId).toLowerCase());
-
-                if (!foundOrder) {
-                    try {
-                        const data = await apiRequest(SHEETDB_API + "/search?id=" + encodeURIComponent(orderId));
-                        if (Array.isArray(data) && data.length > 0) {
-                            foundOrder = data[0];
-                        }
-                    } catch(err) {
-                        console.log("Cloud search error:", err);
-                    }
-                }
-
-                if (!foundOrder) {
-                    resultDiv.className = "mt-4 rounded-xl p-4 text-sm bg-red-50 text-red-700";
-                    resultDiv.textContent = "Pesanan dengan kode tersebut tidak ditemukan.";
-                    return;
-                }
-
-                resultDiv.className = "mt-4 rounded-xl border border-sky-200 bg-white p-4 text-sm shadow-sm";
-                let statusBadgeClass = "bg-yellow-100 text-yellow-800";
-                const st = foundOrder.status || "Menunggu";
-                if(st === 'Diproses') statusBadgeClass = "bg-blue-100 text-blue-800";
-                if(st === 'Selesai') statusBadgeClass = "bg-emerald-100 text-emerald-800";
-                if(st === 'Dibatalkan') statusBadgeClass = "bg-red-100 text-red-800";
-
-                let restNote = (st === 'Diproses' || st === 'Selesai') 
-                    ? '<div class="mt-3 text-xs font-bold text-sky-700 bg-sky-50 p-2.5 rounded-lg border border-sky-100">Pesanan sedang dikerjakan / diproses oleh resto Mie Bangka Teladan.</div>' 
-                    : '<div class="mt-3 text-xs font-bold text-amber-700 bg-amber-50 p-2.5 rounded-lg border border-amber-100">Menunggu verifikasi dan konfirmasi dari resto. Silakan lakukan pembayaran.</div>';
-
-                let itemsHtml = '';
-                if (foundOrder.items) {
-                    let itemsList = typeof foundOrder.items === 'string' ? JSON.parse(foundOrder.items) : foundOrder.items;
-                    if (Array.isArray(itemsList) && itemsList.length > 0) {
-                        itemsHtml = `<div class="my-2 p-2.5 bg-slate-50 rounded-lg space-y-1">`;
-                        itemsList.forEach(it => {
-                            itemsHtml += `<div class="flex justify-between text-xs text-slate-700">
-                                <span><b>${it.qty || 1}x</b> ${it.name} ${it.topping ? '(Topping: '+it.topping+')' : ''}</span>
-                                <span class="font-semibold">${rupiah((it.price || 0) * (it.qty || 1))}</span>
-                            </div>`;
-                        });
-                        itemsHtml += `</div>`;
-                    }
-                }
-
-                resultDiv.innerHTML = `
-                    <p class="font-extrabold text-slate-900 text-base mb-3 flex items-center gap-2">
-                        <span class="w-5 h-5 bg-emerald-500 text-white rounded-full flex items-center justify-center text-xs"><i class="fa-solid fa-check"></i></span>
-                        <span>Pesanan Ditemukan</span>
-                    </p>
-                    <div class="space-y-1.5 text-xs text-slate-700">
-                        <div class="flex"><span class="w-28 font-semibold text-slate-500">ID Pesanan:</span> <span class="font-bold text-slate-800">${foundOrder.id}</span></div>
-                        <div class="flex"><span class="w-28 font-semibold text-slate-500">Nama:</span> <span>${foundOrder.name}</span></div>
-                        <div class="flex items-center"><span class="w-28 font-semibold text-slate-500">Status:</span> <span class="px-2 py-0.5 rounded font-bold ${statusBadgeClass}">${st}</span></div>
-                        ${itemsHtml}
-                        <div class="flex"><span class="w-28 font-semibold text-slate-500">Total:</span> <span class="font-bold text-slate-900">${rupiah(foundOrder.total)}</span></div>
-                        <div class="flex"><span class="w-28 font-semibold text-slate-500">Pembayaran:</span> <span>${foundOrder.payment || '-'}</span></div>
-                        <div class="flex"><span class="w-28 font-semibold text-slate-500">Waktu:</span> <span>${foundOrder.created_at || foundOrder.date || '-'}</span></div>
-                        ${restNote}
-                        <div class="mt-4 pt-3 border-t border-dashed border-slate-200 text-center font-bold text-slate-800 text-sm">
-                            Terima kasih telah memesan di Resto Mie Bangka Teladan! 🙏<br>
-                            <span class="text-xs font-normal text-slate-500">Selamat menikmati hidangan Anda.</span>
-                        </div>
-                    </div>`;
-
-            } catch (error) {
-                resultDiv.className = "mt-4 rounded-xl p-4 text-sm bg-red-50 text-red-700";
-                resultDiv.textContent = "Gagal memuat status: " + error.message;
-            }
         }
 
         window.onload = initApp;
     </script>
 </body>
 </html>
-
-
-<div style="padding: 20px; background: #fff; margin: 20px; border-radius: 8px;">
-  <h3>Form Pesanan Mie Bangka Teladan</h3>
-  <form id="formPesan" onsubmit="kirimPesanan(event)">
-    <p><input type="text" id="namaPemesan" placeholder="Nama Anda" required style="width:100%; padding:8px;"></p>
-    <p>
-      <select id="pilihanMenu" style="width:100%; padding:8px;">
-        <option value="Mie Bangka Special B2">Mie Bangka Special (Topping B2)</option>
-        <option value="Mie Bangka Jumbo B2">Mie Bangka Jumbo (Topping B2)</option>
-      </select>
-    </p>
-    <p><input type="text" id="catatanPesanan" placeholder="Catatan (misal: kuah dipisah)" style="width:100%; padding:8px;"></p>
-    <button type="submit" style="width:100%; padding:10px; background:green; color:white; border:none; border-radius:5px;">Kirim Pesanan</button>
-  </form>
-  <p id="statusPesan" style="font-weight:bold; margin-top:10px;"></p>
-</div>
-
-<script>
-  async function kirimPesanan(e) {
-    e.preventDefault();
-    const res = await fetch('/api/pesanan', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({
-        nama: document.getElementById('namaPemesan').value,
-        menu: document.getElementById('pilihanMenu').value,
-        catatan: document.getElementById('catatanPesanan').value,
-        waktu: new Date().toLocaleString()
-      })
-    });
-    const hasil = await res.json();
-    document.getElementById('statusPesaninnerText').innerText = hasil.success ? 'Pesanan berhasil dikirim!' : 'Gagal mengirim.';
-    if(hasil.success) document.getElementById('formPesan').reset();
-  }
-</script>
