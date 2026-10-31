@@ -948,3 +948,39 @@
     </script>
 </body>
 </html>
+
+
+<div style="padding: 20px; background: #fff; margin: 20px; border-radius: 8px;">
+  <h3>Form Pesanan Mie Bangka Teladan</h3>
+  <form id="formPesan" onsubmit="kirimPesanan(event)">
+    <p><input type="text" id="namaPemesan" placeholder="Nama Anda" required style="width:100%; padding:8px;"></p>
+    <p>
+      <select id="pilihanMenu" style="width:100%; padding:8px;">
+        <option value="Mie Bangka Special B2">Mie Bangka Special (Topping B2)</option>
+        <option value="Mie Bangka Jumbo B2">Mie Bangka Jumbo (Topping B2)</option>
+      </select>
+    </p>
+    <p><input type="text" id="catatanPesanan" placeholder="Catatan (misal: kuah dipisah)" style="width:100%; padding:8px;"></p>
+    <button type="submit" style="width:100%; padding:10px; background:green; color:white; border:none; border-radius:5px;">Kirim Pesanan</button>
+  </form>
+  <p id="statusPesan" style="font-weight:bold; margin-top:10px;"></p>
+</div>
+
+<script>
+  async function kirimPesanan(e) {
+    e.preventDefault();
+    const res = await fetch('/api/pesanan', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        nama: document.getElementById('namaPemesan').value,
+        menu: document.getElementById('pilihanMenu').value,
+        catatan: document.getElementById('catatanPesanan').value,
+        waktu: new Date().toLocaleString()
+      })
+    });
+    const hasil = await res.json();
+    document.getElementById('statusPesaninnerText').innerText = hasil.success ? 'Pesanan berhasil dikirim!' : 'Gagal mengirim.';
+    if(hasil.success) document.getElementById('formPesan').reset();
+  }
+</script>
