@@ -1,0 +1,5 @@
+<meta name='viewport' content='width=device-width, initial-scale=1'/>my-website/
+├── public/
+│   └── index.html       <-- File HTML Anda yang sudah ada
+├── server.js            <-- Otak backend Node.js kita
+└── package.json         <-- File konfigurasi proyek
