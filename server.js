@@ -10,18 +10,19 @@ const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname)));
 
-// Inisialisasi Upstash Redis (mengambil otomatis dari env: UPSTASH_REDIS_REST_URL & UPSTASH_REDIS_REST_TOKEN)
-let redis;
+// Inisialisasi Upstash Redis secara aman
+let redis = null;
 try {
-    redis = Redis.fromEnv();
+    if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
+        redis = Redis.fromEnv();
+    }
 } catch (e) {
-    console.log("Catatan: Redis belum dikonfigurasi via env, menggunakan memori lokal sementara.");
+    console.log("Redis init note: Menggunakan memori cadangan.");
 }
 
-// Memori cadangan jika Redis gagal terhubung
 let memoriPesanan = [];
 
-// API Kirim Pesanan (POST)
+// API POST: Kirim Pesanan (Wajib mengembalikan JSON murni)
 app.post('/api/pesanan', async (req, res) => {
     try {
         const pesananBaru = req.body;
@@ -29,46 +30,62 @@ app.post('/api/pesanan', async (req, res) => {
             pesananBaru.id = "ORD-" + Math.random().toString(36).substring(2, 8).toUpperCase();
         }
 
-        // Coba simpan ke Upstash Redis
         if (redis) {
-            await redis.lpush('daftar_pesanan', JSON.stringify(pesananBaru));
+            try {
+                await redis.lpush('daftar_pesanan', JSON.stringify(pesananBaru));
+            } catch (redisErr) {
+                console.log("Redis save error, fallback ke memori:", redisErr);
+            }
         }
         
-        // Simpan juga ke memori lokal sbg cadangan aman
         memoriPesanan.unshift(pesananBaru);
 
-        res.json({ success: true, message: "Pesanan berhasil disimpan!", pesanan: pesananBaru });
+        return res.status(200).json({ 
+            success: true, 
+            message: "Pesanan berhasil disimpan!", 
+            pesanan: pesananBaru 
+        });
     } catch (error) {
-        console.error("Gagal simpan pesanan:", error);
-        res.status(500).json({ success: false, error: error.message });
+        return res.status(500).json({ 
+            success: false, 
+            error: error.message || "Terjadi kesalahan server" 
+        });
     }
 });
 
-// API Ambil Daftar Pesanan (GET)
+// API GET: Ambil Pesanan (Wajib mengembalikan JSON murni)
 app.get('/api/pesanan', async (req, res) => {
     try {
         let semuaPesanan = [];
 
         if (redis) {
-            const dataRedis = await redis.lrange('daftar_pesanan', 0, -1);
-            if (dataRedis && dataRedis.length > 0) {
-                semuaPesanan = dataRedis.map(item => typeof item === 'string' ? JSON.parse(item) : item);
+            try {
+                const dataRedis = await redis.lrange('daftar_pesanan', 0, -1);
+                if (dataRedis && dataRedis.length > 0) {
+                    semuaPesanan = dataRedis.map(item => typeof item === 'string' ? JSON.parse(item) : item);
+                }
+            } catch (redisErr) {
+                console.log("Redis fetch error, fallback ke memori:", redisErr);
             }
         }
 
-        // Jika Redis kosong, gunakan memori lokal
         if (semuaPesanan.length === 0) {
             semuaPesanan = memoriPesanan;
         }
 
-        res.json({ success: true, pesanan: semuaPesanan });
+        return res.status(200).json({ 
+            success: true, 
+            pesanan: semuaPesanan 
+        });
     } catch (error) {
-        console.error("Gagal ambil pesanan:", error);
-        res.json({ success: true, pesanan: memoriPesanan });
+        return res.status(200).json({ 
+            success: true, 
+            pesanan: memoriPesanan 
+        });
     }
 });
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`Server Mie Bangka Teladan berjalan di port ${PORT}`);
+    console.log(`Server berjalan di port ${PORT}`);
 });
