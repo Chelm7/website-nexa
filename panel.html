@@ -159,8 +159,8 @@
     <script>
         "use strict";
 
-    const SUPABASE_URL = 'https://xqhvipfvfgqpqiiqndvu.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_Fkw0im1L-O-kkzgRbX8TvQ_eIkviGmd'; 
+        const SUPABASE_URL = 'https://xqhvipfvfgqpqiiqndvu.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_Fkw0im1L-O-kkzgRbX8TvQ_eIkviGmd'; 
 
         function handleLogin(e) {
             e.preventDefault();
@@ -289,7 +289,7 @@
         }
 
         async function updateOrderStatus(id, status) {
-            await fetch(`${SUPABASE_URL}/rest/v1/Pesan?id=eq.${id}`, {
+            await fetch(`${SUPABASE_URL}/rest/v1/pesan?id=eq.${id}`, {
                 method: 'PATCH',
                 headers: {
                     'apikey': SUPABASE_ANON_KEY,
@@ -303,7 +303,7 @@
 
         async function deleteOrder(id) {
             if (!confirm("Hapus pesanan ini?")) return;
-            await fetch(`${SUPABASE_URL}/rest/v1/Pesan?id=eq.${id}`, {
+            await fetch(`${SUPABASE_URL}/rest/v1/pesan?id=eq.${id}`, {
                 method: 'DELETE',
                 headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
             });
