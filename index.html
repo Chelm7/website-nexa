@@ -279,6 +279,12 @@
                         <i class="fa-solid fa-copy"></i> Salin Rekening
                     </button>
                 </div>
+                <!-- Tombol Chat WhatsApp dengan Logo WA di bawah tombol salin -->
+                <div>
+                    <button type="button" onclick="connectWhatsApp()" class="w-full mt-2 bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-xl text-xs font-bold shadow transition flex items-center justify-center gap-2">
+                        <i class="fa-brands fa-whatsapp text-base"></i> Chat WhatsApp
+                    </button>
+                </div>
                 <div><b>Total Harga:</b> <span id="pay-total" class="text-xl font-black text-sky-700 block mt-1"></span></div>
             </div>
 
@@ -299,6 +305,7 @@
         "use strict";
 
         const SHEETDB_API = "https://sheetdb.io/api/v1/2ij5jepgf1fdy";
+        const RESTO_WA_NUMBER = "6282384039200"; // Nomor WhatsApp Resto
 
         const memoryStorage = {};
         function safeGet(key) {
@@ -750,6 +757,30 @@
             });
         }
 
+        function connectWhatsApp() {
+            const orderId = document.getElementById('pay-order-id').innerText;
+            const buyerName = document.getElementById('pay-buyer-name').innerText;
+            const paymentMethod = document.getElementById('pay-method-chosen').innerText;
+            const total = document.getElementById('pay-total').innerText;
+
+            let localOrders = [];
+            try { localOrders = JSON.parse(safeGet('mb_orders') || '[]'); } catch(e) { localOrders = []; }
+            const found = localOrders.find(o => o.id === orderId);
+
+            let itemsDetail = "";
+            if (found && found.items) {
+                let itemsList = typeof found.items === 'string' ? JSON.parse(found.items) : found.items;
+                itemsList.forEach((it, idx) => {
+                    itemsDetail += `\n${idx + 1}. ${it.name} (${it.qty}x) - ${rupiah(it.price * it.qty)}`;
+                });
+            }
+
+            const message = `Halo Resto Mie Bangka Teladan, saya ingin konfirmasi pesanan saya:\n\n*ID Pesanan:* ${orderId}\n*Nama Pemesan:* ${buyerName}\n*Metode Pembayaran:* ${paymentMethod}\n*Total Harga:* ${total}\n*Rincian Menu:*${itemsDetail}\n\nTerima kasih!`;
+
+            const waUrl = `https://wa.me/${RESTO_WA_NUMBER}?text=` + encodeURIComponent(message);
+            window.open(waUrl, '_blank');
+        }
+
         function closeTimerModal() {
             document.getElementById('payment-timer-modal').classList.add('hidden');
             const section = document.getElementById('status-pesanan-section');
@@ -774,7 +805,18 @@
                 if (--timer < 0) {
                     clearInterval(window.orderTimerInterval);
                     display.textContent = "Waktu Habis";
-                    closeTimerModal();
+                    
+                    // Waktu habis: tutup modal, hapus pesanan pending dari local storage agar mereset dari awal
+                    document.getElementById('payment-timer-modal').classList.add('hidden');
+                    if (activeTrackingId) {
+                        let localOrders = [];
+                        try { localOrders = JSON.parse(safeGet('mb_orders') || '[]'); } catch(e) { localOrders = []; }
+                        localOrders = localOrders.filter(o => o.id !== activeTrackingId);
+                        safeSet('mb_orders', JSON.stringify(localOrders));
+                        activeTrackingId = null;
+                    }
+                    alert("Waktu konfirmasi habis. Pesanan dibatalkan otomatis dan dikembalikan dari awal.");
+                    window.location.reload();
                 }
             }, 1000);
         }
