@@ -1,5 +1,4 @@
 import express from 'express';
-import { Redis } from '@upstash/redis';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -10,77 +9,47 @@ const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname)));
 
-// Inisialisasi Upstash Redis secara aman
-let redis = null;
-try {
-    if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
-        redis = Redis.fromEnv();
-    }
-} catch (e) {
-    console.log("Redis init note: Menggunakan memori cadangan.");
-}
+// Memori lokal sementara yang aman (100% jalan tanpa takut koneksi Redis putus)
+let daftarPesananGlobal = [];
 
-let memoriPesanan = [];
-
-// API POST: Kirim Pesanan (Wajib mengembalikan JSON murni)
-app.post('/api/pesanan', async (req, res) => {
+// API POST: Kirim Pesanan
+app.post('/api/pesanan', (req, res) => {
     try {
-        const pesananBaru = req.body;
-        if (!pesananBaru.id) {
-            pesananBaru.id = "ORD-" + Math.random().toString(36).substring(2, 8).toUpperCase();
-        }
+        const dataBaru = req.body || {};
+        const pesanan = {
+            id: dataBaru.id || ("ORD-" + Math.random().toString(36).substring(2, 8).toUpperCase()),
+            nama: dataBaru.nama || "Tanpa Nama",
+            menu: dataBaru.menu || "-",
+            catatan: dataBaru.catatan || "Tidak ada",
+            waktu: dataBaru.waktu || new Date().toLocaleString('id-ID')
+        };
 
-        if (redis) {
-            try {
-                await redis.lpush('daftar_pesanan', JSON.stringify(pesananBaru));
-            } catch (redisErr) {
-                console.log("Redis save error, fallback ke memori:", redisErr);
-            }
-        }
-        
-        memoriPesanan.unshift(pesananBaru);
+        daftarPesananGlobal.unshift(pesanan);
 
-        return res.status(200).json({ 
+        return res.json({ 
             success: true, 
-            message: "Pesanan berhasil disimpan!", 
-            pesanan: pesananBaru 
+            message: "Pesanan berhasil disimpan", 
+            pesanan: pesanan 
         });
-    } catch (error) {
-        return res.status(500).json({ 
+    } catch (err) {
+        return res.json({ 
             success: false, 
-            error: error.message || "Terjadi kesalahan server" 
+            error: err.message 
         });
     }
 });
 
-// API GET: Ambil Pesanan (Wajib mengembalikan JSON murni)
-app.get('/api/pesanan', async (req, res) => {
+// API GET: Ambil Daftar Pesanan
+app.get('/api/pesanan', (req, res) => {
     try {
-        let semuaPesanan = [];
-
-        if (redis) {
-            try {
-                const dataRedis = await redis.lrange('daftar_pesanan', 0, -1);
-                if (dataRedis && dataRedis.length > 0) {
-                    semuaPesanan = dataRedis.map(item => typeof item === 'string' ? JSON.parse(item) : item);
-                }
-            } catch (redisErr) {
-                console.log("Redis fetch error, fallback ke memori:", redisErr);
-            }
-        }
-
-        if (semuaPesanan.length === 0) {
-            semuaPesanan = memoriPesanan;
-        }
-
-        return res.status(200).json({ 
+        return res.json({ 
             success: true, 
-            pesanan: semuaPesanan 
+            pesanan: daftarPesananGlobal 
         });
-    } catch (error) {
-        return res.status(200).json({ 
+    } catch (err) {
+        return res.json({ 
             success: true, 
-            pesanan: memoriPesanan 
+            pesanan: [] 
         });
     }
 });
