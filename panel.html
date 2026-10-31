@@ -63,7 +63,6 @@
                 </div>
 
                 <div class="flex items-center space-x-3">
-                    <!-- Dropdown Kawalan Status Resto -->
                     <select id="resto-status-toggle" onchange="toggleRestoStatus(this.value)" class="rounded-xl border border-sky-400 bg-sky-700 text-white px-3 py-2 text-xs font-bold outline-none focus:ring-2 focus:ring-white shadow-sm cursor-pointer">
                         <option value="Buka">Resto Buka</option>
                         <option value="Tutup">Resto Tutup (Offline)</option>
@@ -77,7 +76,7 @@
 
             <!-- Tab Navigasi -->
             <div class="bg-sky-700 px-4 flex space-x-2 overflow-x-auto border-t border-sky-500">
-                <button onclick="switchTab('pesanan')" id="tab-btn-pesanan" class="tab-btn px-4 py-3 text-xs font-bold text-white border-b-2 border-white transition">Pesanan</button>
+                <button onclick="switchTab('pesanan')" id="tab-btn-pesanan" class="tab-btn px-4 py-3 text-xs font-bold text-white border-b-2 border-white transition">Pesanan dari Redis</button>
                 <button onclick="switchTab('menu')" id="tab-btn-menu" class="tab-btn px-4 py-3 text-xs font-bold text-sky-200 hover:text-white transition">Kelola Menu</button>
                 <button onclick="switchTab('banner')" id="tab-btn-banner" class="tab-btn px-4 py-3 text-xs font-bold text-sky-200 hover:text-white transition">Banner</button>
                 <button onclick="switchTab('rekening')" id="tab-btn-rekening" class="tab-btn px-4 py-3 text-xs font-bold text-sky-200 hover:text-white transition">Rekening</button>
@@ -88,20 +87,20 @@
         <!-- Konten Utama Admin -->
         <main class="container mx-auto px-4 py-6 max-w-7xl flex-1">
 
-            <!-- TAB 1: PESANAN -->
+            <!-- TAB 1: PESANAN DARI REDIS -->
             <section id="tab-pesanan" class="tab-content active space-y-6">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white p-4 rounded-2xl shadow-sm border border-sky-100">
                     <div>
-                        <h2 class="text-lg font-extrabold text-sky-950">Daftar Pesanan Masuk & Riwayat</h2>
-                        <p class="text-xs text-slate-500">Kelola dan update status pesanan pelanggan secara real-time (Cek otomatis setiap 2 detik).</p>
+                        <h2 class="text-lg font-extrabold text-sky-950">Daftar Pesanan Masuk (Upstash Redis)</h2>
+                        <p class="text-xs text-slate-500">Data pesanan pelanggan yang tersimpan langsung di database Redis backend Express.</p>
                     </div>
-                    <button onclick="clearAllOrders()" class="bg-white text-red-600 border border-red-300 hover:bg-red-50 text-xs font-bold px-3 py-2 rounded-xl transition shadow">
-                        <i class="fa-solid fa-trash mr-1.5"></i> Hapus Semua Riwayat
+                    <button onclick="renderAdminOrders()" class="bg-sky-600 text-white text-xs font-bold px-4 py-2 rounded-xl transition shadow hover:bg-sky-700">
+                        <i class="fa-solid fa-rotate mr-1.5"></i> Refresh Pesanan
                     </button>
                 </div>
 
                 <div id="admin-orders-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <!-- Diisi otomatis oleh JavaScript -->
+                    <!-- Diisi otomatis dari server Redis -->
                 </div>
             </section>
 
@@ -129,9 +128,8 @@
                             </div>
                         </div>
                         <div>
-                            <label class="block text-sm font-bold text-gray-700 mb-1">Upload Foto Menu (Pilih File) atau Masukkan URL</label>
-                            <input id="menu-file-input" type="file" accept="image/*" class="w-full text-xs text-slate-500 mb-2 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100 cursor-pointer">
-                            <input id="menu-image" type="url" placeholder="https://images.unsplash.com/... (otomatis terisi jika upload file)" class="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-sky-500">
+                            <label class="block text-sm font-bold text-gray-700 mb-1">URL Foto Menu</label>
+                            <input id="menu-image" type="url" placeholder="https://images.unsplash.com/..." class="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-sky-500">
                         </div>
                         <div>
                             <label class="block text-sm font-bold text-gray-700 mb-1">Deskripsi Singkat</label>
@@ -156,11 +154,10 @@
                     <h2 class="text-lg font-extrabold text-sky-950 mb-3">Tambah Banner Promosi</h2>
                     <form onsubmit="addBanner(event)" class="space-y-4">
                         <div>
-                            <label class="block text-sm font-bold text-gray-700 mb-1">Upload Banner (Pilih File) atau URL Gambar</label>
-                            <input id="banner-file-input" type="file" accept="image/*" class="w-full text-xs text-slate-500 mb-2 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100 cursor-pointer">
-                            <input id="banner-url-input" type="url" placeholder="https://images.unsplash.com/... (otomatis terisi jika upload file)" class="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-sky-500">
+                            <label class="block text-sm font-bold text-gray-700 mb-1">URL Gambar Banner</label>
+                            <input id="banner-url-input" type="url" required placeholder="https://images.unsplash.com/..." class="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-sky-500">
                         </div>
-                        <button type="submit" id="banner-submit-btn" class="w-full bg-sky-600 text-white font-bold py-2.5 rounded-xl hover:bg-sky-700 transition shadow text-sm">Tambah Banner</button>
+                        <button type="submit" class="w-full bg-sky-600 text-white font-bold py-2.5 rounded-xl hover:bg-sky-700 transition shadow text-sm">Tambah Banner</button>
                     </form>
                 </div>
 
@@ -177,7 +174,7 @@
                     <form onsubmit="savePaymentMethods(event)" class="space-y-4">
                         <div>
                             <label class="block text-sm font-bold text-gray-700 mb-1">Daftar Pembayaran (Satu per baris)</label>
-                            <textarea id="payment-methods-textarea" rows="6" placeholder="BCA - 1234567890 (a.n. Mie Bangka Teladan)&#10;DANA - 081267166886 (a.n. Mie Bangka Teladan)&#10;Kasir (Tunai)" class="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-sky-500 font-mono"></textarea>
+                            <textarea id="payment-methods-textarea" rows="6" class="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-sky-500 font-mono"></textarea>
                         </div>
                         <button type="submit" class="w-full bg-sky-600 text-white font-bold py-2.5 rounded-xl hover:bg-sky-700 transition shadow text-sm">Simpan Rekening</button>
                     </form>
@@ -209,68 +206,8 @@
         </footer>
     </div>
 
-    <!-- MODAL EDIT PESANAN -->
-    <div id="edit-order-modal" class="modal-hidden fixed inset-0 z-50 bg-black/60 p-4 flex justify-center items-center">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative">
-            <h3 class="text-lg font-extrabold text-sky-950 mb-4">Edit Pesanan Pelanggan</h3>
-            <form id="edit-order-form" onsubmit="saveEditedOrder(event)" class="space-y-3">
-                <input type="hidden" id="edit-order-id-input">
-                <div>
-                    <label class="block text-xs font-bold text-gray-700 mb-1">Nama Pelanggan</label>
-                    <input id="edit-buyer-name" type="text" required class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-sky-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-700 mb-1">Nomor HP / WhatsApp</label>
-                    <input id="edit-buyer-phone" type="tel" required class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-sky-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-700 mb-1">Nomor Meja / Alamat</label>
-                    <input id="edit-buyer-address" type="text" required class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-sky-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-700 mb-1">Total Harga (Rp)</label>
-                    <input id="edit-order-total" type="number" required class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-sky-500">
-                </div>
-                <div class="flex gap-2 pt-2">
-                    <button type="submit" class="flex-1 bg-sky-600 text-white font-bold py-2 rounded-xl text-sm hover:bg-sky-700 transition">Simpan</button>
-                    <button type="button" onclick="closeEditModal()" class="bg-slate-200 text-slate-700 font-bold py-2 px-4 rounded-xl text-sm hover:bg-slate-300 transition">Batal</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
     <script>
         "use strict";
-
-        const SHEETDB_API = "https://sheetdb.io/api/v1/2ij5jepgf1fdy";
-
-        // Konfigurasi Cloudinary Anda
-        const CLOUD_NAME = "fyrwtkl8";
-        const UPLOAD_PRESET = "ml_default";
-
-        async function uploadFileToCloudinary(file) {
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('upload_preset', UPLOAD_PRESET);
-
-            try {
-                const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
-                    method: 'POST',
-                    body: formData
-                });
-                const data = await response.json();
-                if (data.secure_url) {
-                    return data.secure_url;
-                } else {
-                    alert("Gagal mengunggah gambar ke Cloudinary.");
-                    return null;
-                }
-            } catch (error) {
-                console.error("Cloudinary error:", error);
-                alert("Terjadi kesalahan jaringan saat mengunggah gambar.");
-                return null;
-            }
-        }
 
         const memoryStorage = {};
         function safeGet(key) {
@@ -280,34 +217,6 @@
             try { localStorage.setItem(key, val); } catch (e) { }
             memoryStorage[key] = val;
         }
-
-        // Fungsi Suara Dering Notifikasi Pesanan Masuk di Admin
-        function playNotificationSound() {
-            try {
-                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                [0, 200].forEach(delay => {
-                    setTimeout(() => {
-                        const oscillator = audioCtx.createOscillator();
-                        const gainNode = audioCtx.createGain();
-                        
-                        oscillator.type = 'sine';
-                        oscillator.frequency.setValueAtTime(880, audioCtx.currentTime);
-                        gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
-                        
-                        oscillator.connect(gainNode);
-                        gainNode.connect(audioCtx.destination);
-                        
-                        oscillator.start();
-                        oscillator.stop(audioCtx.currentTime + 0.3);
-                    }, delay);
-                });
-            } catch (e) {
-                console.log("Audio tidak didukung.");
-            }
-        }
-
-        let knownOrderIds = new Set();
-        let isFirstLoad = true;
 
         function checkLoginState() {
             if (safeGet('mb_admin_logged') === 'true') {
@@ -382,7 +291,7 @@
             document.getElementById('new-admin-user').value = u;
             document.getElementById('new-admin-pass').value = p;
 
-            setInterval(renderAdminOrders, 2000);
+            setInterval(renderAdminOrders, 3000);
         }
 
         function rupiah(value) {
@@ -393,264 +302,53 @@
             }).format(Number(value) || 0);
         }
 
-        async function apiRequest(url, options = {}) {
-            try {
-                const response = await fetch(url, {
-                    ...options,
-                    headers: {
-                        "Content-Type": "application/json",
-                        ...(options.headers || {})
-                    }
-                });
-                let result;
-                try { result = await response.json(); } catch { result = null; }
-                if (!response.ok) { return null; }
-                return result;
-            } catch (e) {
-                return null;
-            }
-        }
-
+        // FUNGSI MENGAMBIL DATA PESANAN DARI BACKEND NODE.JS & REDIS
         async function renderAdminOrders() {
             const container = document.getElementById('admin-orders-container');
             if(!container) return;
 
-            let orders = [];
-            try { orders = JSON.parse(safeGet('mb_orders') || '[]'); } catch(e) { orders = []; }
+            container.innerHTML = `<p class="col-span-full text-center text-gray-500 py-8">Memuat pesanan dari Redis...</p>`;
 
             try {
-                const cloudData = await apiRequest(SHEETDB_API);
-                if (Array.isArray(cloudData)) {
-                    let map = new Map();
-                    orders.forEach(o => map.set(o.id, o));
-                    cloudData.forEach(c => {
-                        if (c.id) {
-                            if (!map.has(c.id)) {
-                                let itemsParsed = [];
-                                try { itemsParsed = typeof c.items === 'string' ? JSON.parse(c.items) : (c.items || []); } catch(e) { itemsParsed = []; }
-                                map.set(c.id, {
-                                    id: c.id,
-                                    createdAt: Number(c.createdAt) || Date.now(),
-                                    created_at: c.created_at || c.date || '-',
-                                    name: c.name || '-',
-                                    phone: c.phone || '-',
-                                    address: c.address || '-',
-                                    items: itemsParsed,
-                                    total: c.total || '0',
-                                    payment: c.payment || '-',
-                                    status: c.status || 'Menunggu'
-                                });
-                            }
+                const response = await fetch('/api/pesanan');
+                const data = await response.json();
+
+                if (data.success && Array.isArray(data.pesanan) && data.pesanan.length > 0) {
+                    container.innerHTML = '';
+                    data.pesanan.forEach(o => {
+                        let itemsHtml = '';
+                        if (Array.isArray(o.items)) {
+                            o.items.forEach(i => {
+                                itemsHtml += `<div class="text-xs text-slate-600">- ${i.name} (${i.qty}x) ${rupiah(i.price * i.qty)}</div>`;
+                            });
                         }
+
+                        container.innerHTML += `
+                            <div class="bg-white rounded-2xl p-5 shadow-md border border-sky-100 flex flex-col justify-between gap-4">
+                                <div>
+                                    <div class="flex justify-between items-start mb-2">
+                                        <span class="font-extrabold text-sky-950 text-sm">${o.id || 'ORD'}</span>
+                                        <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-yellow-100 text-yellow-800">${o.status || 'Menunggu'}</span>
+                                    </div>
+                                    <div class="text-xs text-slate-500 mb-2">${o.waktu || '-'}</div>
+                                    <div class="text-sm font-bold text-slate-800">${o.nama || o.name || 'Tanpa Nama'} (${o.phone || '-'})</div>
+                                    <div class="text-xs text-sky-700 font-semibold mb-3">Tempat/Alamat: ${o.address || '-'}</div>
+                                    <div class="bg-sky-50 p-2.5 rounded-xl space-y-1 mb-3 border border-sky-100">${itemsHtml}</div>
+                                    <div class="text-xs font-extrabold text-slate-800">Total: ${rupiah(o.total)} (Pembayaran: ${o.payment || '-'})</div>
+                                </div>
+                            </div>`;
                     });
-                    orders = Array.from(map.values());
+                } else {
+                    container.innerHTML = `<p class="col-span-full text-center text-gray-500 py-8">Belum ada pesanan masuk di Redis.</p>`;
                 }
-            } catch(err) {
-                console.log("Cloud load orders note:", err);
+            } catch (err) {
+                container.innerHTML = `<p class="col-span-full text-center text-red-500 py-8">Gagal memuat pesanan dari server: ${err.message}</p>`;
             }
-
-            let hasNewPending = false;
-            orders.forEach(o => {
-                if (!knownOrderIds.has(o.id)) {
-                    knownOrderIds.add(o.id);
-                    if (!isFirstLoad && (o.status === 'Menunggu' || !o.status)) {
-                        hasNewPending = true;
-                    }
-                }
-            });
-
-            if (isFirstLoad) {
-                isFirstLoad = false;
-            }
-
-            if (hasNewPending) {
-                playNotificationSound();
-            }
-
-            orders.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-
-            container.innerHTML = '';
-            if (orders.length === 0) {
-                container.innerHTML = `<p class="col-span-full text-center text-gray-500 py-8">Belum ada pesanan masuk.</p>`;
-                return;
-            }
-
-            orders.forEach(o => {
-                let itemsHtml = '';
-                if (Array.isArray(o.items)) {
-                    o.items.forEach(i => {
-                        itemsHtml += `<div class="text-xs text-slate-600">- ${i.name} (${i.qty}x) ${rupiah(i.price * i.qty)}</div>`;
-                    });
-                }
-
-                let badge = "bg-yellow-100 text-yellow-800";
-                if(o.status === 'Diproses') badge = "bg-blue-100 text-blue-800";
-                if(o.status === 'Selesai') badge = "bg-green-100 text-green-800";
-                if(o.status === 'Dibatalkan') badge = "bg-red-100 text-red-800";
-
-                container.innerHTML += `
-                    <div class="bg-white rounded-2xl p-5 shadow-md border border-sky-100 flex flex-col justify-between gap-4">
-                        <div>
-                            <div class="flex justify-between items-start mb-2">
-                                <span class="font-extrabold text-sky-950 text-sm">${o.id}</span>
-                                <span class="px-2.5 py-0.5 rounded-full text-xs font-bold ${badge}">${o.status || 'Menunggu'}</span>
-                            </div>
-                            <div class="text-xs text-slate-500 mb-2">${o.created_at || '-'}</div>
-                            <div class="text-sm font-bold text-slate-800">${o.name} (${o.phone})</div>
-                            <div class="text-xs text-sky-700 font-semibold mb-3">Tempat/Meja: ${o.address}</div>
-                            <div class="bg-sky-50 p-2.5 rounded-xl space-y-1 mb-3 border border-sky-100">${itemsHtml}</div>
-                            <div class="text-xs font-extrabold text-slate-800">Total: ${rupiah(o.total)} (Pembayaran: ${o.payment || '-'})</div>
-                        </div>
-
-                        <div class="flex flex-wrap gap-2 pt-3 border-t border-slate-100">
-                            <button type="button" onclick="updateOrderStatus('${o.id}', 'Diproses')" class="flex-1 bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold py-2 px-3 rounded-xl shadow transition">Proses</button>
-                            <button type="button" onclick="updateOrderStatus('${o.id}', 'Selesai')" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2 px-3 rounded-xl shadow transition">Selesai</button>
-                            <button type="button" onclick="openEditOrderModal('${o.id}')" class="bg-white text-sky-700 border border-sky-300 hover:bg-sky-50 text-xs font-bold py-2 px-3 rounded-xl shadow transition"><i class="fa-solid fa-pen"></i> Edit</button>
-                            <button type="button" onclick="printOrder('${o.id}')" class="bg-white text-sky-700 border border-sky-300 hover:bg-sky-50 text-xs font-bold py-2 px-3 rounded-xl shadow transition"><i class="fa-solid fa-print"></i> Cetak</button>
-                            <button type="button" onclick="updateOrderStatus('${o.id}', 'Dibatalkan')" class="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold py-2 px-3 rounded-xl shadow transition">Tolak</button>
-                            <button type="button" onclick="deleteOrder('${o.id}')" class="bg-red-600 hover:bg-red-700 text-white text-xs font-bold py-2 px-3 rounded-xl shadow transition">Hapus</button>
-                        </div>
-                    </div>`;
-            });
-        }
-
-        async function updateOrderStatus(orderId, newStatus) {
-            let orders = [];
-            try { orders = JSON.parse(safeGet('mb_orders') || '[]'); } catch(e) { orders = []; }
-            let found = orders.find(o => o.id === orderId);
-            if (found) {
-                found.status = newStatus;
-                safeSet('mb_orders', JSON.stringify(orders));
-            } else {
-                orders.push({ id: orderId, status: newStatus, createdAt: Date.now() });
-                safeSet('mb_orders', JSON.stringify(orders));
-            }
-
-            renderAdminOrders();
-
-            try {
-                await apiRequest(SHEETDB_API + "/id/" + encodeURIComponent(orderId), {
-                    method: "PUT",
-                    body: JSON.stringify({ data: { status: newStatus } })
-                });
-            } catch(err) {
-                console.log("Cloud update status note:", err);
-            }
-        }
-
-        async function deleteOrder(orderId) {
-            if(!confirm("Yakin ingin menghapus pesanan ini?")) return;
-            let orders = [];
-            try { orders = JSON.parse(safeGet('mb_orders') || '[]'); } catch(e) { orders = []; }
-            orders = orders.filter(o => o.id !== orderId);
-            safeSet('mb_orders', JSON.stringify(orders));
-            renderAdminOrders();
-
-            try {
-                await apiRequest(SHEETDB_API + "/id/" + encodeURIComponent(orderId), { method: "DELETE" });
-            } catch(err) {
-                console.log("Cloud delete note:", err);
-            }
-        }
-
-        async function clearAllOrders() {
-            if(!confirm("Yakin ingin menghapus seluruh riwayat pesanan?")) return;
-            safeSet('mb_orders', JSON.stringify([]));
-            renderAdminOrders();
-            try {
-                await apiRequest(SHEETDB_API + "/all", { method: "DELETE" });
-            } catch(e) {}
-        }
-
-        function openEditOrderModal(orderId) {
-            let orders = [];
-            try { orders = JSON.parse(safeGet('mb_orders') || '[]'); } catch(e) { orders = []; }
-            let o = orders.find(item => item.id === orderId);
-            if (!o) return;
-
-            document.getElementById('edit-order-id-input').value = o.id;
-            document.getElementById('edit-buyer-name').value = o.name || '';
-            document.getElementById('edit-buyer-phone').value = o.phone || '';
-            document.getElementById('edit-buyer-address').value = o.address || '';
-            document.getElementById('edit-order-total').value = o.total || '';
-
-            document.getElementById('edit-order-modal').classList.remove('modal-hidden');
-        }
-
-        function closeEditModal() {
-            document.getElementById('edit-order-modal').classList.add('modal-hidden');
-        }
-
-        async function saveEditedOrder(event) {
-            event.preventDefault();
-            const id = document.getElementById('edit-order-id-input').value;
-            const name = document.getElementById('edit-buyer-name').value.trim();
-            const phone = document.getElementById('edit-buyer-phone').value.trim();
-            const address = document.getElementById('edit-buyer-address').value.trim();
-            const total = document.getElementById('edit-order-total').value.trim();
-
-            let orders = [];
-            try { orders = JSON.parse(safeGet('mb_orders') || '[]'); } catch(e) { orders = []; }
-            let o = orders.find(item => item.id === id);
-            if (o) {
-                o.name = name;
-                o.phone = phone;
-                o.address = address;
-                o.total = total;
-                safeSet('mb_orders', JSON.stringify(orders));
-            }
-
-            closeEditModal();
-            renderAdminOrders();
-
-            try {
-                await apiRequest(SHEETDB_API + "/id/" + encodeURIComponent(id), {
-                    method: "PUT",
-                    body: JSON.stringify({ data: { name: name, phone: phone, address: address, total: total } })
-                });
-            } catch(err) {}
-        }
-
-        function printOrder(orderId) {
-            let orders = [];
-            try { orders = JSON.parse(safeGet('mb_orders') || '[]'); } catch(e) { orders = []; }
-            let o = orders.find(item => item.id === orderId);
-            if (!o) return;
-
-            let w = window.open('', '_blank', 'width=400,height=600');
-            let itemsText = '';
-            if (Array.isArray(o.items)) {
-                o.items.forEach(i => {
-                    itemsText += `<div>- ${i.name} (${i.qty}x) @${rupiah(i.price)}</div>`;
-                });
-            }
-            w.document.write(`
-                <html><head><title>Struk - ${o.id}</title><style>body{font-family:monospace;font-size:12px;padding:10px;}</style></head>
-                <body>
-                    <h3 style="text-align:center;margin:0;">Mie Bangka Teladan</h3>
-                    <p style="text-align:center;margin:0 0 10px 0;">Jalan Batu 8 Atas, Tanjungpinang</p>
-                    <hr>
-                    <div><b>ID:</b> ${o.id}</div>
-                    <div><b>Waktu:</b> ${o.created_at || '-'}</div>
-                    <div><b>Nama:</b> ${o.name}</div>
-                    <div><b>Meja:</b> ${o.address}</div>
-                    <hr>
-                    <div><b>Menu Pesanan:</b></div>
-                    ${itemsText}
-                    <hr>
-                    <div><b>Total:</b> ${rupiah(o.total)}</div>
-                    <div><b>Pembayaran:</b> ${o.payment || '-'}</div>
-                    <div><b>Status:</b> ${o.status}</div>
-                    <hr>
-                    <p style="text-align:center;margin:10px 0 0 0;">Terima Kasih</p>
-                </body></html>`);
-            w.document.close();
-            w.print();
         }
 
         const defaultMenu = [
-            { id: "menu-001", name: "Mie Bangka Spesial (Topping B2)", category: "Makanan", price: 25000, description: "Mie kenyal khas Bangka dengan topping cincang B2 gurih dan pangsit.", image: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=700&q=80" },
-            { id: "menu-002", name: "Mie Bangka Pangsit Kuah", category: "Makanan", price: 22000, description: "Mie hangat dengan kuah kaldu lezat dan pangsit rebus.", image: "https://images.unsplash.com/photo-1612929633738-8fe44f7ec841?auto=format&fit=crop&w=700&q=80" },
+            { id: "menu-001", name: "Mie Bangka Spesial (Topping B2)", category: "Makanan", price: 30000, description: "Mie kenyal khas Bangka dengan topping B2 gurih dan pangsit.", image: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=700&q=80" },
+            { id: "menu-002", name: "Mie Bangka Pangsit Kuah", category: "Makanan", price: 25000, description: "Mie hangat dengan kuah kaldu lezat dan pangsit rebus.", image: "https://images.unsplash.com/photo-1612929633738-8fe44f7ec841?auto=format&fit=crop&w=700&q=80" },
             { id: "menu-003", name: "Es Jeruk Kunci Bangka", category: "Minuman", price: 8000, description: "Minuman segar dengan jeruk kunci khas Bangka.", image: "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=700&q=80" }
         ];
 
@@ -677,32 +375,13 @@
             });
         }
 
-        async function saveMenu(event) {
+        function saveMenu(event) {
             event.preventDefault();
-            const submitBtn = document.getElementById('menu-submit-btn');
-            
-            // Cek apakah ada file yang dipilih untuk di-upload ke Cloudinary
-            const fileInput = document.getElementById('menu-file-input');
-            let imageUrl = document.getElementById('menu-image').value.trim();
-
-            if (fileInput && fileInput.files && fileInput.files[0]) {
-                submitBtn.disabled = true;
-                submitBtn.textContent = "Mengunggah Gambar...";
-                const uploadedUrl = await uploadFileToCloudinary(fileInput.files[0]);
-                submitBtn.disabled = false;
-                submitBtn.textContent = "Simpan Menu";
-                
-                if (uploadedUrl) {
-                    imageUrl = uploadedUrl;
-                } else {
-                    return; // Batalkan jika upload gagal
-                }
-            }
-
             const id = document.getElementById('edit-menu-id').value || ("menu-" + Date.now());
             const name = document.getElementById('menu-name').value.trim();
             const category = document.getElementById('menu-category').value;
             const price = parseFloat(document.getElementById('menu-price').value) || 0;
+            const image = document.getElementById('menu-image').value.trim();
             const description = document.getElementById('menu-desc').value.trim();
 
             let menuList = [];
@@ -710,9 +389,9 @@
 
             const idx = menuList.findIndex(m => String(m.id) === String(id));
             if (idx >= 0) {
-                menuList[idx] = { id, name, category, price, image: imageUrl, description };
+                menuList[idx] = { id, name, category, price, image, description };
             } else {
-                menuList.push({ id, name, category, price, image: imageUrl, description });
+                menuList.push({ id, name, category, price, image, description });
             }
 
             safeSet('mb_menus', JSON.stringify(menuList));
@@ -732,7 +411,6 @@
             document.getElementById('menu-price').value = m.price;
             document.getElementById('menu-image').value = m.image || '';
             document.getElementById('menu-desc').value = m.description || '';
-            if(document.getElementById('menu-file-input')) document.getElementById('menu-file-input').value = '';
 
             document.getElementById('menu-form-title').textContent = "Edit Menu";
             document.getElementById('cancel-edit-btn').classList.remove('hidden');
@@ -773,31 +451,10 @@
             });
         }
 
-        async function addBanner(event) {
+        function addBanner(event) {
             event.preventDefault();
-            const submitBtn = document.getElementById('banner-submit-btn');
-            
-            const fileInput = document.getElementById('banner-file-input');
-            let url = document.getElementById('banner-url-input').value.trim();
-
-            if (fileInput && fileInput.files && fileInput.files[0]) {
-                submitBtn.disabled = true;
-                submitBtn.textContent = "Mengunggah Banner...";
-                const uploadedUrl = await uploadFileToCloudinary(fileInput.files[0]);
-                submitBtn.disabled = false;
-                submitBtn.textContent = "Tambah Banner";
-
-                if (uploadedUrl) {
-                    url = uploadedUrl;
-                } else {
-                    return; // Batalkan jika upload gagal
-                }
-            }
-
-            if(!url) {
-                alert("Pilih file gambar atau masukkan URL banner terlebih dahulu!");
-                return;
-            }
+            const url = document.getElementById('banner-url-input').value.trim();
+            if(!url) return;
 
             let banners = [];
             try { banners = JSON.parse(safeGet('mb_banners')) || []; } catch(e) { banners = []; }
@@ -805,7 +462,6 @@
             safeSet('mb_banners', JSON.stringify(banners));
             
             document.getElementById('banner-url-input').value = '';
-            if(fileInput) fileInput.value = '';
             renderAdminBanners();
         }
 
@@ -843,107 +499,5 @@
 
         window.onload = checkLoginState;
     </script>
-
-<script>
-  // Fungsi untuk mengambil daftar pesanan dari server Redis
-  async function muatPesanan() {
-    try {
-      const response = await fetch('/api/pesanan');
-      const data = await response.json();
-      
-      if (data.success) {
-        console.log('Daftar pesanan masuk:', data.pesanan);
-        // Di sini data.pesanan bisa ditampilkan ke tabel / kartu pesanan
-      }
-    } catch (err) {
-      console.error('Gagal mengambil pesanan:', err);
-    }
-  }
-
-  // Muat pesanan saat halaman admin dibuka
-  muatPesanan();
-</script>
-
-<script>
-  // Fungsi untuk mengambil daftar pesanan dari server Redis
-  async function muatPesanan() {
-    try {
-      const response = await fetch('/api/pesanan');
-      const data = await response.json();
-      
-      if (data.success) {
-        console.log('Daftar pesanan masuk:', data.pesanan);
-        // Di sini data.pesanan bisa ditampilkan ke tabel / kartu pesanan
-      }
-    } catch (err) {
-      console.error('Gagal mengambil pesanan:', err);
-    }
-  }
-
-  // Muat pesanan saat halaman admin dibuka
-  muatPesanan();
-</script>
-
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel Admin - Mie Bangka Teladan</title>
-    <style>
-        body { font-family: Arial, sans-serif; background: #f4f6f8; margin: 0; padding: 15px; color: #333; }
-        h2 { text-align: center; color: #d9534f; }
-        .card { background: white; padding: 15px; margin-bottom: 12px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .card h4 { margin: 0 0 8px 0; color: #0275d8; }
-        .card p { margin: 4px 0; font-size: 14px; }
-        .btn-refresh { display: block; width: 100%; padding: 12px; background: #0275d8; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; margin-bottom: 15px; }
-        .empty { text-align: center; color: #777; margin-top: 20px; }
-    </style>
-</head>
-<body>
-
-    <h2>Panel Admin Mie Bangka Teladan</h2>
-    
-    <button class="btn-refresh" onclick="muatPesanan()">Refresh Pesanan</button>
-    
-    <div id="daftarPesanan">
-        <p class="empty">Memuat data pesanan...</p>
-    </div>
-
-    <script>
-        async function muatPesanan() {
-            const container = document.getElementById('daftarPesanan');
-            container.innerHTML = '<p class="empty">Memuat data...</p>';
-
-            try {
-                const response = await fetch('/api/pesanan');
-                const data = await response.json();
-
-                if (data.success && data.pesanan.length > 0) {
-                    let html = '';
-                    data.pesanan.forEach(item => {
-                        html += `
-                            <div class="card">
-                                <h4>👤 ${item.nama || 'Tanpa Nama'}</h4>
-                                <p><strong>Menu:</strong> ${item.menu || '-'}</p>
-                                <p><strong>Catatan:</strong> ${item.catatan || 'Tidak ada'}</p>
-                                <p><strong>Waktu:</strong> ${item.waktu || '-'}</p>
-                            </div>
-                        `;
-                    });
-                    container.innerHTML = html;
-                } else {
-                    container.innerHTML = '<p class="empty">Belum ada pesanan masuk.</p>';
-                }
-            } catch (err) {
-                container.innerHTML = '<p class="empty" style="color:red;">Gagal memuat pesanan: ' + err.message + '</p>';
-            }
-        }
-
-        // Otomatis muat pesanan saat halaman dibuka
-        muatPesanan();
-    </script>
-
 </body>
 </html>
-
